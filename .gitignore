@@ -1,4 +1,7 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-data/
+data/srt_kor/*
+!data/srt_kor/.gitkeep
+data/srt_eng/*
+!data/srt_eng/.gitkeep
