@@ -2,6 +2,11 @@
 
 import re
 from docx import Document
+from docx.document import Document as _Document
+from docx.oxml.table import CT_Tbl
+from docx.oxml.text.paragraph import CT_P
+from docx.table import Table
+from docx.text.paragraph import Paragraph
 
 #자막파일 전처리
 def load_srt(filepath):
@@ -17,10 +22,14 @@ def load_srt(filepath):
     #빈 줄 정리
     text = re.sub(r'\n{2,}','\n',text)
     
-    return text.strip()
+    text = text.replace('\n',' ')
+    
+    text = re.sub(r'\s+', ' ', text)
+    
+    return text
 
 
-#docx파일 전처리 (텍스트만 추출, 텍스트상자 X, 표 X)
+#docx파일 전처리
 def load_docx(filepath):
     doc = Document(filepath)
     texts = []
@@ -29,11 +38,11 @@ def load_docx(filepath):
             texts.append(p.text.strip())
     
     return '\n'.join(texts)
-    
-
-
-
+          
+                
             
+
+    
     
     
 
