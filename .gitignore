@@ -5,3 +5,7 @@ data/srt_kor/*
 !data/srt_kor/.gitkeep
 data/srt_eng/*
 !data/srt_eng/.gitkeep
+data/docx_kor/*
+!data/docx_kor/.gitkeep
+data/docx_eng/*
+!data/docx_eng/.gitkeep
