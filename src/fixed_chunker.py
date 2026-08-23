@@ -1,6 +1,6 @@
 #단순 글자수 분할 베이스라인
 def fixed_chunking(text: str, chunk_size: int = 256 , overlap: int = 0):
-    if not text:
+    if not text.strip():
         return []
     
     chunks = []

@@ -1,21 +1,28 @@
-#pip install python-docx
-
 import re
 from docx import Document
 from pathlib import Path
 
 #자막파일 전처리
 def clean_srt(filepath: str) -> str:
-    with open(filepath, encoding="utf-8") as f:
-        text = f.read()
+    text = ""
+    encodings = ['utf-8','cp949']
+    for enc in encodings:
+        try:
+            with open(filepath, encoding = enc) as f:
+                text = f.read()
+        except UnicodeDecodeError:
+            continue
     
-    #자막 번호 제거
-    text = re.sub(r'^\d+$','',text,flags=re.MULTILINE)
+    pattern = r'^\d+\r?\n\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3}'
+    text = re.sub(pattern,'',text,flags = re.MULTILINE)
     
-    #시간 표시 제거
-    text = re.sub(r'\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}','',text)
+    text = re.sub(r'<[^>]+>', '', text)
     
-    return " ".join([line.strip() for line in text.splitlines() if line.strip()])
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    
+    return " ".join(lines)
+        
+        
 
 
 #docx파일 전처리
@@ -23,8 +30,9 @@ def clean_docx(filepath: str) -> str:
     doc = Document(filepath)
     
     texts = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
-    
+
     return '\n'.join(texts)
+
 
 def load_file(filepath: str) -> str:
     ext = Path(filepath).suffix.lower()
