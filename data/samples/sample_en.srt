@@ -1,0 +1,12 @@
+1
+00:00:01,100 --> 00:00:03,800
+Welcome to the LLM chunking test module.
+
+2
+00:00:04,000 --> 00:00:07,500
+text preprocessing is essential
+for RAG performance.
+
+3
+00:00:08,000 --> 00:00:11,200
+This is an example of an English subtitle file.
