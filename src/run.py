@@ -1,14 +1,14 @@
-from loader import load_srt, load_docx
-from config import SRT_ENG_DIR, SRT_KOR_DIR, DOCX_ENG_DIR, DOCX_KOR_DIR
-from chunker import fixed_chunking
+from loader import load_file
+from config import SRT_KOR_DIR
+from fixed_chunker import fixed_chunking
 
+text_kor_srt = load_file(SRT_KOR_DIR/"부산행.srt")
 
-text_kor_srt = load_srt(SRT_KOR_DIR/"부산행.srt")
+fixed_chunk_list = fixed_chunking(text_kor_srt)
 
-srt_chunks = fixed_chunking(text_kor_srt,512)
+for i, text in enumerate(fixed_chunk_list):
+    print(f"청크{i}: {text}")
 
-for i, chunk in enumerate(srt_chunks):
-    print(f"srt_chunk {i+1}: [{chunk}]")
     
 
 
