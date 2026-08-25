@@ -9,3 +9,4 @@ data/docx_kor/*
 !data/docx_kor/.gitkeep
 data/docx_eng/*
 !data/docx_eng/.gitkeep
+venv/
