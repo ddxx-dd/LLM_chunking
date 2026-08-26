@@ -8,6 +8,7 @@ from semantic_chunker import semantic_chunking
 from analyzer import print_chunks
 
 
+
 #설정
 FILE_PATH = SRT_KOR_DIR / "부산행.srt"
 CHUNK_SIZE = 512

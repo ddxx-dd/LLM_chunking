@@ -97,31 +97,6 @@ def split_at_boundaries(sentences,similarities,threshold):
     return chunks
 
 
-#각 문장에 앞 뒤 문장을 붙여 문맥을 확장한다.
-#buffer_size = 1이면 문장 2기준 문장1,문장3 결합
-#문장들이 겹쳐지기 때문에 평균 유사도는 올라간다.
-def combine_with_buffer(sentences, buffer_size = 1):
-    
-    if buffer_size <= 0:
-        return sentences
-    
-    combined = []
-    
-    #기준 문장 인덱스
-    for i in range(len(sentences)):
-        parts = []
-        
-        for j in range(i-buffer_size, i + buffer_size + 1):
-            #첫/마지막 문장 처리
-            if 0 <= j < len(sentences):
-                parts.append(sentences[j])
-            
-        combined.append(" ".join(parts))
-    
-    return combined
-
-
-
 #의미 기반 분할 베이스라인
 def semantic_chunking(text,model,method = "percentile",amount = 5,buffer_size = 0, max_sentence_length = 200):
 
@@ -146,6 +121,31 @@ def semantic_chunking(text,model,method = "percentile",amount = 5,buffer_size = 
     
     #경계에서 분할
     return split_at_boundaries(sentences,similarities,threshold)
+
+
+
+#각 문장에 앞 뒤 문장을 붙여 문맥을 확장한다.
+#buffer_size = 1이면 문장 2기준 문장1,문장3 결합
+#문장들이 겹쳐지기 때문에 평균 유사도는 올라간다.
+def combine_with_buffer(sentences, buffer_size = 1):
+    
+    if buffer_size <= 0:
+        return sentences
+    
+    combined = []
+    
+    #기준 문장 인덱스
+    for i in range(len(sentences)):
+        parts = []
+        
+        for j in range(i-buffer_size, i + buffer_size + 1):
+            #첫/마지막 문장 처리
+            if 0 <= j < len(sentences):
+                parts.append(sentences[j])
+            
+        combined.append(" ".join(parts))
+    
+    return combined
     
     
 
