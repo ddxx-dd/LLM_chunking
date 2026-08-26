@@ -1,21 +1,21 @@
 #단순 글자수 분할 베이스라인
-def fixed_chunking(text: str, chunk_size: int = 256 , overlap: int = 0):
+def fixed_chunking(text, chunk_size = 256, overlap = 0):
+    
     if not text.strip():
         return []
     
+    if overlap >= chunk_size:
+        raise ValueError("overlap은 chunk_size보다 작아야 함")
+        
     chunks = []
     start = 0
-    text_len = len(text)
+    step = chunk_size - overlap
     
-    while start < text_len:
-        end = start + chunk_size
-        chunk = text[start:end]
-        chunks.append(chunk.strip())
-        start += (chunk_size-overlap)
-        
-        if start >= text_len or chunk_size <= overlap:
-            break
-            
+    while start < len(text):
+        chunk = text[start:start + chunk_size]
+        if chunk.strip():
+            chunks.append(chunk)
+        start = start + step
+    
     return chunks
-    
     

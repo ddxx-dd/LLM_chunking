@@ -1,31 +1,45 @@
+from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer
+
 from loader import load_file
-from config import DOCX_KOR_DIR
+from config import SRT_KOR_DIR
 from fixed_chunker import fixed_chunking
 from semantic_chunker import semantic_chunking
-from sentence_transformers import SentenceTransformer
+from analyzer import print_chunks
 
 
-text_kor_docx = load_file(DOCX_KOR_DIR/"혼합코퍼스_A.docx")
+#설정
+FILE_PATH = SRT_KOR_DIR / "부산행.srt"
+CHUNK_SIZE = 512
+OVERLAP = 0
+METHOD = "percentile"
+AMOUNT = 10
 
-fixed_chunk_list = fixed_chunking(text_kor_docx,512,0)
 
-print("="*30 + "fixed_chunking"+"="*30 )
-for i, text in enumerate(fixed_chunk_list):
-    print(f"청크{i+1}: {text}")
-print("="*60)
+#로드
+text = load_file(FILE_PATH)
+print("파일: " + FILE_PATH.name)
+print("원본: " + str(len(text)) + "글자\n")
 
-print("bge-m3 로드중..")
+print("모델 로드중..")
 model = SentenceTransformer("BAAI/bge-m3")
+tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-4B")
 print("로드 완료\n")
 
 
+#청킹
+fixed_chunks = fixed_chunking(text,CHUNK_SIZE,OVERLAP)
+semantic_chunks = semantic_chunking(text,model,method = METHOD, amount = AMOUNT)
 
-semantic_chunk_list = semantic_chunking(text_kor_docx,model,threshold = 0.4)
+#출력 
+print_chunks(fixed_chunks,tokenizer,"단순 분할")
+print_chunks(semantic_chunks,tokenizer,"의미 기반 분할")
 
-print("="*60)
-for i, text in enumerate(semantic_chunk_list):
-    print(f"청크{i+1}: {text}")
-print("="*60)
+
+
+
+
+
     
 
     
