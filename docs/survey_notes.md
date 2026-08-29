@@ -25,31 +25,38 @@
 
 본 프로젝트는 1단계와 4단계를 비교한다.
 
-## 3. 임베딩 모델 선정: bge-m3
+## 3. 임베딩 모델 비교
 
-### Qwen3-Embedding-4B 로드 실패
+### 환경 구축
 
-ValueError: The checkpoint you are trying to load has model type `qwen3`
-but Transformers does not recognize this architecture.
+Qwen3 계열(Qwen3-4B, Qwen3-Embedding-4B)은 transformers 4.51+를
+요구하고, 이는 Python 3.9+가 필요하다. 서버 시스템 Python은 3.8이며
+venv는 인터프리터를 시스템에서 심볼릭 링크로 참조하므로
+(venv/bin/python -> /usr/bin/python3.8) 버전 문제가 해결되지 않는다.
 
-원인: 서버 transformers 4.46.3, Qwen3는 4.51+ 필요.
-4.51은 Python 3.9+ 요구, 서버는 3.8이라 업그레이드 불가.
+uv로 Python 3.11 환경을 구축했다.
 
-venv는 패키지만 격리하고 인터프리터는 시스템 것을 심볼릭 링크로
-참조하므로 Python 버전 문제는 해결되지 않는다.
+    Python 3.11.16
+    torch 2.7.1+cu118 (sm_86 지원 확인)
+    transformers 5.16.1
+    Qwen3-4B, Qwen3-Embedding-4B 로드 확인
 
-토크나이저는 BPE 규칙 파일(vocab.json, merges.txt)만 읽으면 되어
-아키텍처와 무관하므로 Qwen3-4B 토크나이저는 정상 로드된다.
-토큰 카운팅에는 이를 사용한다.
+### 비교 항목
+
+- 모델 단독 VRAM, LLM 동시 로드 시 VRAM
+- 100문장 인코딩 속도
+- 주제 경계 유사도 낙차 (한국어/영어)
+
+낙차는 같은 주제 내 평균 유사도에서 주제 경계 유사도를 뺀 값으로,
+클수록 임계값 설정과 무관하게 경계를 뚜렷하게 잡는다.
+
+### 측정 결과
+
+(측정 후 작성)
 
 ### 선정 근거
 
-1. MTEB 종합 순위는 검색(retrieval) 태스크 비중이 크지만,
-   본 프로젝트의 임베딩 용도는 인접 문장 간 STS다. 태스크가 다르다.
-2. Tier 1(24GB)에서 LLM과 동시 로드 시 여유가 필요하다.
-3. 어블레이션을 여러 조합 돌려야 하므로 인코딩 속도가
-   실험 횟수를 좌우한다.
-4. 문장 단위 임베딩이라 긴 컨텍스트 지원은 불필요하다.
+(측정 후 작성).
 
 ## 4. 구현 중 발견한 것
 

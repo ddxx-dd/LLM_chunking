@@ -11,3 +11,4 @@ data/docx_eng/*
 !data/docx_eng/.gitkeep
 venv/
 results/*.json
+.venv311/
