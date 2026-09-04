@@ -5,14 +5,17 @@ top-k 검색 동작 확인용 데모.
 혼합 코퍼스에서 단순 분할과 의미 분할의 검색 결과를 비교한다.
 결과는 docs/baseline_report.md 참조.
 """
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from sentence_transformers import SentenceTransformer
 
 from config import DOCX_KOR_DIR
-from loader import load_file
-from fixed_chunker import fixed_chunking
-from semantic_chunker import semantic_chunking
-from retriever import retrieve_top_k, print_retrieved
+from preprocessing.loader import load_file
+from chunking.fixed_chunker import fixed_chunking
+from chunking.semantic_chunker import semantic_chunking
+from retrieval.retriever import retrieve_top_k, print_retrieved
 
 
 FILE_PATH = DOCX_KOR_DIR / "혼합코퍼스_A.docx"

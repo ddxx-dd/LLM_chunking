@@ -7,6 +7,9 @@
   3. 인코딩 속도             -> 어블레이션 실행 횟수를 좌우
   4. 주제 전환 유사도 낙차     -> 의미 분할 정확도의 직접 지표 (핵심)
 """
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import gc
 import time

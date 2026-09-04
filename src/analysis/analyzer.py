@@ -2,6 +2,7 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import koreanize_matplotlib
 
 #텍스트의 토큰 수를 센다
 def count_tokens(text,tokenizer):
@@ -63,7 +64,7 @@ def plot_boundaries(similarities, threshold, save_path, title=""):
     
     plt.xlabel("sentence index")
     plt.ylabel("cosine similarity")
-    plt.title = title
+    plt.title(title)
     plt.legend()
     plt.grid(alpha = 0.3)
     plt.tight_layout()
