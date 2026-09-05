@@ -1,38 +1,28 @@
+#질문과 가장 유사한 청크 k개를 찾는다.
+
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
-#질문과 가장 유사한 청크 k개를 찾는다.
-#비교대상: 질문 - 모든 청크
-def retrieve_top_k(query, chunks, model, k = 3):
-    
-    query_vector = model.encode([query])
-    chunk_vectors = model.encode(chunks)
-    
-    sims = cosine_similarity(query_vector,chunk_vectors)[0]
-    
-    ranked = np.argsort(sims)[::-1]
-    
-    results = []
-    for idx in ranked[:k]:
-        results.append({
-            "index": int(idx),
-            "score": float(sims[idx]),
-            "text": chunks[idx],
-        })
-    return results
+
+def retrieve_top_k(query, chunks, model, k=3):
+#질문 벡터와 모든 청크 벡터의 코사인 유사도 -> 상위 k개.
+
+    texts = [c.text for c in chunks]
+    qv = model.encode([query])
+    cv = model.encode(texts)
+    sims = cosine_similarity(qv, cv)[0]
+    ranked = np.argsort(sims)[::-1]                 
+    return [{"index": int(i), "score": float(sims[i]), "chunk": chunks[i]}
+            for i in ranked[:k]]
 
 
-def print_retrieved(query, retrieved, preview = 100):
-    print("질문: " + query)
-    print("=" * 60)
-    
-    for rank in range(len(retrieved)):
-        item = retrieved[rank]
-        text = item["text"].strip()[:preview]
-        if len(item["text"].strip()) > preview:
-            text = text + "..."
-            
-        print("[" + str(rank + 1) + "위] 청크" + str(item["index"] + 1)
-              + " | 유사도 " + format(item["score"], ".3f"))
-        print("  " + text)
+def print_retrieved(query, retrieved, preview=90):
+    print("질문:", query)
+    print("=" * 62)
+    for rank, item in enumerate(retrieved, 1):
+        t = item["chunk"].text.strip().replace("\n", " / ")
+        if len(t) > preview:
+            t = t[:preview] + "..."
+        print("[{}위] 청크{} | 유사도 {:.3f}".format(rank, item["index"], item["score"]))
+        print("  ", t)
         print()

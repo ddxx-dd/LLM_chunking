@@ -7,4 +7,8 @@ SRT_KOR_DIR = DATA_DIR / "srt_kor"
 SRT_ENG_DIR = DATA_DIR / "srt_eng"
 DOCX_KOR_DIR = DATA_DIR / "docx_kor"
 DOCX_ENG_DIR = DATA_DIR / "docx_eng"
+
 RESULTS_DIR = ROOT / "results"
+
+EMBED_MODEL = "BAAI/bge-m3"
+TOKENIZER = "Qwen/Qwen3-4B"
