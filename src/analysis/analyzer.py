@@ -63,6 +63,32 @@ def table_breaks(doc, chunks):
                 break
     return n
 
+def split_tables(doc, chunks):
+    """표 하나(같은 meta['table'] id)의 행들이 서로 다른 청크에 나뉘어 담겼는지 확인.
+    이 프로젝트의 docx 로더는 표의 행 하나하나를 이미 독립된 Unit으로 만들기 때문에,
+    청크 경계는 대부분 행의 '중간'이 아니라 행과 행 '사이'에 떨어진다 - table_breaks가
+    잡는 건 드문 경우(행 자체가 잘림)고, 이 함수가 실제로 흔한 경우("표는 하나인데
+    청크는 여러 개로 갈림")를 직접 측정한다. 의도적으로 아무것도 고치지 않고
+    "몇 번 테이블이 몇 개 청크로 쪼개졌는지"만 보고한다 - 분할 기법의 한계를
+    감추지 않고 그대로 드러내기 위함."""
+    def chunk_index_of(pos):
+        for i, c in enumerate(chunks):
+            if c.start <= pos < c.end:
+                return i
+        return None
+
+    tables = {}
+    for u in doc.units:
+        if u.kind == "row":
+            tables.setdefault(u.meta["table"], []).append(u)
+
+    result = {}
+    for table_id, rows in tables.items():
+        chunk_ids = sorted({chunk_index_of(r.start) for r in rows})
+        if len(chunk_ids) > 1:
+            result[table_id] = chunk_ids
+    return result
+
 def topic_mix(doc, chunks):
     vals = []
     for c in chunks:
