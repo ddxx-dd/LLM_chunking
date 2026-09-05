@@ -1,61 +1,43 @@
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-
 from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer
 
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config import SRT_KOR_DIR, DOCX_KOR_DIR, RESULTS_DIR
 from preprocessing.loader import load_file
 from chunking.fixed_chunker import fixed_chunking
-from chunking.semantic_chunker import (
-    split_sentences, calculate_similarities,
-    calculate_threshold, split_at_boundaries,
-)
+from chunking.semantic_chunker import split_sentences, calculate_similarities, calculate_threshold, split_at_boundaries
 from analysis.analyzer import plot_boundaries
 
-#설정
-FILES = [SRT_KOR_DIR / "부산행.srt", DOCX_KOR_DIR / "스택.docx"]
+FILES = [SRT_KOR_DIR / "부산행.srt", DOCX_KOR_DIR / "2-1.스택.docx"]
 CHUNK_SIZE = 512
 OVERLAP = 0
 METHOD = "percentile"
 AMOUNT = 10
 
-
-# ---- 모델 로드 ----
 print("모델 로드중..")
 model = SentenceTransformer("BAAI/bge-m3")
-tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-4B")
 print("로드 완료\n")
 
 for FILE_PATH in FILES:
+    if not FILE_PATH.exists():
+        continue
+    doc = load_file(FILE_PATH)
+    text = doc.text
+    print("파일:", FILE_PATH.name, "(글자수:", len(text), ")")
 
-    # 로드
-    text = load_file(FILE_PATH)
-    print("파일: " + FILE_PATH.name)
-    print("원본: " + str(len(text)) + "글자\n")
-
-    # 청킹
     fixed_chunks = fixed_chunking(text, CHUNK_SIZE, OVERLAP)
 
     sentences = split_sentences(text, 200)
-    vectors = model.encode(sentences)
+    sentence_texts = [s[0] for s in sentences]
+    vectors = model.encode(sentence_texts, show_progress_bar=False)
+
     similarities = calculate_similarities(vectors)
     threshold = calculate_threshold(similarities, METHOD, AMOUNT)
-    semantic_chunks = split_at_boundaries(sentences, similarities, threshold)
+    semantic_chunks = split_at_boundaries(sentences, similarities, threshold, text)
 
-    #시각화
     save_name = FILE_PATH.stem + "_" + METHOD + str(AMOUNT) + ".png"
+    save_path = str(RESULTS_DIR / save_name)
 
-    plot_boundaries(
-        similarities,threshold,
-        str(RESULTS_DIR / save_name),
-        title = str(FILE_PATH.name) + " — " + METHOD + " (amount=" + str(AMOUNT) + ")"
-    )
-
-
-    print("-" * 70 + "\n")
-    print(FILE_PATH.name + " — " + METHOD + " (amount=" + str(AMOUNT) + ") 파일 생성 완료")
-    print("-" * 70 + "\n")
-
-
+    plot_boundaries(similarities, threshold, save_path, title=FILE_PATH.name + " — " + METHOD)
+    print("저장 완료:", save_path, "\n")

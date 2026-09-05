@@ -1,43 +1,32 @@
-# 파이프라인 전체가 공유하는 자료구조
 
-# Doc.text -> 청커가 보는 유일한 입력.  두 청킹 방식이 똑같이 받는다.
-# Doc.units -> 병합기·평가기만 보는 스켈레톤.
-# Chunk     -> 청커의 출력.  text + (start, end)
+#[설계 원칙]
+#- Doc.text  : 청커(Chunker)가 바라보는 유일한 입력 (순수 텍스트 스트#림)
+#- Doc.units : 병합기(Merger)와 평가기(Evaluator)가 바라보는 원본 문서의 뼈대(Skeleton).
+#- Chunk     : 청커의 출력 (청크 텍스트 및 시작/끝 문자 인덱스 오프셋).
 
 from collections import namedtuple
 
-# ── Unit : 원본 파일의 최소 조각 ──────────────────────────────
-#   자막이면 큐 1개, 워드면 문단 1개 또는 표의 행 1개.
-#
-#   kind : "cue" | "para" | "row"
-#   meta : cue -> {"index":7, "t_start":94.8, "t_end":96.6}
-#          para -> {"style":"Heading 1", "heading":True}
-#          row -> {"table":1, "row":0, "header":["연산자","의미"]}
-#
-#   예) Unit(start=7, end=28, kind="cue",
-#            meta={"index":2, "t_start":96.6, "t_end":99.6})
-#       -> doc.text[7:28] == "또 돼지들 싹 다 잡아다 파묻는 거여?"
+# ── 1. Unit : 원본 파일의 최소 조각 단위 ──────────────────────
+# start : Doc.text 안에서 이 유닛이 시작하는 글자 오프셋
+# end   : Doc.text 안에서 이 유닛이 끝나는 글자 오프셋
+# kind  : 유닛 종류 ("cue"=자막 1개 대사, "para"=워드 문단 1개, "row"=워드 표 1행)
+# meta  : 원본 복원을 위한 메타데이터 딕셔너리
+#         * cue  -> {"index": 7, "t_start": 94.8, "t_end": 96.6} 
+#         * para -> {"style": "Heading 1", "heading": True}       
+#         * row  -> {"table": 1, "row": 0, "header": ["연산자", "의미"]}
+Unit = namedtuple("Unit", ["start", "end", "kind", "meta"])
 
+# ── 2. Doc : loader.py가 반환하는 표준 문서 컨테이너 ───────────
+# name  : 원본 파일명 (예: "부산행.srt", "스택.docx")
+# text  : 모든 유닛을 줄바꿈('\n')으로 연결한 단 하나의 통합 평문 문자열
+# units : Unit 객체들의 리스트 (원본 타임스탬프 및 서식을 이어주는 뼈대)
+# fmt   : 파일 포맷 ("srt", "docx", "text")
+# log   : 전처리 과정에서 정제/제거된 태그 및 빈 줄 통계
+Doc = namedtuple("Doc", ["name", "text", "units", "fmt", "log"])
 
-
-Unit = namedtuple("Unit", ["start","end","kind","meta"])
-
-# ── Doc : 로더의 출력 ────────────────────────────────────────
-#   name : 파일 이름
-#   text : 모든 유닛을 개행으로 이어붙인 평문. 
-#   units: Unit 목록.  text 안의 위치와 원본 메타데이터를 이어준다.
-#   fmt  : "srt" | "docx" | "text"
-#   log  : 전처리가 무엇을 몇 개 정리했는지.
-
-Doc = namedtuple("Doc",["name","text","units","fmt","log"])
-
-
-
-# ── Chunk : 청커의 출력 ──────────────────────────────────────
-#   text  : 청크 내용
-#   start : Doc.text 안에서의 시작 위치(문자 인덱스)
-#   end   : 끝 위치(exclusive)
-#   불변식: chunk.text == doc.text[chunk.start:chunk.end]
-
-Chunk = namedtuple("Chunk",["text","start","end"])
-
+# ── 3. Chunk : 청커의 출력 단위 ──────────────────────────────
+# text  : LLM에 전달될 실제 청크 문자열
+# start : Doc.text 안에서의 시작 글자 인덱스
+# end   : 끝 글자 인덱스
+# 불변식: chunk.text == doc.text[chunk.start:chunk.end]
+Chunk = namedtuple("Chunk", ["text", "start", "end"])
