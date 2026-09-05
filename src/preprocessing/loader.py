@@ -124,3 +124,13 @@ def load_file(filepath):
     if ext == ".docx":
         return load_docx(str(filepath))
     raise ValueError("지원하지 않는 형식: " + ext)
+
+def load_docx_bundle(paths):
+    """여러 docx 파일(같은 큰 주제의 소주제 묶음이든, 서로 다른 주제 묶음이든)을
+    각각 독립된 Doc으로 로드한다. 문서 경계를 넘어 청킹/검색하지 않도록
+    묶지 않고 리스트로 반환 -> 상위 파이프라인이 문서별로 청킹하게 한다."""
+    paths = sorted(Path(p) for p in paths)
+    return [load_docx(str(p)) for p in paths]
+
+def load_docx_dir(dirpath):
+    return load_docx_bundle(Path(dirpath).glob("*.docx"))

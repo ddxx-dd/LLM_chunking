@@ -70,7 +70,22 @@ def split_at_boundaries(sents, similarities, threshold, text):
         chunks.append(Chunk(last_piece, start, len(text)))
     return chunks
 
-def semantic_chunking(text, model, method="percentile", amount=10, max_sentence_length=200, return_debug=False):
+def _cap_chunk_sizes(chunks, max_chunk_chars):
+    """의미 기반 경계 사이 구간이 임계값을 넘지 않아 하나의 청크가 지나치게
+    커지는 걸 막는 로드밸런싱 장치. 상한을 넘는 청크만 고정 분할로 한 번 더 쪼갠다
+    (Pinecone 등에서 권장하는 '재귀적/하이브리드 청킹' 방식)."""
+    from chunking.fixed_chunker import fixed_chunking
+    out = []
+    for c in chunks:
+        if len(c.text) <= max_chunk_chars:
+            out.append(c)
+            continue
+        for s in fixed_chunking(c.text, chunk_size=max_chunk_chars, overlap=0):
+            out.append(Chunk(s.text, c.start + s.start, c.start + s.end))
+    return out
+
+def semantic_chunking(text, model, method="percentile", amount=10, max_sentence_length=200,
+                       max_chunk_chars=None, return_debug=False):
     sents = split_sentences(text, max_sentence_length)
     if len(sents) < 2:
         single = [Chunk(text, 0, len(text))] if text else []
@@ -80,6 +95,8 @@ def semantic_chunking(text, model, method="percentile", amount=10, max_sentence_
     similarities = calculate_similarities(vectors)
     threshold = calculate_threshold(similarities, method, amount)
     chunks = split_at_boundaries(sents, similarities, threshold, text)
+    if max_chunk_chars:
+        chunks = _cap_chunk_sizes(chunks, max_chunk_chars)
 
     if return_debug:
         return chunks, similarities, threshold, sents
