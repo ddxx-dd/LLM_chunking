@@ -52,7 +52,6 @@ CUE_RE = re.compile(
     re.S
 )
 TAG_RE = re.compile(r"<[^>]{1,40}>|\{\\[^}]{0,40}\}")
-SPEAKER_RE = re.compile(r"^\s*[A-Z가-힣]{1,12}\s*[:：]\s*")
 
 def _to_sec(ts):
     ts = ts.replace(".", ",")
@@ -68,8 +67,10 @@ def load_srt(filepath):
     log["cues_found"] = len(blocks)
 
     for num, t0, t1, body in blocks:
+        # 화자 표기("JOHN: ")도 원본이 실제로 보여준 정보라 지우지 않고 그대로 둔다 -
+        # SDH(청각장애인용) 자막처럼 화자 표기 자체가 대사의 일부인 경우가 있고,
+        # 번역 대상에서 제외할 근거가 없다.
         line = normalize(" ".join(TAG_RE.sub("", body).split()))
-        line = SPEAKER_RE.sub("", line)
         if not line:
             log["dropped_empty"] += 1
             continue
@@ -86,7 +87,7 @@ def _iter_body(doc):
         elif tag == "tbl":
             yield Table(child, doc)
 
-def load_docx(filepath, min_para_len=2):
+def load_docx(filepath):
     doc = DocxDocument(filepath)
     b = _Builder()
     log = {"paras": 0, "tables": 0, "rows": 0}
@@ -95,7 +96,9 @@ def load_docx(filepath, min_para_len=2):
     for item in _iter_body(doc):
         if isinstance(item, Paragraph):
             t = normalize(item.text)
-            if len(t) < min_para_len:
+            # 길이 기준으로 버리지 않는다 - 1~2글자짜리 소제목/라벨도 docx의
+            # 일부이므로 그대로 보존한다. 완전히 빈 문단만 노이즈로 취급.
+            if not t:
                 continue
             style = item.style.name if item.style else ""
             is_head = style.startswith(("Heading", "제목", "Title"))

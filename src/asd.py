@@ -29,7 +29,6 @@ from pipeline.bundle import chunk_bundle
 from retrieval.retriever import retrieve_top_k_bundle
 from analysis.analyzer import split_tables
 
-SUB_UNITS = 80          # PART A: 자막 앞부분 몇 줄로 검증할지
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 DIRECTION_CONFIG = {
@@ -79,60 +78,58 @@ tokenizer = AutoTokenizer.from_pretrained(TOKENIZER)
 llm_model = AutoModelForCausalLM.from_pretrained(TOKENIZER, torch_dtype=torch.float16, device_map="auto")
 print("✅ 모델 준비 완료!\n")
 
-def has_foreign_contamination(s):
-    return bool(re.search(r"[一-鿿぀-ヿ]", s))
+# 방향별 "목표 스크립트" 하나만 정의한다. 어떤 스크립트가 "오염"인지 하드코딩된
+# 목록(한자/가나 등)을 따로 관리하지 않고, "원본 자막 파일은 그 언어 하나로만
+# 되어 있다"고 가정한 뒤 "목표 스크립트가 아닌 알파벳 문자가 하나라도 있으면
+# 실패"로 통일한다 - 목표 스크립트 정규식 하나만 등록하면 되므로 새 언어쌍이
+# 추가돼도 이 로직 자체는 손댈 필요가 없다.
+SCRIPT_REGEX = {
+    "hangul": re.compile(r"[가-힣]"),
+    "latin": re.compile(r"[A-Za-z]"),
+}
+DIRECTION_CONFIG["en2ko"]["target_script"] = "hangul"
+DIRECTION_CONFIG["ko2en"]["target_script"] = "latin"
 
-def has_hangul(s):
-    return bool(re.search(r"[가-힣]", s))
+def has_target_script(s, target_script):
+    return bool(SCRIPT_REGEX[target_script].search(s))
 
-def has_significant_latin(s):
-    """3자 이상 이어지는 알파벳 어절이 남아있는지 - 번역 안 되고 원문 그대로
-    남은 영어 단어(예: 'Can I calm you down?')를 잡아내기 위함. 특정 데이터셋에
-    묶이지 않은 순수 문자열 패턴 검사라 어떤 자막 파일에도 그대로 적용된다."""
-    return bool(re.search(r"[A-Za-z]{3,}", s))
+def has_off_target_letters(s, target_script):
+    """s의 알파벳 문자 중 목표 스크립트가 아닌 게 하나라도 있으면 True.
+    한자/가나/키릴 등 "어떤 스크립트들을 따로 조사할지" 목록을 유지할 필요가
+    없다 - 목표 스크립트 하나만 알면 그 외 전부(무엇이든)를 자동으로 걸러낸다."""
+    target_re = SCRIPT_REGEX[target_script]
+    return any(ch.isalpha() and not target_re.match(ch) for ch in s)
 
-def _build_script_token_ids():
-    """vocab 전체를 실제로 디코딩해서 토큰별 스크립트를 분류한다.
-    Qwen 등 byte-level BPE는 vocab의 원문 토큰 문자열 자체가 바이트 치환
-    표현이라(예: 한글 '안'이 'ìķĪ'처럼 저장됨) 문자 범위를 직접 비교하면 안 되고,
-    반드시 tokenizer.decode()로 실제 텍스트를 복원한 뒤 판단해야 한다."""
+def _build_off_target_ids(target_script):
+    """vocab 전체를 실제로 디코딩해서, 목표 스크립트가 아닌 알파벳 문자를 포함한
+    토큰 id 목록을 만든다. Qwen 등 byte-level BPE는 vocab의 원문 토큰 문자열
+    자체가 바이트 치환 표현이라(예: 한글 '안'이 'ìķĪ'처럼 저장됨) 문자 범위를
+    직접 비교하면 안 되고, 반드시 tokenizer.decode()로 실제 텍스트를 복원한 뒤
+    판단해야 한다."""
     vocab = tokenizer.get_vocab()
     ids = list(vocab.values())
     decoded = tokenizer.batch_decode([[i] for i in ids])
-    hangul_ids, english_ids, foreign_ids = [], [], []
+    off_ids = []
     for tok_id, text in zip(ids, decoded):
-        if not text:
-            continue
-        if has_foreign_contamination(text):
-            foreign_ids.append(tok_id)
-        elif has_hangul(text):
-            hangul_ids.append(tok_id)
-        else:
-            stripped = text.strip()
-            if len(stripped) >= 3 and stripped.isascii() and stripped.isalpha():
-                english_ids.append(tok_id)
-    return hangul_ids, english_ids, foreign_ids
+        if text and has_off_target_letters(text, target_script):
+            off_ids.append(tok_id)
+    return off_ids
 
-print("• vocab 전체를 디코딩해 언어별 토큰 목록 계산 중...")
-_HANGUL_IDS, _ENGLISH_IDS, _FOREIGN_IDS = _build_script_token_ids()
-print(f"  한글 토큰 {len(_HANGUL_IDS)}개 / 영어 토큰 {len(_ENGLISH_IDS)}개 / 한자·가나 토큰 {len(_FOREIGN_IDS)}개")
-
-def _target_ban_ids(ban):
-    return _FOREIGN_IDS + (_ENGLISH_IDS if ban == "english" else _HANGUL_IDS)
-
-_BAD_IDS = {
-    "en2ko": [[i] for i in _target_ban_ids("english")],
-    "ko2en": [[i] for i in _target_ban_ids("hangul")],
+print("• vocab 전체를 디코딩해 방향별 '목표 아닌 스크립트' 토큰 목록 계산 중...")
+_OFF_TARGET_IDS = {
+    direction: _build_off_target_ids(cfg["target_script"])
+    for direction, cfg in DIRECTION_CONFIG.items()
 }
+for direction, ids in _OFF_TARGET_IDS.items():
+    print(f"  {direction}: 목표({DIRECTION_CONFIG[direction]['target_script']}) 아닌 토큰 {len(ids)}개")
+
+_BAD_IDS = {d: [[i] for i in ids] for d, ids in _OFF_TARGET_IDS.items()}
 # 하드 배제(-inf) 대신 로짓에 강한 음의 편향만 주는 소프트 제약.
 # 완전 차단은 모델이 남은 후보들 중 확률이 아주 낮은(=종종 의미 없는) 토큰을
 # 고르게 만들어 오히려 문장이 깨지는 부작용이 있어서(문헌상 "hard constraint
 # disrupts the underlying probability distribution"), 방향을 강하게 유도하되
 # 분포 자체는 무너뜨리지 않는 soft-constrained decoding으로 대체.
-_SOFT_BIAS = {
-    "en2ko": {(i,): -8.0 for i in _target_ban_ids("english")},
-    "ko2en": {(i,): -8.0 for i in _target_ban_ids("hangul")},
-}
+_SOFT_BIAS = {d: {(i,): -8.0 for i in ids} for d, ids in _OFF_TARGET_IDS.items()}
 
 _PROMPT_ECHO_MARKERS = (
     "self-check", "previous attempt", "rewrite it completely",
@@ -148,16 +145,22 @@ def looks_like_prompt_echo(s):
 
 def is_translated_ok(s, direction):
     """목표 언어로 온전히 번역됐는지 판단 - 언어 방향(direction)만 받고 특정
-    문서/데이터셋의 내용에는 의존하지 않아 어떤 자막 세트에도 그대로 쓸 수 있다."""
+    문서/데이터셋의 내용에는 의존하지 않아 어떤 자막 세트에도 그대로 쓸 수 있다.
+    "원본 자막 파일은 그 언어 하나로만 되어 있다"고 가정하고, 목표 스크립트가
+    있고 그 외의 알파벳 문자는 하나도 없어야 통과시킨다."""
     if not s.strip():
-        return False
-    if has_foreign_contamination(s):
         return False
     if looks_like_prompt_echo(s):
         return False
-    if direction == "en2ko":
-        return has_hangul(s) and not has_significant_latin(s)
-    return has_significant_latin(s) and not has_hangul(s)
+    if not any(ch.isalpha() for ch in s):
+        # 알파벳 문자가 하나도 없는 조각(예: 고정 글자수 분할이 유닛 중간을 끊어
+        # "!" 하나만 남긴 경우) - 번역할 대상 자체가 없으므로 스크립트 검사를
+        # 적용할 수 없다. 이런 조각은 몇 번을 재시도해도 목표 스크립트가 나올 수
+        # 없어 항상 전체 재시도 단계(최대 10회 LLM 호출)를 낭비하고 결국 원래
+        # 텍스트를 그대로 쓰게 되므로, 애초에 통과시켜 낭비를 없앤다.
+        return True
+    target_script = DIRECTION_CONFIG[direction]["target_script"]
+    return has_target_script(s, target_script) and not has_off_target_letters(s, target_script)
 
 def call_llm_translate(prompt_body, direction, do_sample=False, temperature=None,
                         soft_force=False, hard_force=False):
@@ -303,30 +306,35 @@ def f1_score(pred, gold):
     prec, rec = num_same / len(p), num_same / len(g)
     return 2 * prec * rec / (prec + rec)
 
-def align_by_timestamp(src_units, ref_doc):
-    """src_units 각각에 대해 ref_doc.units 중 시간대가 가장 많이 겹치는 유닛을 찾는다."""
-    aligned = []
-    for u in src_units:
-        best_v, best_overlap = None, float("-inf")
-        for v in ref_doc.units:
-            overlap = min(u.meta["t_end"], v.meta["t_end"]) - max(u.meta["t_start"], v.meta["t_start"])
-            if overlap > best_overlap:
-                best_overlap, best_v = overlap, v
-        aligned.append(ref_doc.text[best_v.start:best_v.end] if best_v else "")
-    return aligned
+def compare_full_text(unit_texts, ref_doc):
+    """큐 단위로 정밀하게 대응시키지 않고, 번역 결과 전체와 참조 자막 전체를
+    통째로(단어 단위 F1) 비교한다. 번역은 청크 단위로 이뤄지므로(글자수 분할이
+    문맥 없이 잘라 번역을 망치는 것도 청크 단계에서 벌어지는 일) 큐 단위로
+    정밀하게 안 맞춰도 분할 방식에 따른 번역 품질 차이는 그대로 드러난다.
+    두 파일의 타임스탬프가 서로 몇 초씩 어긋나 있어도(실측 확인됨) 이 비교는
+    타임스탬프를 아예 안 쓰므로 영향받지 않는다."""
+    src_full = " ".join(t for t in unit_texts if t.strip())
+    ref_full = " ".join(ref_doc.text[u.start:u.end] for u in ref_doc.units)
+    return f1_score(src_full, ref_full)
 
-class SubDoc:
-    def __init__(self, name, text, units, fmt, log):
-        self.name, self.text, self.units, self.fmt, self.log = name, text, units, fmt, log
-
-def truncate(doc, n):
-    text = doc.text[:doc.units[n - 1].end]
-    return SubDoc(doc.name, text, doc.units[:n], doc.fmt, {"truncated": True})
+def check_timestamp_integrity(out_srt_path, src_doc):
+    """번역 품질과는 별개로, merge_to_units + write_srt가 원본(같은 파일에서 나온)
+    유닛들의 타임스탬프를 그대로 보존했는지 확인한다. 서로 다른 두 파일(예: 한국어
+    파일과 영어 파일) 사이의 타임스탬프 비교가 아니라, 출력 파일과 그 출력이
+    파생된 원본 소스 파일 사이의 비교라서 파일 간 드리프트 문제와 무관하다."""
+    out_doc = load_srt(str(out_srt_path))
+    if len(out_doc.units) != len(src_doc.units):
+        return False, [f"유닛 개수 불일치: 출력 {len(out_doc.units)} vs 원본 {len(src_doc.units)}"]
+    bad = [
+        i for i, (o, s) in enumerate(zip(out_doc.units, src_doc.units))
+        if abs(o.meta["t_start"] - s.meta["t_start"]) > 1e-6 or abs(o.meta["t_end"] - s.meta["t_end"]) > 1e-6
+    ]
+    return (len(bad) == 0), bad
 
 def run_translation(direction, src_doc, ref_doc):
     cfg = DIRECTION_CONFIG[direction]
     print("=" * 70)
-    print(f"🚀 [{cfg['label']}] {src_doc.name} 앞부분 {len(src_doc.units)}줄")
+    print(f"🚀 [{cfg['label']}] {src_doc.name} 전체 {len(src_doc.units)}줄")
     print("=" * 70)
 
     results = {}
@@ -345,12 +353,13 @@ def run_translation(direction, src_doc, ref_doc):
         write_srt(src_doc, unit_texts, str(out_path))
         print(f"  ✅ [{method_label}] -> {out_path}")
 
-        ref_texts = align_by_timestamp(src_doc.units, ref_doc)
-        f1s = [f1_score(pred, ref) for pred, ref in zip(unit_texts, ref_texts) if pred.strip() and ref.strip()]
-        avg_f1 = sum(f1s) / len(f1s) if f1s else 0.0
-        print(f"  📊 [{method_label}] 참조 자막 대비 평균 F1: {avg_f1:.4f} (n={len(f1s)})")
-        results[method_label] = dict(out_path=out_path, avg_f1=avg_f1, n=len(f1s),
-                                      unit_texts=unit_texts, ref_texts=ref_texts)
+        ts_ok, ts_bad = check_timestamp_integrity(out_path, src_doc)
+        print(f"  🕒 [{method_label}] 타임스탬프 보존(병합 무결성) 확인: {'OK' if ts_ok else f'문제 {len(ts_bad)}건 {ts_bad[:5]}'}")
+
+        f1 = compare_full_text(unit_texts, ref_doc)
+        print(f"  📊 [{method_label}] 참조 자막 전체 대비 텍스트 F1(통짜 비교): {f1:.4f}")
+        results[method_label] = dict(out_path=out_path, f1=f1, ts_ok=ts_ok, ts_bad=ts_bad,
+                                      unit_texts=unit_texts)
     return results
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -363,20 +372,18 @@ print("#" * 70)
 ko_full = load_srt(str(SRT_KOR_DIR / "트루먼쇼.srt"))
 en_full = load_srt(str(SRT_ENG_DIR / "The_Truman_Show_Eng.srt"))
 
-ko_sub = truncate(ko_full, SUB_UNITS)
-en_sub = truncate(en_full, SUB_UNITS)
-
 report_lines = []
 all_results = {}
-for direction, src_sub, ref_full in [("ko2en", ko_sub, en_full), ("en2ko", en_sub, ko_full)]:
-    all_results[direction] = run_translation(direction, src_sub, ref_full)
+for direction, src_full, ref_full in [("ko2en", ko_full, en_full), ("en2ko", en_full, ko_full)]:
+    all_results[direction] = run_translation(direction, src_full, ref_full)
 
 report_lines.append("트루먼쇼 자막 번역 파이프라인 검증 결과")
 report_lines.append("=" * 60)
 for direction, methods in all_results.items():
     label = DIRECTION_CONFIG[direction]["label"]
     for method_label, r in methods.items():
-        report_lines.append(f"[{label}] {method_label:9s} 평균 F1={r['avg_f1']:.4f}  (n={r['n']})  -> {r['out_path'].name}")
+        ts_str = "OK" if r["ts_ok"] else f"문제 {len(r['ts_bad'])}건"
+        report_lines.append(f"[{label}] {method_label:9s} 텍스트 F1={r['f1']:.4f}  타임스탬프보존={ts_str}  -> {r['out_path'].name}")
 report_path = RESULTS_DIR / "트루먼쇼_번역_비교결과.txt"
 report_path.write_text("\n".join(report_lines), encoding="utf-8")
 print(f"\n📄 비교 리포트 저장: {report_path}")
@@ -445,6 +452,8 @@ def strip_row_json(text):
     return "\n".join(kept)
 
 def build_compose_prompt(query, retrieved):
+    # 이미 top-k로 관련성 필터링된 조각만 들어오고 그 내용만 근거로 합성하므로
+    # 출처 라벨을 LLM에서 굳이 숨기지 않는다.
     body = "\n\n".join(f"[출처: {r['doc_name']}]\n{r['chunk'].text.strip()}" for r in retrieved if r["chunk"].text.strip())
     return (
         "다음은 여러 강의자료에서 검색된, 아래 질문과 관련된 내용입니다. "

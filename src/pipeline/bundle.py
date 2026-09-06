@@ -14,7 +14,9 @@ def chunk_bundle(docs, chunker_fn):
 
 def build_summary_prompt(query, retrieved):
     """retrieved: retrieve_top_k_bundle()의 반환값.
-    각 조각이 어느 문서에서 왔는지 라벨을 붙여, 근거 없는 내용을 지어내지 않도록 지시."""
+    각 조각이 어느 문서에서 왔는지 라벨을 붙여, 근거 없는 내용을 지어내지 않도록 지시.
+    (라벨을 LLM에서 숨기는 방안도 검토했으나, 이미 top-k로 관련성 필터링된 조각들만
+    들어오고 그 내용만 근거로 요약하므로 굳이 숨길 필요가 없다고 판단해 그대로 둠.)"""
     body_parts = []
     for i, item in enumerate(retrieved, 1):
         body_parts.append(f"[출처: {item['doc_name']}]\n{item['chunk'].text.strip()}")
