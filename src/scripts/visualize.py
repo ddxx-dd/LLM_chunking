@@ -1,5 +1,8 @@
 import sys
 from pathlib import Path
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 from sentence_transformers import SentenceTransformer
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -7,7 +10,24 @@ from config import SRT_KOR_DIR, SRT_ENG_DIR, DOCX_KOR_DIR, RESULTS_DIR
 from preprocessing.loader import load_file
 from chunking.fixed_chunker import fixed_chunking
 from chunking.semantic_chunker import split_sentences, calculate_similarities, calculate_threshold, split_at_boundaries
-from analysis.analyzer import plot_boundaries
+
+
+def plot_boundaries(similarities, threshold, save_path, title=""):
+    """문장 간 유사도 곡선 + 임계값 + 절단 지점을 그려서 저장."""
+    plt.figure(figsize=(14, 5))
+    plt.plot(similarities, linewidth=0.8, color="steelblue", label="similarity")
+    plt.axhline(y=threshold, color="red", linestyle="--", linewidth=1.5, label=f"threshold = {threshold:.3f}")
+    cut_x = [i for i, s in enumerate(similarities) if s < threshold]
+    cut_y = [similarities[i] for i in cut_x]
+    plt.scatter(cut_x, cut_y, color="red", s=25, zorder=3, label=f"cut points ({len(cut_x)})")
+    plt.xlabel("sentence index")
+    plt.ylabel("cosine similarity")
+    plt.title(title)
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=120)
+    plt.close()
 
 FILES = [
     SRT_KOR_DIR / "트루먼쇼.srt",
