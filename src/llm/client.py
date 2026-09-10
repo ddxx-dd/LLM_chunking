@@ -5,10 +5,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 def load_llm(model_id, device=None):
-    """토크나이저 + 모델 로드."""
+    """토크나이저 + 모델 로드. Gemma4는 통합 멀티모달 아키텍처라 전용 클래스가 필요."""
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16, device_map="auto")
+    if "gemma-4" in model_id.lower():
+        from transformers import Gemma4ForConditionalGeneration
+        model = Gemma4ForConditionalGeneration.from_pretrained(model_id, dtype=torch.bfloat16, device_map="auto")
+    else:
+        model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16, device_map="auto")
     return tokenizer, model, device
 
 

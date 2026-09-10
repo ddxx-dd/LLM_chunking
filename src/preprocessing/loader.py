@@ -134,6 +134,3 @@ def load_docx_bundle(paths):
     묶지 않고 리스트로 반환 -> 상위 파이프라인이 문서별로 청킹하게 한다."""
     paths = sorted(Path(p) for p in paths)
     return [load_docx(str(p)) for p in paths]
-
-def load_docx_dir(dirpath):
-    return load_docx_bundle(Path(dirpath).glob("*.docx"))

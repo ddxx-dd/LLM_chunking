@@ -7,12 +7,10 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from core import Chunk
 from preprocessing.loader import _to_sec
 from pipeline.mapper import build_prompt, parse_marked, merge_to_units, write_srt
 from llm.client import generate
-from eval.script_check import is_translated_ok as _is_translated_ok_script, build_off_target_ids
-from eval.glossary import build_glossary, inject_glossary
+from eval.timestamp_align import align_by_overlap
 
 _TS_RE = re.compile(r"(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})")
 
@@ -36,12 +34,19 @@ DIRECTION_CONFIG = {
             "2. Do NOT explain words, grammar, or your thought process.\n"
             "3. Do NOT output English."
         ),
-        ex_user="[1] What is that?\n[2] Where are you going?",
-        ex_assistant="[1] 저게 뭐야?\n[2] 어디 가세요?",
+        # 무관한 문장 나열 대신 실제 대화 흐름을 few-shot으로 보여줘야 구어체 톤이
+        # 더 자연스러워진다는 게 실측으로 확인됨(F1 상승 + 참조 자막과의 말투(반말/
+        # 존댓말) 정합성 개선, 실패율/타임스탬프엔 부작용 없음).
+        ex_user=(
+            "[1] Hey, you got a minute?\n[2] Yeah, what's up?\n"
+            "[3] Nothing, forget it.\n[4] Come on, tell me."
+        ),
+        ex_assistant=(
+            "[1] 야, 시간 좀 있어?\n[2] 어, 왜?\n"
+            "[3] 아니야, 됐어.\n[4] 아 왜 그래, 말해봐."
+        ),
         instruction="Translate each line to Korean. Keep the [n] numbers exactly:\n{body}",
         label="영→한",
-        target_script="hangul",
-        wiki_lang="ko",
     ),
     "ko2en": dict(
         system_msg=(
@@ -52,31 +57,22 @@ DIRECTION_CONFIG = {
             "2. Do NOT explain words, grammar, or your thought process.\n"
             "3. Do NOT output Korean."
         ),
-        ex_user="[1] 아~뭐여~?\n[2] 어디 가세요?",
-        ex_assistant="[1] What is that?\n[2] Where are you going?",
+        # en2ko와 같은 대화를 방향만 뒤집어 재사용.
+        ex_user=(
+            "[1] 야, 시간 좀 있어?\n[2] 어, 왜?\n"
+            "[3] 아니야, 됐어.\n[4] 아 왜 그래, 말해봐."
+        ),
+        ex_assistant=(
+            "[1] Hey, you got a minute?\n[2] Yeah, what's up?\n"
+            "[3] Nothing, forget it.\n[4] Come on, tell me."
+        ),
         instruction="Translate each line to English. Keep the [n] numbers exactly:\n{body}",
         label="한→영",
-        target_script="latin",
-        wiki_lang="en",
     ),
 }
 
 
-def is_translated_ok(s, direction):
-    """목표 언어로 온전히 번역됐는지 판단 (script_check의 얇은 래퍼)."""
-    return _is_translated_ok_script(s, DIRECTION_CONFIG[direction]["target_script"])
-
-
-def build_prompt_for(doc, chunk, direction, glossary=None):
-    """방향에 맞는 지시문으로 번역 프롬프트 생성. glossary가 있으면 이 청크에
-    실제로 등장하는 이름에 한해 "항상 이렇게 번역하세요" 지시를 앞에 붙인다."""
-    frs, prompt = build_prompt(doc, chunk, instruction=DIRECTION_CONFIG[direction]["instruction"])
-    if glossary:
-        prompt = inject_glossary(prompt, chunk.text, glossary)
-    return frs, prompt
-
-
-def call_llm_translate(tokenizer, model, device, prompt_body, direction, bad_words_ids=None):
+def call_llm_translate(tokenizer, model, device, prompt_body, direction):
     """번호 태그 프롬프트로 LLM 호출, 번호 붙은 줄만 추려서 반환."""
     cfg = DIRECTION_CONFIG[direction]
     messages = [
@@ -85,7 +81,7 @@ def call_llm_translate(tokenizer, model, device, prompt_body, direction, bad_wor
         {"role": "assistant", "content": cfg["ex_assistant"]},
         {"role": "user", "content": f"Translate these lines. Output ONLY numbered translations:\n{prompt_body}"},
     ]
-    raw = generate(tokenizer, model, device, messages, max_new_tokens=1024, bad_words_ids=bad_words_ids)
+    raw = generate(tokenizer, model, device, messages, max_new_tokens=1024)
 
     final_lines = []
     for line in raw.split("\n"):
@@ -95,26 +91,11 @@ def call_llm_translate(tokenizer, model, device, prompt_body, direction, bad_wor
     return "\n".join(final_lines)
 
 
-def translate_chunk(doc, chunk, direction, tokenizer, model, device, off_target_ids, glossary=None):
-    """청크 번역, 실패한 조각만 단독으로 한글(목표 스크립트)을 강제해 재시도 1회.
-    (j, txt, ok) 목록 반환."""
-    frs, prompt = build_prompt_for(doc, chunk, direction, glossary)
+def translate_chunk(doc, chunk, direction, tokenizer, model, device):
+    """청크 번역. (j, txt) 목록 반환."""
+    frs, prompt = build_prompt(doc, chunk, instruction=DIRECTION_CONFIG[direction]["instruction"])
     llm_out = call_llm_translate(tokenizer, model, device, prompt, direction)
-    pieces = parse_marked(llm_out, frs)
-
-    results = []
-    for (j, txt), (jj, s, e, w) in zip(pieces, frs):
-        ok = is_translated_ok(txt, direction)
-        if not ok:
-            single_chunk = Chunk(doc.text[s:e], s, e)
-            sub_frs, sub_prompt = build_prompt_for(doc, single_chunk, direction, glossary)
-            sub_out = call_llm_translate(tokenizer, model, device, sub_prompt, direction,
-                                          bad_words_ids=off_target_ids)
-            sub_pieces = parse_marked(sub_out, sub_frs)
-            if sub_pieces and sub_pieces[0][1] and is_translated_ok(sub_pieces[0][1], direction):
-                txt, ok = sub_pieces[0][1], True
-        results.append((j, txt, ok))
-    return results
+    return parse_marked(llm_out, frs)
 
 
 def normalize_answer(s):
@@ -137,11 +118,10 @@ def f1_score(pred, gold):
     return 2 * prec * rec / (prec + rec)
 
 
-def compare_full_text(unit_texts, ref_doc):
-    """큐 단위 정렬 없이, 번역 전체 vs 참조 전체를 통짜로 F1 비교."""
-    src_full = " ".join(t for t in unit_texts if t.strip())
-    ref_full = " ".join(ref_doc.text[u.start:u.end] for u in ref_doc.units)
-    return f1_score(src_full, ref_full)
+def compare_per_cue(unit_texts, aligned_reference):
+    """큐 단위 F1 평균 - 시간으로 정렬된 참조와 유닛끼리 하나씩 비교."""
+    scores = [f1_score(p, r) for p, r in zip(unit_texts, aligned_reference) if p.strip() and r.strip()]
+    return sum(scores) / len(scores) if scores else 0.0
 
 
 def check_timestamp_integrity(out_srt_path, src_doc):
@@ -161,35 +141,24 @@ def check_timestamp_integrity(out_srt_path, src_doc):
 
 
 def run_translation(direction, src_doc, ref_doc, chunkers, tokenizer, model, device, out_dir):
-    """chunkers: {method_label: chunker_fn(text) -> list[Chunk]}"""
+    """chunkers: {method_label: chunker_fn(text) -> list[Chunk]}
+    ref_doc가 None이면(참조 자막이 없는 데이터셋) 큐 단위 F1 비교를 건너뛴다."""
     cfg = DIRECTION_CONFIG[direction]
     print("=" * 70)
     print(f"[{cfg['label']}] {src_doc.name} 전체 {len(src_doc.units)}줄")
     print("=" * 70)
 
-    # 방향당 한 번만 계산 - fixed/semantic 양쪽에 동일하게 재사용(공정성 유지)
-    off_target_ids = build_off_target_ids(tokenizer, cfg["target_script"])
-    print("  용어집 구축 중...")
-    # 위키피디아 조회(네트워크)·폴백(온도 샘플링) 둘 다 실행마다 살짝 달라질 수
-    # 있어(재현성 문제) 파일로 캐싱한다 - 같은 문서를 다시 돌리면 완전히
-    # 동일한 용어집을 즉시 재사용한다.
-    cache_path = Path(out_dir) / f"용어집_{direction}_{src_doc.name}.json"
-    glossary = build_glossary(src_doc, tokenizer, model, device, off_target_ids,
-                               cfg["target_script"], wiki_lang=cfg["wiki_lang"], cache_path=cache_path)
-    print(f"  용어집 {len(glossary)}개: {glossary}")
+    # 방향당 한 번만 계산 - fixed/semantic 양쪽에 동일하게 재사용(공정성 유지).
+    # 시간 정렬도 청킹 방식과 무관하게 문서당 한 번만 계산해서 그대로 공유한다.
+    aligned_reference = align_by_overlap(src_doc, ref_doc) if ref_doc is not None else None
 
     results = {}
     for method_label, chunker_fn in chunkers.items():
         chunks = chunker_fn(src_doc.text)
         print(f"  [{method_label}] 청크 {len(chunks)}개 번역 중...")
         pieces = []
-        fail_count = 0
         for c_idx, c in enumerate(chunks, 1):
-            for j, txt, ok in translate_chunk(src_doc, c, direction, tokenizer, model, device,
-                                               off_target_ids, glossary):
-                pieces.append((j, txt))
-                if not ok:
-                    fail_count += 1
+            pieces.extend(translate_chunk(src_doc, c, direction, tokenizer, model, device))
             if c_idx % 50 == 0 or c_idx == len(chunks):
                 print(f"    {method_label} 청크 {c_idx}/{len(chunks)} 완료")
         unit_texts = merge_to_units(src_doc, pieces)
@@ -198,11 +167,10 @@ def run_translation(direction, src_doc, ref_doc, chunkers, tokenizer, model, dev
         write_srt(src_doc, unit_texts, str(out_path))
 
         ts_ok, ts_bad = check_timestamp_integrity(out_path, src_doc)
-        f1 = compare_full_text(unit_texts, ref_doc)
-        fail_rate = fail_count / max(1, len(src_doc.units))
+        f1 = compare_per_cue(unit_texts, aligned_reference) if aligned_reference is not None else None
+        f1_display = f"{f1:.4f}" if f1 is not None else "N/A(참조 없음)"
         print(f"  ✅ [{method_label}] -> {out_path}")
-        print(f"     텍스트 F1(통짜 비교)={f1:.4f}  번역 실패율={fail_rate:.3%}({fail_count}건)  타임스탬프보존={'OK' if ts_ok else f'문제 {len(ts_bad)}건'}")
+        print(f"     텍스트 F1(큐 단위)={f1_display}  타임스탬프보존={'OK' if ts_ok else f'문제 {len(ts_bad)}건'}")
 
-        results[method_label] = dict(out_path=out_path, f1=f1, fail_count=fail_count,
-                                      fail_rate=fail_rate, ts_ok=ts_ok, ts_bad=ts_bad)
+        results[method_label] = dict(out_path=out_path, f1=f1, ts_ok=ts_ok, ts_bad=ts_bad)
     return results

@@ -103,17 +103,12 @@ def split_at_boundaries(sents, similarities, threshold, text, max_chunk_chars=No
     return chunks
 
 def semantic_chunking(text, model, method="percentile", amount=10, max_sentence_length=200,
-                       max_chunk_chars=None, return_debug=False):
+                       max_chunk_chars=None):
     sents = split_sentences(text, max_sentence_length)
     if len(sents) < 2:
-        single = [Chunk(text, 0, len(text))] if text else []
-        return (single, [], 0.0, sents) if return_debug else single
+        return [Chunk(text, 0, len(text))] if text else []
 
     vectors = model.encode([s[0] for s in sents], show_progress_bar=False)
     similarities = calculate_similarities(vectors)
     threshold = calculate_threshold(similarities, method, amount)
-    chunks = split_at_boundaries(sents, similarities, threshold, text, max_chunk_chars=max_chunk_chars)
-
-    if return_debug:
-        return chunks, similarities, threshold, sents
-    return chunks
+    return split_at_boundaries(sents, similarities, threshold, text, max_chunk_chars=max_chunk_chars)

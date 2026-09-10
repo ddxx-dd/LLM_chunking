@@ -30,14 +30,14 @@ def plot_boundaries(similarities, threshold, save_path, title=""):
     plt.close()
 
 FILES = [
-    SRT_KOR_DIR / "트루먼쇼.srt",
+    SRT_KOR_DIR / "트루먼쇼_PerfectionHD.srt",
     SRT_ENG_DIR / "The_Truman_Show_Eng.srt",
     DOCX_KOR_DIR / "3-1.큐.docx",
 ]
 # matplotlib 기본 폰트(DejaVu Sans)가 한글 글리프를 지원하지 않아 그래프 제목이
 # 깨지는 걸 막기 위해, 그래프에 넣을 라벨만 영문으로 매핑한다(저장 파일명은 원래대로).
 TITLE_LABELS = {
-    "트루먼쇼.srt": "Truman Show (KOR subtitles)",
+    "트루먼쇼_PerfectionHD.srt": "Truman Show (KOR subtitles)",
     "The_Truman_Show_Eng.srt": "Truman Show (ENG subtitles)",
     "3-1.큐.docx": "Queue Lecture Notes (3-1)",
 }

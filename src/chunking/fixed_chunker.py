@@ -22,7 +22,3 @@ def fixed_chunking(text, chunk_size=256, overlap=0):
         start += step
 
     return chunks
-
-def fixed_chunking_k(text, k):
-    size = max(1, len(text) // max(1, k))
-    return fixed_chunking(text, chunk_size=size, overlap=0)

@@ -28,14 +28,3 @@ def retrieve_top_k_bundle(query, bundle_chunks, model, k=5):
         item["score"] = float(sims[i])
         out.append(item)
     return out
-
-def print_retrieved(query, retrieved, preview=90):
-    print("질문:", query)
-    print("=" * 62)
-    for rank, item in enumerate(retrieved, 1):
-        t = item["chunk"].text.strip().replace("\n", " / ")
-        if len(t) > preview:
-            t = t[:preview] + "..."
-        print("[{}위] 청크{} | 유사도 {:.3f}".format(rank, item["index"], item["score"]))
-        print("  ", t)
-        print()
