@@ -94,7 +94,7 @@ def run_method(label, chunker_fn):
 fixed_avg = run_method("FIXED (글자수 고정분할)", lambda text: fixed_chunking(text, chunk_size=FIXED_CHUNK_SIZE))
 semantic_avg = run_method(
     "SEMANTIC (BGE-M3 의미기반 분할)",
-    lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15, max_sentence_length=200, max_chunk_chars=2000),
+    lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15, max_sentence_length=200, max_chunk_tokens=500, min_chunk_tokens=128),
 )
 
 print("\n" + "=" * 70)

@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from preprocessing.loader import _to_sec
 from pipeline.mapper import build_prompt, parse_marked, merge_to_units, write_srt
-from llm.client import generate
+from llm.client import generate, generate_batch
 from eval.timestamp_align import align_by_overlap
 
 _TS_RE = re.compile(r"(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})")
@@ -36,15 +36,33 @@ DIRECTION_CONFIG = {
         ),
         # 무관한 문장 나열 대신 실제 대화 흐름을 few-shot으로 보여줘야 구어체 톤이
         # 더 자연스러워진다는 게 실측으로 확인됨(F1 상승 + 참조 자막과의 말투(반말/
-        # 존댓말) 정합성 개선, 실패율/타임스탬프엔 부작용 없음).
-        ex_user=(
-            "[1] Hey, you got a minute?\n[2] Yeah, what's up?\n"
-            "[3] Nothing, forget it.\n[4] Come on, tell me."
-        ),
-        ex_assistant=(
-            "[1] 야, 시간 좀 있어?\n[2] 어, 왜?\n"
-            "[3] 아니야, 됐어.\n[4] 아 왜 그래, 말해봐."
-        ),
+        # 존댓말) 정합성 개선, 실패율/타임스탬프엔 부작용 없음). 예시 3개는 각각
+        # 다른 톤(반말/관용구 의역/격앙된 감정)을 보여주는 각자 완결된 대화 - 예전에
+        # 실패했던 "동적 선택"(교차 영화, 연결 안 된 단일 문장)과 달리 고정이고 각
+        # 예시 내부가 자연스러운 대화 흐름이라 그 실패 원인을 피해간다. 관용구 예시는
+        # 참조 자막이 직역이 아니라 의역인 경우가 많다는 걸 실측으로 확인한 뒤 추가함
+        # ("mothership"->"대박이죠" 같은 실제 사례) - 모델이 참조 스타일에 더 가까운
+        # 자연스러운 의역을 하도록 유도하려는 목적.
+        examples=[
+            (
+                "[1] Hey, you got a minute?\n[2] Yeah, what's up?\n"
+                "[3] Nothing, forget it.\n[4] Come on, tell me.",
+                "[1] 야, 시간 좀 있어?\n[2] 어, 왜?\n"
+                "[3] 아니야, 됐어.\n[4] 아 왜 그래, 말해봐.",
+            ),
+            (
+                "[1] Break a leg out there!\n[2] Thanks, I'll try not to trip.\n"
+                "[3] You've got this in the bag.\n[4] I hope you're right.",
+                "[1] 나가서 잘하고 와!\n[2] 고마워, 넘어지지 않게 조심할게.\n"
+                "[3] 이건 완전 식은 죽 먹기야.\n[4] 그러면 좋겠다.",
+            ),
+            (
+                "[1] I can't believe you did this to me.\n[2] I'm sorry, I never meant to hurt you.\n"
+                "[3] It's too late for sorry.\n[4] Please, just give me a chance to explain.",
+                "[1] 네가 나한테 이럴 줄은 몰랐어.\n[2] 미안해, 상처 주려던 건 아니었어.\n"
+                "[3] 미안하다는 말로는 이제 늦었어.\n[4] 제발, 설명할 기회만 줘.",
+            ),
+        ],
         instruction="Translate each line to Korean. Keep the [n] numbers exactly:\n{body}",
         label="영→한",
     ),
@@ -57,38 +75,52 @@ DIRECTION_CONFIG = {
             "2. Do NOT explain words, grammar, or your thought process.\n"
             "3. Do NOT output Korean."
         ),
-        # en2ko와 같은 대화를 방향만 뒤집어 재사용.
-        ex_user=(
-            "[1] 야, 시간 좀 있어?\n[2] 어, 왜?\n"
-            "[3] 아니야, 됐어.\n[4] 아 왜 그래, 말해봐."
-        ),
-        ex_assistant=(
-            "[1] Hey, you got a minute?\n[2] Yeah, what's up?\n"
-            "[3] Nothing, forget it.\n[4] Come on, tell me."
-        ),
+        # en2ko와 같은 대화 3개를 방향만 뒤집어 재사용.
+        examples=[
+            (
+                "[1] 야, 시간 좀 있어?\n[2] 어, 왜?\n"
+                "[3] 아니야, 됐어.\n[4] 아 왜 그래, 말해봐.",
+                "[1] Hey, you got a minute?\n[2] Yeah, what's up?\n"
+                "[3] Nothing, forget it.\n[4] Come on, tell me.",
+            ),
+            (
+                "[1] 나가서 잘하고 와!\n[2] 고마워, 넘어지지 않게 조심할게.\n"
+                "[3] 이건 완전 식은 죽 먹기야.\n[4] 그러면 좋겠다.",
+                "[1] Break a leg out there!\n[2] Thanks, I'll try not to trip.\n"
+                "[3] You've got this in the bag.\n[4] I hope you're right.",
+            ),
+            (
+                "[1] 네가 나한테 이럴 줄은 몰랐어.\n[2] 미안해, 상처 주려던 건 아니었어.\n"
+                "[3] 미안하다는 말로는 이제 늦었어.\n[4] 제발, 설명할 기회만 줘.",
+                "[1] I can't believe you did this to me.\n[2] I'm sorry, I never meant to hurt you.\n"
+                "[3] It's too late for sorry.\n[4] Please, just give me a chance to explain.",
+            ),
+        ],
         instruction="Translate each line to English. Keep the [n] numbers exactly:\n{body}",
         label="한→영",
     ),
 }
 
 
+def _build_messages(prompt_body, direction):
+    cfg = DIRECTION_CONFIG[direction]
+    messages = [{"role": "system", "content": cfg["system_msg"]}]
+    for ex_user, ex_assistant in cfg["examples"]:
+        messages.append({"role": "user", "content": ex_user})
+        messages.append({"role": "assistant", "content": ex_assistant})
+    messages.append({"role": "user", "content": f"Translate these lines. Output ONLY numbered translations:\n{prompt_body}"})
+    return messages
+
+
+def _keep_marked_lines(raw):
+    return "\n".join(line.strip() for line in raw.split("\n") if re.match(r"^\[\d+\]", line.strip()))
+
+
 def call_llm_translate(tokenizer, model, device, prompt_body, direction):
     """번호 태그 프롬프트로 LLM 호출, 번호 붙은 줄만 추려서 반환."""
-    cfg = DIRECTION_CONFIG[direction]
-    messages = [
-        {"role": "system", "content": cfg["system_msg"]},
-        {"role": "user", "content": cfg["ex_user"]},
-        {"role": "assistant", "content": cfg["ex_assistant"]},
-        {"role": "user", "content": f"Translate these lines. Output ONLY numbered translations:\n{prompt_body}"},
-    ]
+    messages = _build_messages(prompt_body, direction)
     raw = generate(tokenizer, model, device, messages, max_new_tokens=1024)
-
-    final_lines = []
-    for line in raw.split("\n"):
-        line = line.strip()
-        if re.match(r"^\[\d+\]", line):
-            final_lines.append(line)
-    return "\n".join(final_lines)
+    return _keep_marked_lines(raw)
 
 
 def translate_chunk(doc, chunk, direction, tokenizer, model, device):
@@ -96,6 +128,23 @@ def translate_chunk(doc, chunk, direction, tokenizer, model, device):
     frs, prompt = build_prompt(doc, chunk, instruction=DIRECTION_CONFIG[direction]["instruction"])
     llm_out = call_llm_translate(tokenizer, model, device, prompt, direction)
     return parse_marked(llm_out, frs)
+
+
+def translate_chunks_batch(doc, chunks, direction, tokenizer, model, device, batch_size=8, label=""):
+    """여러 청크를 batch_size씩 묶어 한 번의 generate_batch() 호출로 번역.
+    GPU를 순차 처리보다 더 채워서 처리량을 올린다 - 번역 결과(마킹/파싱 방식)는
+    translate_chunk()와 동일, 호출 방식만 배치로 바뀐 것."""
+    pieces = []
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i:i + batch_size]
+        built = [build_prompt(doc, c, instruction=DIRECTION_CONFIG[direction]["instruction"]) for c in batch]
+        messages_list = [_build_messages(prompt, direction) for frs, prompt in built]
+        raws = generate_batch(tokenizer, model, device, messages_list, max_new_tokens=1024)
+        for (frs, _), raw in zip(built, raws):
+            pieces.extend(parse_marked(_keep_marked_lines(raw), frs))
+        done = min(i + batch_size, len(chunks))
+        print(f"    {label} 청크 {done}/{len(chunks)} 완료", flush=True)
+    return pieces
 
 
 def normalize_answer(s):
@@ -155,12 +204,9 @@ def run_translation(direction, src_doc, ref_doc, chunkers, tokenizer, model, dev
     results = {}
     for method_label, chunker_fn in chunkers.items():
         chunks = chunker_fn(src_doc.text)
-        print(f"  [{method_label}] 청크 {len(chunks)}개 번역 중...")
-        pieces = []
-        for c_idx, c in enumerate(chunks, 1):
-            pieces.extend(translate_chunk(src_doc, c, direction, tokenizer, model, device))
-            if c_idx % 50 == 0 or c_idx == len(chunks):
-                print(f"    {method_label} 청크 {c_idx}/{len(chunks)} 완료")
+        print(f"  [{method_label}] 청크 {len(chunks)}개 번역 중...", flush=True)
+        pieces = translate_chunks_batch(src_doc, chunks, direction, tokenizer, model, device,
+                                         batch_size=8, label=method_label)
         unit_texts = merge_to_units(src_doc, pieces)
 
         out_path = Path(out_dir) / f"{src_doc.name.rsplit('.', 1)[0]}_{direction}_{method_label}.srt"

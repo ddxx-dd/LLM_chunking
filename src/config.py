@@ -11,4 +11,4 @@ DOCX_ENG_DIR = DATA_DIR / "docx_eng"
 RESULTS_DIR = ROOT / "results"
 
 EMBED_MODEL = "BAAI/bge-m3"
-TOKENIZER = "google/gemma-4-E4B-it"
+TOKENIZER = "google/gemma-4-12B-it-qat-q4_0-unquantized"

@@ -15,12 +15,15 @@ from eval.subtitle_translate import run_translation
 
 RESULTS_DIR.mkdir(exist_ok=True)
 
-# 타임스탬프 정합성 실측 검증된 EN/KO 세트 (오정렬률 5~8% 수준, data/README 격
-# 역할 - 새 영화 추가 시 여기만 늘리면 됨)
+# 타임스탬프 정합성 실측 검증된 EN/KO 세트 (OPUS OpenSubtitles 원본에서 직접 검증 후 선정,
+# 저품질/오정렬 후보 다수 제외 - 오정렬률 4~9% 수준, data/README 격 역할 - 새 영화 추가 시
+# 여기만 늘리면 됨)
 DATASETS = {
-    "TrumanShow": ("The_Truman_Show_Eng.srt", "트루먼쇼_PerfectionHD.srt"),
-    "AboutTime": ("About_Time_Eng.srt", "어바웃타임.srt"),
-    "Interstellar": ("Interstellar_Eng.srt", "인터스텔라.srt"),
+    "Noah": ("Noah_Eng.srt", "노아.srt"),
+    "Deadpool": ("Deadpool_Eng.srt", "데드풀.srt"),
+    "InsidiousChapter2": ("Insidious_Chapter2_Eng.srt", "인시디어스2.srt"),
+    "DoctorStrange": ("Doctor_Strange_Eng.srt", "닥터스트레인지.srt"),
+    "CaptainAmericaCivilWar": ("Captain_America_Civil_War_Eng.srt", "캡틴아메리카시빌워.srt"),
 }
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -31,7 +34,7 @@ print("모델 준비 완료")
 
 CHUNKERS = {
     "fixed": lambda text: fixed_chunking(text, chunk_size=120),
-    "semantic": lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15),
+    "semantic": lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15, min_chunk_tokens=128),
 }
 
 report_lines = ["자막 번역 비교 결과 (큐 단위 F1)", "=" * 60]

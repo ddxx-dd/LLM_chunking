@@ -36,7 +36,7 @@ print("모델 준비 완료")
 
 CHUNKERS = {
     "fixed": lambda text: fixed_chunking(text, chunk_size=FIXED_CHUNK_SIZE),
-    "semantic": lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15, max_chunk_chars=2000),
+    "semantic": lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15, max_chunk_tokens=500, min_chunk_tokens=128),
 }
 
 for label, chunker_fn in CHUNKERS.items():
