@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from preprocessing.loader import _to_sec
 from pipeline.mapper import build_prompt, parse_marked, merge_to_units, write_srt
-from llm.client import generate, generate_batch
+from llm.client import generate_batch
 from eval.timestamp_align import align_by_overlap
 
 _TS_RE = re.compile(r"(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})")
@@ -116,24 +116,9 @@ def _keep_marked_lines(raw):
     return "\n".join(line.strip() for line in raw.split("\n") if re.match(r"^\[\d+\]", line.strip()))
 
 
-def call_llm_translate(tokenizer, model, device, prompt_body, direction):
-    """번호 태그 프롬프트로 LLM 호출, 번호 붙은 줄만 추려서 반환."""
-    messages = _build_messages(prompt_body, direction)
-    raw = generate(tokenizer, model, device, messages, max_new_tokens=1024)
-    return _keep_marked_lines(raw)
-
-
-def translate_chunk(doc, chunk, direction, tokenizer, model, device):
-    """청크 번역. (j, txt) 목록 반환."""
-    frs, prompt = build_prompt(doc, chunk, instruction=DIRECTION_CONFIG[direction]["instruction"])
-    llm_out = call_llm_translate(tokenizer, model, device, prompt, direction)
-    return parse_marked(llm_out, frs)
-
-
 def translate_chunks_batch(doc, chunks, direction, tokenizer, model, device, batch_size=8, label=""):
     """여러 청크를 batch_size씩 묶어 한 번의 generate_batch() 호출로 번역.
-    GPU를 순차 처리보다 더 채워서 처리량을 올린다 - 번역 결과(마킹/파싱 방식)는
-    translate_chunk()와 동일, 호출 방식만 배치로 바뀐 것."""
+    GPU를 순차 처리보다 더 채워서 처리량을 올린다."""
     pieces = []
     for i in range(0, len(chunks), batch_size):
         batch = chunks[i:i + batch_size]

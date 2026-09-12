@@ -33,8 +33,9 @@ tokenizer, llm_model, device = load_llm(TOKENIZER, device)
 print("모델 준비 완료")
 
 CHUNKERS = {
-    "fixed": lambda text: fixed_chunking(text, chunk_size=120),
-    "semantic": lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15, min_chunk_tokens=128),
+    "fixed": lambda text: fixed_chunking(text, chunk_size=500),
+    "semantic": lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15,
+                                                min_chunk_tokens=128, max_chunk_tokens=1024),
 }
 
 report_lines = ["자막 번역 비교 결과 (큐 단위 F1)", "=" * 60]
