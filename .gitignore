@@ -14,3 +14,7 @@ data/longbench/*
 venv/
 results/*.json
 .venv311/
+*.log
+.env
+.pytest_cache/
+*.egg-info/
