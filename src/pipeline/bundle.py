@@ -7,5 +7,5 @@ def chunk_bundle(docs, chunker_fn):
     for doc_idx, doc in enumerate(docs):
         chunks = chunker_fn(doc.text)
         for c in chunks:
-            out.append({"doc_idx": doc_idx, "doc_name": docs[doc_idx].name, "chunk": c})
+            out.append({"doc_idx": doc_idx, "doc_name": doc.name, "chunk": c})
     return out

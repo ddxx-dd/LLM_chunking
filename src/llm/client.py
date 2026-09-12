@@ -33,23 +33,11 @@ def _clean(raw):
 
 def generate(tokenizer, model, device, messages, max_new_tokens=512, do_sample=False,
              temperature=None, repetition_penalty=1.1, **extra_gen_kwargs):
-    """채팅 메시지로 생성, <think> 블록 제거 후 텍스트만 반환."""
-    text_input = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
-    )
-    model_inputs = tokenizer([text_input], return_tensors="pt").to(device)
-
-    gen_kwargs = dict(max_new_tokens=max_new_tokens, do_sample=do_sample, repetition_penalty=repetition_penalty)
-    if do_sample:
-        gen_kwargs.update(temperature=temperature or 0.8, top_p=0.95)
-    gen_kwargs.update(extra_gen_kwargs)
-
-    with torch.no_grad():
-        generated_ids = model.generate(**model_inputs, **gen_kwargs)
-        generated_ids = [out_ids[len(in_ids):] for in_ids, out_ids in zip(model_inputs.input_ids, generated_ids)]
-        raw = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-
-    return _clean(raw)
+    """채팅 메시지 1개로 생성 - generate_batch()에 크기 1짜리 배치로 위임(중복 제거).
+    배치=1이면 왼쪽 패딩이 실질적으로 패딩 없음과 동일해서 동작 차이 없음."""
+    return generate_batch(tokenizer, model, device, [messages], max_new_tokens=max_new_tokens,
+                           do_sample=do_sample, temperature=temperature,
+                           repetition_penalty=repetition_penalty, **extra_gen_kwargs)[0]
 
 
 def generate_batch(tokenizer, model, device, list_of_messages, max_new_tokens=512,

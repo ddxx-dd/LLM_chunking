@@ -1,10 +1,9 @@
 """자막 파이프라인: 청킹 -> 청크 단위 번역 -> 원래 유닛(번호/타임스탬프)에
 재병합 -> SRT 저장 -> 참조 자막과 텍스트 비교."""
 import re
-import string
 import sys
-from collections import Counter
 from pathlib import Path
+import sacrebleu
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from preprocessing.loader import _to_sec
@@ -132,30 +131,16 @@ def translate_chunks_batch(doc, chunks, direction, tokenizer, model, device, bat
     return pieces
 
 
-def normalize_answer(s):
-    """소문자화 + 구두점 제거 (SQuAD 스타일 F1 전처리)."""
-    s = s.lower()
-    s = "".join(ch for ch in s if ch not in string.punctuation)
-    return " ".join(s.split())
-
-
-def f1_score(pred, gold):
-    """단어 단위 F1."""
-    p, g = normalize_answer(pred).split(), normalize_answer(gold).split()
-    if not p or not g:
-        return float(p == g)
-    common = Counter(p) & Counter(g)
-    num_same = sum(common.values())
-    if num_same == 0:
-        return 0.0
-    prec, rec = num_same / len(p), num_same / len(g)
-    return 2 * prec * rec / (prec + rec)
-
-
-def compare_per_cue(unit_texts, aligned_reference):
-    """큐 단위 F1 평균 - 시간으로 정렬된 참조와 유닛끼리 하나씩 비교."""
-    scores = [f1_score(p, r) for p, r in zip(unit_texts, aligned_reference) if p.strip() and r.strip()]
-    return sum(scores) / len(scores) if scores else 0.0
+def score_chunks(unit_texts, aligned_reference):
+    """큐 단위 chrF/BLEU 평균 - 시간으로 정렬된 참조와 유닛끼리 하나씩 비교
+    (word-F1은 한국어에 너무 가혹해서 sacrebleu의 chrF+BLEU로 교체됨)."""
+    chrfs, bleus = [], []
+    for p, r in zip(unit_texts, aligned_reference):
+        if p.strip() and r.strip():
+            chrfs.append(sacrebleu.sentence_chrf(p, [r]).score)
+            bleus.append(sacrebleu.sentence_bleu(p, [r]).score)
+    n = len(chrfs)
+    return (sum(chrfs) / n if n else 0.0), (sum(bleus) / n if n else 0.0), n
 
 
 def check_timestamp_integrity(out_srt_path, src_doc):
@@ -176,7 +161,7 @@ def check_timestamp_integrity(out_srt_path, src_doc):
 
 def run_translation(direction, src_doc, ref_doc, chunkers, tokenizer, model, device, out_dir):
     """chunkers: {method_label: chunker_fn(text) -> list[Chunk]}
-    ref_doc가 None이면(참조 자막이 없는 데이터셋) 큐 단위 F1 비교를 건너뛴다."""
+    ref_doc가 None이면(참조 자막이 없는 데이터셋) chrF/BLEU 비교를 건너뛴다."""
     cfg = DIRECTION_CONFIG[direction]
     print("=" * 70)
     print(f"[{cfg['label']}] {src_doc.name} 전체 {len(src_doc.units)}줄")
@@ -198,10 +183,14 @@ def run_translation(direction, src_doc, ref_doc, chunkers, tokenizer, model, dev
         write_srt(src_doc, unit_texts, str(out_path))
 
         ts_ok, ts_bad = check_timestamp_integrity(out_path, src_doc)
-        f1 = compare_per_cue(unit_texts, aligned_reference) if aligned_reference is not None else None
-        f1_display = f"{f1:.4f}" if f1 is not None else "N/A(참조 없음)"
+        if aligned_reference is not None:
+            chrf, bleu, n = score_chunks(unit_texts, aligned_reference)
+            score_display = f"chrF={chrf:.2f} BLEU={bleu:.2f} (n={n})"
+        else:
+            chrf = bleu = n = None
+            score_display = "N/A(참조 없음)"
         print(f"  ✅ [{method_label}] -> {out_path}")
-        print(f"     텍스트 F1(큐 단위)={f1_display}  타임스탬프보존={'OK' if ts_ok else f'문제 {len(ts_bad)}건'}")
+        print(f"     텍스트 {score_display}  타임스탬프보존={'OK' if ts_ok else f'문제 {len(ts_bad)}건'}")
 
-        results[method_label] = dict(out_path=out_path, f1=f1, ts_ok=ts_ok, ts_bad=ts_bad)
+        results[method_label] = dict(out_path=out_path, chrf=chrf, bleu=bleu, n=n, ts_ok=ts_ok, ts_bad=ts_bad)
     return results

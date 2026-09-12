@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from sentence_transformers import SentenceTransformer
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config import SRT_KOR_DIR, SRT_ENG_DIR, DOCX_KOR_DIR, RESULTS_DIR
+from config import SRT_KOR_DIR, SRT_ENG_DIR, DOCX_KOR_DIR, RESULTS_DIR, SUBTITLE_DATASETS
 from preprocessing.loader import load_file
 from chunking.fixed_chunker import fixed_chunking
 from chunking.semantic_chunker import split_sentences, calculate_similarities, calculate_threshold, split_at_boundaries
@@ -29,16 +29,17 @@ def plot_boundaries(similarities, threshold, save_path, title=""):
     plt.savefig(save_path, dpi=120)
     plt.close()
 
+_noah_en, _noah_ko = SUBTITLE_DATASETS["Noah"]
 FILES = [
-    SRT_KOR_DIR / "트루먼쇼_PerfectionHD.srt",
-    SRT_ENG_DIR / "The_Truman_Show_Eng.srt",
+    SRT_KOR_DIR / _noah_ko,
+    SRT_ENG_DIR / _noah_en,
     DOCX_KOR_DIR / "3-1.큐.docx",
 ]
 # matplotlib 기본 폰트(DejaVu Sans)가 한글 글리프를 지원하지 않아 그래프 제목이
 # 깨지는 걸 막기 위해, 그래프에 넣을 라벨만 영문으로 매핑한다(저장 파일명은 원래대로).
 TITLE_LABELS = {
-    "트루먼쇼_PerfectionHD.srt": "Truman Show (KOR subtitles)",
-    "The_Truman_Show_Eng.srt": "Truman Show (ENG subtitles)",
+    _noah_ko: "Noah (KOR subtitles)",
+    _noah_en: "Noah (ENG subtitles)",
     "3-1.큐.docx": "Queue Lecture Notes (3-1)",
 }
 CHUNK_SIZE = 512

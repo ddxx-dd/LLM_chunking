@@ -42,7 +42,6 @@ def write_srt(doc, unit_texts, out_path):
     for i, (u, txt) in enumerate(zip(doc.units, unit_texts), 1):
         t_start = _fmt(u.meta["t_start"])
         t_end = _fmt(u.meta["t_end"])
-        display_text = txt
-        blocks.append("{}\n{} --> {}\n{}\n".format(i, t_start, t_end, display_text))
+        blocks.append("{}\n{} --> {}\n{}\n".format(i, t_start, t_end, txt))
     Path(out_path).write_text("\n".join(blocks), encoding="utf-8")
     return out_path

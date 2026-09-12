@@ -3,51 +3,27 @@
 import sys
 import time
 import pickle
-import sacrebleu
+from pathlib import Path
 
-sys.path.append("/root/jupyter/LLM_chunking/src")
-from config import SRT_ENG_DIR, SRT_KOR_DIR, EMBED_MODEL, TOKENIZER
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from config import SRT_ENG_DIR, SRT_KOR_DIR, RESULTS_DIR, EMBED_MODEL, TOKENIZER, SUBTITLE_DATASETS
 from preprocessing.loader import load_srt
-from chunking.fixed_chunker import fixed_chunking
-from chunking.semantic_chunker import semantic_chunking
+from chunking.defaults import default_subtitle_chunkers
 from llm.client import load_llm
 from eval.timestamp_align import align_by_overlap
-from eval.subtitle_translate import translate_chunks_batch
+from eval.subtitle_translate import translate_chunks_batch, score_chunks
 from pipeline.mapper import merge_to_units
 from sentence_transformers import SentenceTransformer
-
-DATASETS = {
-    "Noah": ("Noah_Eng.srt", "노아.srt"),
-    "Deadpool": ("Deadpool_Eng.srt", "데드풀.srt"),
-    "InsidiousChapter2": ("Insidious_Chapter2_Eng.srt", "인시디어스2.srt"),
-    "DoctorStrange": ("Doctor_Strange_Eng.srt", "닥터스트레인지.srt"),
-    "CaptainAmericaCivilWar": ("Captain_America_Civil_War_Eng.srt", "캡틴아메리카시빌워.srt"),
-}
 
 print("모델 로드 중...", flush=True)
 embed_model = SentenceTransformer(EMBED_MODEL, device="cuda")
 tokenizer, model, device = load_llm(TOKENIZER)
 print("모델 준비 완료\n", flush=True)
 
-CHUNKERS = {
-    "fixed": lambda text: fixed_chunking(text, chunk_size=500),
-    "semantic": lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15,
-                                                min_chunk_tokens=128, max_chunk_tokens=1024),
-}
-
-
-def score(unit_texts, aligned_ref):
-    chrfs, bleus = [], []
-    for p, r in zip(unit_texts, aligned_ref):
-        if p.strip() and r.strip():
-            chrfs.append(sacrebleu.sentence_chrf(p, [r]).score)
-            bleus.append(sacrebleu.sentence_bleu(p, [r]).score)
-    n = len(chrfs)
-    return (sum(chrfs) / n if n else 0.0), (sum(bleus) / n if n else 0.0), n
-
+CHUNKERS = default_subtitle_chunkers(embed_model)
 
 all_results = {}
-for movie, (en_name, ko_name) in DATASETS.items():
+for movie, (en_name, ko_name) in SUBTITLE_DATASETS.items():
     en_full = load_srt(str(SRT_ENG_DIR / en_name))
     ko_full = load_srt(str(SRT_KOR_DIR / ko_name))
     aligned_ref = {"en2ko": align_by_overlap(en_full, ko_full), "ko2en": align_by_overlap(ko_full, en_full)}
@@ -60,12 +36,12 @@ for movie, (en_name, ko_name) in DATASETS.items():
             pieces = translate_chunks_batch(src_doc, chunks, direction, tokenizer, model, device,
                                              batch_size=8, label=f"{movie}/{method_label}/{direction}")
             unit_texts = merge_to_units(src_doc, pieces)
-            chrf, bleu, n = score(unit_texts, aligned_ref[direction])
+            chrf, bleu, n = score_chunks(unit_texts, aligned_ref[direction])
             elapsed = time.time() - t0
             print(f"[{movie}/{method_label}/{direction}] chrF={chrf:.2f} BLEU={bleu:.2f} (n={n}, {elapsed:.0f}초)", flush=True)
             all_results[(movie, method_label, direction)] = dict(chrf=chrf, bleu=bleu, n=n, n_chunks=len(chunks))
 
-with open("/tmp/claude-0/-root-jupyter-LLM-chunking/9a24a7b2-903a-4e97-81f3-4032fdcdabeb/scratchpad/full_5movies_results.pkl", "wb") as f:
+with open(RESULTS_DIR / "full_5movies_results.pkl", "wb") as f:
     pickle.dump(all_results, f)
 
 print("\n" + "=" * 90)

@@ -112,7 +112,7 @@ def split_at_boundaries(sents, similarities, threshold, text, tokenizer=None,
         chunks.append(Chunk(last_piece, start, len(text)))
     return chunks
 
-def semantic_chunking(text, model, method="percentile", amount=10, max_sentence_length=200,
+def semantic_chunking(text, model, method="percentile", amount=15, max_sentence_length=200,
                        max_chunk_tokens=None, min_chunk_tokens=None):
     sents = split_sentences(text, max_sentence_length)
     if len(sents) < 2:
