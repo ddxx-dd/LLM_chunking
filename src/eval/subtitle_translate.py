@@ -68,7 +68,7 @@ DIRECTION_CONFIG = {
                 "[3] 미안하다는 말로는 이제 늦었어.\n[4] 제발, 설명할 기회만 줘.",
             ),
         ],
-        instruction="Translate each line to Korean. Keep the [n] numbers exactly:\n{body}",
+        target_lang="Korean",
         label="영→한",
     ),
     "ko2en": dict(
@@ -101,7 +101,7 @@ DIRECTION_CONFIG = {
                 "[3] It's too late for sorry.\n[4] Please, just give me a chance to explain.",
             ),
         ],
-        instruction="Translate each line to English. Keep the [n] numbers exactly:\n{body}",
+        target_lang="English",
         label="한→영",
     ),
 }
@@ -113,7 +113,10 @@ def _build_messages(prompt_body, direction):
     for ex_user, ex_assistant in cfg["examples"]:
         messages.append({"role": "user", "content": ex_user})
         messages.append({"role": "assistant", "content": ex_assistant})
-    messages.append({"role": "user", "content": f"Translate these lines. Output ONLY numbered translations:\n{prompt_body}"})
+    messages.append({"role": "user", "content": (
+        f"Translate these lines to {cfg['target_lang']}, keeping the [n] numbers exactly as given. "
+        f"Output ONLY the numbered translations:\n{prompt_body}"
+    )})
     return messages
 
 
@@ -127,7 +130,7 @@ def translate_chunks_batch(doc, chunks, direction, tokenizer, model, device, bat
     pieces = []
     for i in range(0, len(chunks), batch_size):
         batch = chunks[i:i + batch_size]
-        built = [build_prompt(doc, c, instruction=DIRECTION_CONFIG[direction]["instruction"]) for c in batch]
+        built = [build_prompt(doc, c, instruction="{body}") for c in batch]
         messages_list = [_build_messages(prompt, direction) for frs, prompt in built]
         raws = generate_batch(tokenizer, model, device, messages_list, max_new_tokens=1024)
         for (frs, _), raw in zip(built, raws):

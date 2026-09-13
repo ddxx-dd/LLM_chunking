@@ -1,5 +1,4 @@
 """LLM 모델 로드 + 호출 공용 함수."""
-import re
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -21,14 +20,6 @@ def load_llm(model_id, device=None):
     else:
         model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16, device_map="auto")
     return tokenizer, model, device
-
-
-def _clean(raw):
-    """<think> 블록 제거 (thinking 모델이 실수로 새어나온 경우 대비)."""
-    cleaned = re.sub(r"<think>.*?</think>", "", raw, flags=re.S).strip()
-    if "<think>" in cleaned:
-        cleaned = cleaned.split("<think>")[0].strip()
-    return cleaned
 
 
 def generate(tokenizer, model, device, messages, max_new_tokens=512, do_sample=False,
@@ -66,4 +57,4 @@ def generate_batch(tokenizer, model, device, list_of_messages, max_new_tokens=51
         new_ids = generated_ids[:, input_len:]
         raw_texts = tokenizer.batch_decode(new_ids, skip_special_tokens=True)
 
-    return [_clean(raw) for raw in raw_texts]
+    return [raw.strip() for raw in raw_texts]
