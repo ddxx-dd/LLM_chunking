@@ -1,5 +1,5 @@
 """자막 번역 실험: EN/KO 자막 세트(같은 릴리즈, 타임스탬프 정합성 검증됨) 양방향
-번역, fixed vs semantic 비교. 큐 단위(Jaccard 시간겹침 정렬) chrF/BLEU 사용."""
+번역, fixed vs semantic 비교. 큐 단위(Jaccard 시간겹침 정렬) chrF/BLEU/BERTScore 사용."""
 import sys
 from pathlib import Path
 import torch
@@ -22,7 +22,7 @@ print("모델 준비 완료")
 
 CHUNKERS = default_subtitle_chunkers(embed_model)
 
-report_lines = ["자막 번역 비교 결과 (큐 단위 chrF/BLEU)", "=" * 60]
+report_lines = ["자막 번역 비교 결과 (큐 단위 chrF/BLEU/BERTScore)", "=" * 60]
 for name, (en_name, ko_name) in SUBTITLE_DATASETS.items():
     en_full = load_srt(str(SRT_ENG_DIR / en_name))
     ko_full = load_srt(str(SRT_KOR_DIR / ko_name))
@@ -31,7 +31,8 @@ for name, (en_name, ko_name) in SUBTITLE_DATASETS.items():
         results = run_translation(direction, src_doc, ref_doc, CHUNKERS, tokenizer, llm_model, device, RESULTS_DIR)
         for method_label, r in results.items():
             ts_str = "OK" if r["ts_ok"] else f"문제 {len(r['ts_bad'])}건"
-            score_str = f"chrF={r['chrf']:.2f} BLEU={r['bleu']:.2f}" if r["chrf"] is not None else "N/A"
+            score_str = (f"chrF={r['chrf']:.2f} BLEU={r['bleu']:.2f} BERTScore={r['bert_f1']:.2f}"
+                         if r["chrf"] is not None else "N/A")
             report_lines.append(
                 f"[{name}/{direction}] {method_label:9s} {score_str}  타임스탬프보존={ts_str}"
             )

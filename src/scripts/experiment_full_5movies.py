@@ -1,5 +1,5 @@
 """5개 신규 영화 전체 - fixed(500)/semantic(min128,max1024) x en2ko/ko2en 전체 번역
-+ chrF/BLEU 채점. About Time(구 데이터셋) 결과와 비교 가능하도록 동일 방식."""
++ chrF/BLEU/BERTScore 채점. About Time(구 데이터셋) 결과와 비교 가능하도록 동일 방식."""
 import sys
 import time
 import pickle
@@ -11,7 +11,7 @@ from preprocessing.loader import load_srt
 from chunking.defaults import default_subtitle_chunkers
 from llm.client import load_llm
 from eval.timestamp_align import align_by_overlap
-from eval.subtitle_translate import translate_chunks_batch, score_chunks
+from eval.subtitle_translate import translate_chunks_batch, score_chunks, OUTPUT_LANG
 from pipeline.mapper import merge_to_units
 from sentence_transformers import SentenceTransformer
 
@@ -36,10 +36,12 @@ for movie, (en_name, ko_name) in SUBTITLE_DATASETS.items():
             pieces = translate_chunks_batch(src_doc, chunks, direction, tokenizer, model, device,
                                              batch_size=8, label=f"{movie}/{method_label}/{direction}")
             unit_texts = merge_to_units(src_doc, pieces)
-            chrf, bleu, n = score_chunks(unit_texts, aligned_ref[direction])
+            chrf, bleu, bert_f1, n = score_chunks(unit_texts, aligned_ref[direction], OUTPUT_LANG[direction], device=device)
             elapsed = time.time() - t0
-            print(f"[{movie}/{method_label}/{direction}] chrF={chrf:.2f} BLEU={bleu:.2f} (n={n}, {elapsed:.0f}초)", flush=True)
-            all_results[(movie, method_label, direction)] = dict(chrf=chrf, bleu=bleu, n=n, n_chunks=len(chunks))
+            print(f"[{movie}/{method_label}/{direction}] chrF={chrf:.2f} BLEU={bleu:.2f} "
+                  f"BERTScore={bert_f1:.2f} (n={n}, {elapsed:.0f}초)", flush=True)
+            all_results[(movie, method_label, direction)] = dict(chrf=chrf, bleu=bleu, bert_f1=bert_f1,
+                                                                   n=n, n_chunks=len(chunks))
 
 with open(RESULTS_DIR / "full_5movies_results.pkl", "wb") as f:
     pickle.dump(all_results, f)
@@ -48,7 +50,8 @@ print("\n" + "=" * 90)
 print("전체 결과 요약")
 print("=" * 90)
 for (movie, method, direction), r in all_results.items():
-    print(f"[{movie:24s}/{method:8s}/{direction}] chrF={r['chrf']:6.2f} BLEU={r['bleu']:6.2f} (청크{r['n_chunks']})")
+    print(f"[{movie:24s}/{method:8s}/{direction}] chrF={r['chrf']:6.2f} BLEU={r['bleu']:6.2f} "
+          f"BERTScore={r['bert_f1']:6.2f} (청크{r['n_chunks']})")
 
 print("\n" + "=" * 90)
 print("fixed vs semantic 종합 평균")
@@ -58,6 +61,8 @@ for method in ["fixed", "semantic"]:
         vals = [r for (m, me, d), r in all_results.items() if me == method and d == direction]
         avg_chrf = sum(v["chrf"] for v in vals) / len(vals)
         avg_bleu = sum(v["bleu"] for v in vals) / len(vals)
-        print(f"{method}/{direction}: 평균 chrF={avg_chrf:.2f}, 평균 BLEU={avg_bleu:.2f} (5개 영화 평균)")
+        avg_bert = sum(v["bert_f1"] for v in vals) / len(vals)
+        print(f"{method}/{direction}: 평균 chrF={avg_chrf:.2f}, 평균 BLEU={avg_bleu:.2f}, "
+              f"평균 BERTScore={avg_bert:.2f} (5개 영화 평균)")
 
 print("\nDONE")

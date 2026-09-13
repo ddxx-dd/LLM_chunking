@@ -3,6 +3,7 @@
 import re
 import sys
 from pathlib import Path
+import bert_score
 import sacrebleu
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -12,6 +13,11 @@ from llm.client import generate_batch
 from eval.timestamp_align import align_by_overlap
 
 _TS_RE = re.compile(r"(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})")
+
+# score_chunks()의 BERTScore 호출에 넘길 언어 코드 - 번역 "결과물"의 언어 기준
+# (en2ko 결과는 한국어, ko2en 결과는 영어). bert_score 라이브러리가 이 코드로
+# 언어별 기본 모델을 자동 선택함(en->roberta-large, ko->bert-base-multilingual-cased).
+OUTPUT_LANG = {"en2ko": "ko", "ko2en": "en"}
 
 # 자막 대사는 격식체 글이 아니라 구어체 대화라는 걸 알려주면 번역 톤이 훨씬
 # 자연스러워진다는 게 실측으로 확인됨(직역투/누락 감소). 특정 영화 정보 없이
@@ -131,16 +137,22 @@ def translate_chunks_batch(doc, chunks, direction, tokenizer, model, device, bat
     return pieces
 
 
-def score_chunks(unit_texts, aligned_reference):
-    """큐 단위 chrF/BLEU 평균 - 시간으로 정렬된 참조와 유닛끼리 하나씩 비교
-    (word-F1은 한국어에 너무 가혹해서 sacrebleu의 chrF+BLEU로 교체됨)."""
-    chrfs, bleus = [], []
-    for p, r in zip(unit_texts, aligned_reference):
-        if p.strip() and r.strip():
-            chrfs.append(sacrebleu.sentence_chrf(p, [r]).score)
-            bleus.append(sacrebleu.sentence_bleu(p, [r]).score)
-    n = len(chrfs)
-    return (sum(chrfs) / n if n else 0.0), (sum(bleus) / n if n else 0.0), n
+def score_chunks(unit_texts, aligned_reference, lang, device=None):
+    """큐 단위 chrF/BLEU/BERTScore 평균 - 시간으로 정렬된 참조와 유닛끼리 하나씩 비교.
+    chrF/BLEU는 표면 글자·어절 일치를, BERTScore는 문맥 임베딩 기반 의미 유사도를 봐서
+    참조 자막이 의역인 경우(정답인데 표면 일치만 낮은 경우) 상호보완적으로 판단할 수 있게 함
+    (word-F1은 한국어에 너무 가혹해서 진작에 sacrebleu의 chrF+BLEU로 교체됨).
+    lang: BERTScore용 언어 코드("en"/"ko") - OUTPUT_LANG 참고."""
+    pairs = [(p, r) for p, r in zip(unit_texts, aligned_reference) if p.strip() and r.strip()]
+    n = len(pairs)
+    if n == 0:
+        return 0.0, 0.0, 0.0, 0
+    chrfs = [sacrebleu.sentence_chrf(p, [r]).score for p, r in pairs]
+    bleus = [sacrebleu.sentence_bleu(p, [r]).score for p, r in pairs]
+    preds, refs = zip(*pairs)
+    _, _, bert_f1 = bert_score.score(list(preds), list(refs), lang=lang, device=device, verbose=False)
+    # chrF/BLEU와 같은 0~100 스케일로 맞춤(BERTScore 원래 스케일은 0~1).
+    return sum(chrfs) / n, sum(bleus) / n, bert_f1.mean().item() * 100, n
 
 
 def check_timestamp_integrity(out_srt_path, src_doc):
@@ -161,7 +173,7 @@ def check_timestamp_integrity(out_srt_path, src_doc):
 
 def run_translation(direction, src_doc, ref_doc, chunkers, tokenizer, model, device, out_dir):
     """chunkers: {method_label: chunker_fn(text) -> list[Chunk]}
-    ref_doc가 None이면(참조 자막이 없는 데이터셋) chrF/BLEU 비교를 건너뛴다."""
+    ref_doc가 None이면(참조 자막이 없는 데이터셋) chrF/BLEU/BERTScore 비교를 건너뛴다."""
     cfg = DIRECTION_CONFIG[direction]
     print("=" * 70)
     print(f"[{cfg['label']}] {src_doc.name} 전체 {len(src_doc.units)}줄")
@@ -184,13 +196,14 @@ def run_translation(direction, src_doc, ref_doc, chunkers, tokenizer, model, dev
 
         ts_ok, ts_bad = check_timestamp_integrity(out_path, src_doc)
         if aligned_reference is not None:
-            chrf, bleu, n = score_chunks(unit_texts, aligned_reference)
-            score_display = f"chrF={chrf:.2f} BLEU={bleu:.2f} (n={n})"
+            chrf, bleu, bert_f1, n = score_chunks(unit_texts, aligned_reference, OUTPUT_LANG[direction], device=device)
+            score_display = f"chrF={chrf:.2f} BLEU={bleu:.2f} BERTScore={bert_f1:.2f} (n={n})"
         else:
-            chrf = bleu = n = None
+            chrf = bleu = bert_f1 = n = None
             score_display = "N/A(참조 없음)"
         print(f"  ✅ [{method_label}] -> {out_path}")
         print(f"     텍스트 {score_display}  타임스탬프보존={'OK' if ts_ok else f'문제 {len(ts_bad)}건'}")
 
-        results[method_label] = dict(out_path=out_path, chrf=chrf, bleu=bleu, n=n, ts_ok=ts_ok, ts_bad=ts_bad)
+        results[method_label] = dict(out_path=out_path, chrf=chrf, bleu=bleu, bert_f1=bert_f1, n=n,
+                                      ts_ok=ts_ok, ts_bad=ts_bad)
     return results
