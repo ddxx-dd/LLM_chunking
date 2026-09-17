@@ -1,0 +1,377 @@
+<title>청킹 경계 뷰어</title>
+<style>
+:root{
+  --bg:#faf8f5; --surface:#fff; --border:#e4ddd2; --ink:#2b2621; --ink-muted:#7a7168;
+  --accent:#a8542f; --accent-soft:#f3e2d6;
+  --row-bg:#eef2f6; --row-ink:#3a5169; --row-border:#c9d6e3;
+  --cue-ink:#5b6b52;
+  --split-flag:#c0392b;
+  --chunk-0:#fdf1e6; --chunk-1:#eaf1e8; --chunk-2:#e9eef7; --chunk-3:#f6eef7; --chunk-4:#fdf6e0;
+  --sem-chunk-0:#eaf6f4; --sem-chunk-1:#fbeee9; --sem-chunk-2:#eef0fa; --sem-chunk-3:#f7f3e3; --sem-chunk-4:#f4ecf3;
+  --chart-line:#3a6ea5; --chart-threshold:#c0392b; --chart-cut:#2e8b57; --chart-candidate:#d9a441;
+  --mono: "JetBrains Mono", "D2Coding", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1c1a17; --surface:#242019; --border:#3a352c; --ink:#ece6dc; --ink-muted:#a89e8f;
+    --accent:#e08a52; --accent-soft:#3a2a1e;
+    --row-bg:#1f2733; --row-ink:#a9c3de; --row-border:#334357;
+    --cue-ink:#9db28e;
+    --split-flag:#e57369;
+    --chunk-0:#332920; --chunk-1:#233026; --chunk-2:#212a38; --chunk-3:#2c2432; --chunk-4:#332e1c;
+    --sem-chunk-0:#1e2e2b; --sem-chunk-1:#31241f; --sem-chunk-2:#212233; --sem-chunk-3:#2c2a1c; --sem-chunk-4:#2b2129;
+    --chart-line:#7fb0e0; --chart-threshold:#e57369; --chart-cut:#63c28a; --chart-candidate:#e0b968;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1c1a17; --surface:#242019; --border:#3a352c; --ink:#ece6dc; --ink-muted:#a89e8f;
+  --accent:#e08a52; --accent-soft:#3a2a1e;
+  --row-bg:#1f2733; --row-ink:#a9c3de; --row-border:#334357;
+  --cue-ink:#9db28e;
+  --split-flag:#e57369;
+  --chunk-0:#332920; --chunk-1:#233026; --chunk-2:#212a38; --chunk-3:#2c2432; --chunk-4:#332e1c;
+  --sem-chunk-0:#1e2e2b; --sem-chunk-1:#31241f; --sem-chunk-2:#212233; --sem-chunk-3:#2c2a1c; --sem-chunk-4:#2b2129;
+  --chart-line:#7fb0e0; --chart-threshold:#e57369; --chart-cut:#63c28a; --chart-candidate:#e0b968;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Pretendard Variable","Noto Sans KR",-apple-system,system-ui,sans-serif;
+}
+.wrap{max-width:1400px; margin:0 auto; padding:20px 24px 60px;}
+header{margin-bottom:18px;}
+h1{font-size:1.5rem; margin:0 0 4px; letter-spacing:-0.01em; text-wrap:balance;}
+.sub{color:var(--ink-muted); font-size:0.88rem; margin:0;}
+
+.controls{
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  margin:16px 0; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:10px;
+}
+.controls label{font-size:0.78rem; color:var(--ink-muted); margin-right:6px;}
+select, .seg{font-family:inherit; font-size:0.85rem;}
+select{
+  background:var(--bg); color:var(--ink); border:1px solid var(--border); border-radius:7px;
+  padding:6px 10px; cursor:pointer;
+}
+.seg{display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden;}
+.seg button{
+  font-family:inherit; font-size:0.82rem; border:none; background:var(--surface); color:var(--ink-muted);
+  padding:6px 12px; cursor:pointer; border-right:1px solid var(--border);
+}
+.seg button:last-child{border-right:none;}
+.seg button.active{background:var(--accent); color:#fff;}
+.spacer{flex:1;}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:0.76rem; color:var(--ink-muted); align-items:center;}
+.legend .sw{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; vertical-align:-1px;}
+
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:16px;}
+.stat{
+  background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 14px;
+}
+.stat .num{font-size:1.35rem; font-weight:600; font-variant-numeric:tabular-nums;}
+.stat .lbl{font-size:0.72rem; color:var(--ink-muted); margin-top:2px;}
+.stat.flag .num{color:var(--split-flag);}
+
+.panes{display:grid; gap:16px;}
+.panes.dual{grid-template-columns:1fr 1fr;}
+@media (max-width:920px){.panes.dual{grid-template-columns:1fr;}}
+
+.pane{background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:flex; flex-direction:column;}
+.pane-head{
+  padding:10px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:baseline;
+  font-size:0.82rem; color:var(--ink-muted);
+}
+.pane-head b{color:var(--ink); font-size:0.88rem;}
+.pane-body{
+  padding:16px 18px; max-height:640px; overflow:auto; font-size:0.93rem; line-height:1.9;
+  white-space:pre-wrap; word-break:break-word;
+}
+.pane-body.fixed-view mark.c0{background:var(--chunk-0);} .pane-body.fixed-view mark.c1{background:var(--chunk-1);}
+.pane-body.fixed-view mark.c2{background:var(--chunk-2);} .pane-body.fixed-view mark.c3{background:var(--chunk-3);}
+.pane-body.fixed-view mark.c4{background:var(--chunk-4);}
+.pane-body.semantic-view mark.c0{background:var(--sem-chunk-0);} .pane-body.semantic-view mark.c1{background:var(--sem-chunk-1);}
+.pane-body.semantic-view mark.c2{background:var(--sem-chunk-2);} .pane-body.semantic-view mark.c3{background:var(--sem-chunk-3);}
+.pane-body.semantic-view mark.c4{background:var(--sem-chunk-4);}
+mark{color:inherit; border-radius:3px; padding:1px 0;}
+.cutmark{
+  display:inline-flex; align-items:center; gap:3px; font-family:var(--mono); font-size:0.62rem;
+  color:var(--accent); background:var(--accent-soft); border-radius:4px; padding:1px 5px; margin:0 3px;
+  vertical-align:2px; user-select:none; white-space:nowrap;
+}
+.u-row{font-family:var(--mono); font-size:0.82em; background:var(--row-bg); color:var(--row-ink); border:1px solid var(--row-border); border-radius:4px; padding:1px 4px;}
+.u-cue{color:var(--cue-ink);}
+.split{box-shadow:inset 0 -2px 0 var(--split-flag); text-decoration:none;}
+
+.chart-wrap{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-top:16px;}
+.chart-wrap h3{margin:0 0 4px; font-size:0.95rem;}
+.chart-wrap p{margin:0 0 10px; font-size:0.78rem; color:var(--ink-muted);}
+canvas{width:100%; display:block; cursor:crosshair;}
+#tooltip{
+  position:fixed; pointer-events:none; background:var(--ink); color:var(--bg); font-size:0.76rem;
+  padding:5px 8px; border-radius:6px; max-width:280px; line-height:1.4; z-index:20; display:none;
+}
+::selection{background:var(--accent-soft);}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>청킹 경계 뷰어</h1>
+    <p class="sub">fixed_chunking(글자수) vs semantic_chunking(문장 코사인 유사도) — 실제 파이프라인과 같은 파라미터로 계산한 청크 경계를 원문 위에 겹쳐 표시합니다.</p>
+  </header>
+
+  <div class="controls">
+    <div><label>문서</label><select id="docSelect"></select></div>
+    <div class="seg" id="viewSeg">
+      <button data-view="dual" class="active">나란히 비교</button>
+      <button data-view="fixed">fixed만</button>
+      <button data-view="semantic">semantic만</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--row-bg);border:1px solid var(--row-border)"></span>표 행(row) 유닛</span>
+      <span><span class="sw" style="background:transparent;box-shadow:inset 0 -2px 0 var(--split-flag)"></span>구조 유닛이 청크 경계에 걸림</span>
+      <span><span class="cutmark" style="margin:0">✂ N</span>새 청크 시작</span>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="panes dual" id="panes"></div>
+
+  <div class="chart-wrap" id="chartWrap">
+    <h3>semantic_chunking — 문장 간 코사인 유사도</h3>
+    <p>점선은 이 문서의 컷 임계값. 주황 점 = 임계값 아래로 떨어진 지점(컷 후보), 초록 세로선 = 실제로 청크가 잘린 지점(min/max_chunk_tokens 필터를 통과한 것만). 후보인데 실제로 안 잘린 지점은 그 구간이 min_chunk_tokens보다 작아서 다음 문장까지 계속 모은 경우입니다.</p>
+    <canvas id="chart" height="220"></canvas>
+  </div>
+</div>
+<div id="tooltip"></div>
+
+<script id="chunk-data-b64" type="text/plain">__CHUNK_DATA_B64__</script>
+<script>
+const DOCS = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('chunk-data-b64').textContent.trim()))));
+
+const docSelect = document.getElementById('docSelect');
+DOCS.forEach((d,i)=>{
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `${d.name} (${d.fmt}, ${d.text.length.toLocaleString()}자)`;
+  docSelect.appendChild(opt);
+});
+
+let currentView = 'dual';
+document.getElementById('viewSeg').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentView = btn.dataset.view;
+  render();
+});
+docSelect.addEventListener('change', render);
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// unit lookup: for an offset range, does it cross a unit boundary that's internally split by chunk boundaries?
+function unitsSplitByChunks(units, chunkBoundaries){
+  // chunkBoundaries: sorted array of interior cut offsets (excludes doc start/end)
+  const splitUnitIdx = new Set();
+  for(let ui=0; ui<units.length; ui++){
+    const u = units[ui];
+    for(const b of chunkBoundaries){
+      if(b > u.start && b < u.end){ splitUnitIdx.add(ui); break; }
+    }
+  }
+  return splitUnitIdx;
+}
+
+function buildBoundaries(chunks, textLen){
+  // interior boundaries only (not 0, not textLen)
+  const set = new Set();
+  chunks.forEach(([s,e])=>{ if(s>0) set.add(s); if(e<textLen) set.add(e); });
+  return Array.from(set).sort((a,b)=>a-b);
+}
+
+function findUnitAt(units, offset){
+  // units are contiguous & sorted by start
+  let lo=0, hi=units.length-1;
+  while(lo<=hi){
+    const mid=(lo+hi)>>1;
+    const u = units[mid];
+    if(offset < u.start) hi = mid-1;
+    else if(offset >= u.end) lo = mid+1;
+    else return mid;
+  }
+  return -1;
+}
+
+function renderPane(doc, method){
+  const chunks = doc[method].chunks;
+  const text = doc.text;
+  const units = doc.units;
+  const boundaries = buildBoundaries(chunks, text.length);
+  const splitUnits = unitsSplitByChunks(units, boundaries);
+
+  // build combined cut points: every chunk start (for coloring + badge) plus every unit boundary (for styling)
+  // walk char by char using run segmentation between: chunk edges and unit edges
+  const cuts = new Set([0, text.length]);
+  chunks.forEach(([s,e])=>{cuts.add(s); cuts.add(e);});
+  units.forEach(u=>{cuts.add(u.start); cuts.add(u.end);});
+  const points = Array.from(cuts).sort((a,b)=>a-b);
+
+  let html = '';
+  let chunkIdx = 0;
+  // map offset->chunk index
+  function chunkIndexAt(off){
+    for(let i=0;i<chunks.length;i++){ if(off>=chunks[i][0] && off<chunks[i][1]) return i; }
+    return chunks.length-1;
+  }
+  let lastChunkI = -1;
+  for(let i=0;i<points.length-1;i++){
+    const s = points[i], e = points[i+1];
+    if(s>=e) continue;
+    const ci = chunkIndexAt(s);
+    const ui = findUnitAt(units, s);
+    const kind = ui>=0 ? units[ui].kind : 'para';
+    const isSplit = ui>=0 && splitUnits.has(ui);
+    const chunkStartsHere = ci !== lastChunkI;
+    lastChunkI = ci;
+    const cls = 'c' + (ci % 5);
+    const unitCls = kind==='row' ? ' u-row' : (kind==='cue' ? ' u-cue' : '');
+    const splitCls = isSplit ? ' split' : '';
+    let seg = escapeHtml(text.slice(s,e));
+    if(chunkStartsHere && ci>0){
+      seg = `<span class="cutmark">✂ ${ci+1}</span>` + seg;
+    }
+    html += `<mark class="${cls}${unitCls}${splitCls}" title="chunk #${ci+1}${isSplit?' · 구조 유닛 분할됨':''}">${seg}</mark>`;
+  }
+  return {html, splitCount: splitUnits.size, chunkCount: chunks.length};
+}
+
+function renderStats(doc){
+  const f = renderPane(doc,'fixed');
+  const s = renderPane(doc,'semantic');
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${doc.text.length.toLocaleString()}</div><div class="lbl">원문 글자 수</div></div>
+    <div class="stat"><div class="num">${doc.units.length.toLocaleString()}</div><div class="lbl">구조 유닛(문단/표행/자막큐) 수</div></div>
+    <div class="stat"><div class="num">${f.chunkCount}</div><div class="lbl">fixed 청크 수 (size=${doc.fixed.chunk_size})</div></div>
+    <div class="stat"><div class="num">${s.chunkCount}</div><div class="lbl">semantic 청크 수 (임계값=${doc.semantic.threshold})</div></div>
+    <div class="stat flag"><div class="num">${f.splitCount}</div><div class="lbl">fixed가 쪼갠 구조 유닛 수</div></div>
+    <div class="stat flag"><div class="num">${s.splitCount}</div><div class="lbl">semantic이 쪼갠 구조 유닛 수</div></div>
+  `;
+  return {f, s};
+}
+
+function renderPanes(doc, cache){
+  const panesEl = document.getElementById('panes');
+  if(currentView === 'dual'){
+    panesEl.className = 'panes dual';
+    panesEl.innerHTML = `
+      <div class="pane">
+        <div class="pane-head"><b>fixed_chunking</b><span>글자수 ${doc.fixed.chunk_size} 고정 분할</span></div>
+        <div class="pane-body fixed-view">${cache.f.html}</div>
+      </div>
+      <div class="pane">
+        <div class="pane-head"><b>semantic_chunking</b><span>percentile ${doc.semantic.amount}, min ${doc.semantic.min_chunk_tokens}/max ${doc.semantic.max_chunk_tokens} 토큰</span></div>
+        <div class="pane-body semantic-view">${cache.s.html}</div>
+      </div>`;
+  } else {
+    panesEl.className = 'panes';
+    const m = currentView;
+    const label = m==='fixed' ? `fixed_chunking — 글자수 ${doc.fixed.chunk_size} 고정 분할` : `semantic_chunking — percentile ${doc.semantic.amount}, min ${doc.semantic.min_chunk_tokens}/max ${doc.semantic.max_chunk_tokens} 토큰`;
+    panesEl.innerHTML = `
+      <div class="pane">
+        <div class="pane-head"><b>${m}_chunking</b><span>${label}</span></div>
+        <div class="pane-body ${m}-view">${cache[m==='fixed'?'f':'s'].html}</div>
+      </div>`;
+  }
+}
+
+function drawChart(doc){
+  const wrap = document.getElementById('chartWrap');
+  const canvas = document.getElementById('chart');
+  const sims = doc.semantic.similarities;
+  const threshold = doc.semantic.threshold;
+  const sentences = doc.semantic.sentences;
+  const chunkEnds = new Set(doc.semantic.chunks.slice(0,-1).map(c=>c[1]));
+  // realized cut at sentence i (gap between sentence i and i+1) if sentences[i+1][0] equals a chunk end
+  const realizedCut = sims.map((_,i)=> chunkEnds.has(sentences[i+1] ? sentences[i+1][0] : -1));
+
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = wrap.clientWidth - 36;
+  const cssH = 220;
+  canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+  canvas.style.width = cssW+'px'; canvas.style.height = cssH+'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cssW,cssH);
+
+  const padL=34, padR=10, padT=10, padB=18;
+  const plotW = cssW-padL-padR, plotH = cssH-padT-padB;
+  const n = sims.length;
+  const minV = Math.min(...sims, threshold), maxV = Math.max(...sims, threshold);
+  const yOf = v => padT + plotH*(1-(v-minV)/((maxV-minV)||1));
+  const xOf = i => padL + plotW*(n<=1?0:i/(n-1));
+
+  const inkMuted = getComputedStyle(document.body).getPropertyValue('--ink-muted').trim();
+  const chartLine = getComputedStyle(document.body).getPropertyValue('--chart-line').trim();
+  const chartThreshold = getComputedStyle(document.body).getPropertyValue('--chart-threshold').trim();
+  const chartCut = getComputedStyle(document.body).getPropertyValue('--chart-cut').trim();
+  const chartCandidate = getComputedStyle(document.body).getPropertyValue('--chart-candidate').trim();
+
+  // axis
+  ctx.strokeStyle = inkMuted; ctx.globalAlpha=0.25; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  ctx.globalAlpha=1;
+  ctx.fillStyle = inkMuted; ctx.font = '10px sans-serif';
+  ctx.fillText(maxV.toFixed(2), 2, yOf(maxV)+3);
+  ctx.fillText(minV.toFixed(2), 2, yOf(minV)+3);
+
+  // threshold line
+  ctx.strokeStyle = chartThreshold; ctx.setLineDash([4,3]); ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(padL, yOf(threshold)); ctx.lineTo(padL+plotW, yOf(threshold)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // similarity line
+  ctx.strokeStyle = chartLine; ctx.lineWidth=1.1;
+  ctx.beginPath();
+  sims.forEach((v,i)=>{ const x=xOf(i), y=yOf(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.stroke();
+
+  // candidate points (below threshold)
+  sims.forEach((v,i)=>{
+    if(v < threshold){
+      ctx.fillStyle = chartCandidate; ctx.beginPath(); ctx.arc(xOf(i), yOf(v), 2, 0, 7); ctx.fill();
+    }
+  });
+  // realized cuts
+  ctx.strokeStyle = chartCut; ctx.lineWidth=1.4; ctx.globalAlpha=0.85;
+  realizedCut.forEach((r,i)=>{
+    if(r){ const x=xOf(i); ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,padT+plotH); ctx.stroke(); }
+  });
+  ctx.globalAlpha=1;
+
+  const tooltip = document.getElementById('tooltip');
+  canvas.onmousemove = (ev)=>{
+    const rect = canvas.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const i = Math.round((x-padL)/plotW*(n-1));
+    if(i<0||i>=n){ tooltip.style.display='none'; return; }
+    const snippet = (sentences[i]? doc.text.slice(sentences[i][0], Math.min(sentences[i][1]+60, sentences[i][0]+90)) : '').replace(/\s+/g,' ');
+    tooltip.style.display='block';
+    tooltip.style.left = (ev.clientX+14)+'px';
+    tooltip.style.top = (ev.clientY+14)+'px';
+    tooltip.innerHTML = `문장 #${i+1} · 유사도 ${sims[i].toFixed(3)} ${realizedCut[i]?'· <b style="color:'+chartCut+'">실제 컷</b>':(sims[i]<threshold?'· <span style="color:'+chartCandidate+'">컷 후보(필터로 무산)</span>':'')}<br><span style="opacity:.75">…${escapeHtml(snippet)}…</span>`;
+  };
+  canvas.onmouseleave = ()=>{ tooltip.style.display='none'; };
+}
+
+function render(){
+  const doc = DOCS[+docSelect.value];
+  const cache = renderStats(doc);
+  renderPanes(doc, cache);
+  drawChart(doc);
+}
+window.addEventListener('resize', ()=>{ const doc = DOCS[+docSelect.value]; drawChart(doc); });
+render();
+</script>
