@@ -7,6 +7,8 @@ SRT_KOR_DIR = DATA_DIR / "srt_kor"
 SRT_ENG_DIR = DATA_DIR / "srt_eng"
 DOCX_KOR_DIR = DATA_DIR / "docx_kor"
 DOCX_ENG_DIR = DATA_DIR / "docx_eng"
+PDF_KOR_DIR = DATA_DIR / "pdf_kor"
+PDF_ENG_DIR = DATA_DIR / "pdf_eng"
 
 RESULTS_DIR = ROOT / "results"
 

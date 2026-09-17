@@ -11,6 +11,10 @@ data/docx_eng/*
 !data/docx_eng/.gitkeep
 data/longbench/*
 !data/longbench/.gitkeep
+data/pdf_kor/*
+!data/pdf_kor/.gitkeep
+data/pdf_eng/*
+!data/pdf_eng/.gitkeep
 venv/
 results/*.json
 .venv311/
