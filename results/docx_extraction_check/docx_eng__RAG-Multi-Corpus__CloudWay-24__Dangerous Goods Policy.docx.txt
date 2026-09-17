@@ -1,0 +1,33 @@
+CloudWay 24 Dangerous Goods Policy [H]
+As per international aviation safety regulations and CloudWay 24’s commitment to passenger safety, certain items are classified as Dangerous Goods and are strictly regulated. Please review the following policy to ensure compliance and avoid inconvenience during travel.
+General Guidelines [H]
+Prohibited Items: Items that present a risk to health, safety, property, or the environment are strictly prohibited.
+Declaration: All dangerous goods must be declared at the time of check-in.
+Special Permission: Some items may be allowed only with prior approval.
+Dangerous Goods Allowance Table [H]
+{"Item Category": "Explosives/Fireworks", "Check-In Baggage": "Not Allowed", "Hand Baggage": "Not Allowed", "Remarks": "Includes fireworks, flares, party poppers, ammunition."}
+{"Item Category": "Compressed Gases (incl. LPG)", "Check-In Baggage": "Not Allowed", "Hand Baggage": "Not Allowed", "Remarks": "Includes butane, propane, oxygen cylinders (except for medical use with prior approval)."}
+{"Item Category": "Flammable Liquids", "Check-In Baggage": "Not Allowed", "Hand Baggage": "Not Allowed", "Remarks": "Includes paints, thinners, petrol, solvents, lighter fluid."}
+{"Item Category": "Flammable Solids", "Check-In Baggage": "Not Allowed", "Hand Baggage": "Not Allowed", "Remarks": "Safety matches (1 small box per person in person only, not in bag)"}
+{"Item Category": "Poisons/Toxics", "Check-In Baggage": "Not Allowed", "Hand Baggage": "Not Allowed", "Remarks": "Includes pesticides, arsenic, cyanide."}
+{"Item Category": "Radioactive Materials", "Check-In Baggage": "Not Allowed", "Hand Baggage": "Not Allowed", "Remarks": "For commercial shipment only, not allowed for passenger baggage."}
+{"Item Category": "Corrosives", "Check-In Baggage": "Not Allowed", "Hand Baggage": "Not Allowed", "Remarks": "Includes batteries (industrial), mercury, acids, bleach."}
+{"Item Category": "Lithium Batteries (Spare)", "Check-In Baggage": "* See Remarks", "Hand Baggage": "Up to 2, <=100Wh", "Remarks": "Only for personal electronic devices; spares in hand baggage only. Max 2 per passenger."}
+{"Item Category": "Household Aerosols (Non-flammable, Non-toxic)", "Check-In Baggage": "* Limited qty", "Hand Baggage": "100ml max each; total 1L", "Remarks": "Aerosols (toiletries) in hand baggage subject to liquid restrictions."}
+{"Item Category": "Medicines/Personal Toiletries", "Check-In Baggage": "Allowed in limited qty", "Hand Baggage": "Limited qty (100ml each)", "Remarks": "Must be for personal use and non-explosive/non-flammable."}
+{"Item Category": "Small Oxygen Cylinders (Medical Need)", "Check-In Baggage": "With Approval", "Hand Baggage": "With Approval", "Remarks": "Must be medically necessary, documentation required."}
+{"Item Category": "Alcoholic Beverages", "Check-In Baggage": "≤5L, <70% ABV", "Hand Baggage": "≤100ml per bottle (in international transit as duty free)", "Remarks": "Must be sealed, per applicable duty-free regulations."}
+{"Item Category": "Sharp Objects/Tools", "Check-In Baggage": "With Restrictions", "Hand Baggage": "Not Allowed", "Remarks": "Knives, box cutters, scissors with blades >6cm in check-in only."}
+{"Item Category": "E-cigarettes/Vaping Devices", "Check-In Baggage": "Not Allowed in check-in", "Hand Baggage": "In hand baggage only", "Remarks": "Not for use onboard; spare batteries in hand baggage only."}
+{"Item Category": "Power Banks", "Check-In Baggage": "Not Allowed", "Hand Baggage": "Max 2, <=100Wh each", "Remarks": "Not to be checked in under any circumstances."}
+{"Item Category": "Self-heating Meals/Devices", "Check-In Baggage": "Not Allowed", "Hand Baggage": "Not Allowed", "Remarks": "Includes flameless ration heaters."}
+Key: [H]
+Allowed (with or without restrictions as noted)
+Not Allowed
+See Remarks: Additional conditions apply
+Important Notes [H]
+Liquids, Gels, Aerosols: In hand baggage, each container must be 100ml or less; total may not exceed 1 litre per passenger (packed in a clear, resealable bag).
+Electronics: Lithium battery-operated equipment may be carried in both check-in and hand baggage, but spares must only be in hand baggage and protected from short-circuiting.
+Sharp Items: Prohibited in hand baggage. Limited sizes and types may go in checked baggage if securely packed.
+For full list and updates, please refer to CloudWay24.com/dangerous-goods or contact our customer service before your journey. [H]
+Failure to comply may result in removal of prohibited items, denial of boarding, or legal action as per applicable law.

@@ -1,0 +1,65 @@
+ZX Bank Ltd. [H]
+Headquarters: Mumbai, Maharashtra, India
+Founded: 1998
+Bank Type: Private Sector, Commercial Banking
+SWIFT Code: ZXININBB
+IFSC Example: ZXIN0000123
+Website: www.zxbank.asia
+Operating Countries [H]
+India
+Full-service operations: retail, corporate, and digital banking.
+Sri Lanka
+25+ branches focused on SME, personal banking, and remittance corridors.
+Bangladesh
+Regional partner for mobile banking services and microfinance.
+Bhutan
+Cross-border banking, digital onboarding, and NRI support.
+Nepal
+Strategic presence via digital kiosks and remittance services.
+Services Offered [H]
+Retail Banking [H]
+Savings & Current Accounts
+Personal & Home Loans
+Credit Cards
+Fixed Deposits
+Corporate Banking [H]
+Business Loans
+Trade Finance
+Treasury Solutions
+Digital Banking [H]
+Mobile App (Android & iOS)
+NetBanking & UPI
+e-KYC
+AI Chatbot
+Remittances [H]
+Rapid cross-border payments (India, Sri Lanka, Nepal, Bhutan)
+Wealth Management [H]
+Investment Advisory
+Mutual Funds
+NRI Services
+Branch & ATM Network [H]
+{"Country": "India", "Branches": "560+", "ATMs": "1,200+"}
+{"Country": "Sri Lanka", "Branches": "32", "ATMs": "40"}
+{"Country": "Bangladesh", "Branches": "18", "ATMs": "30"}
+{"Country": "Bhutan", "Branches": "8", "ATMs": "15"}
+{"Country": "Nepal", "Branches": "20", "ATMs": "35"}
+Key Management [H]
+CEO: Anjali Deshmukh
+CFO: Rajiv Senanayake
+CTO: Dipendra Khadka
+Regional Director (South Asia): Meera Liyanage
+Mobile App: ZX Bank Asia [H]
+Available on: Android, iOS
+Key Features:
+Balance check & fund transfer
+Bill payments & loan tracking
+Biometric login & QR scan pay
+AI-based financial assistant: Zia
+CSR & ESG Focus [H]
+Green Finance Projects
+Partnering with Bhutan hydropower & Nepal solar ventures
+Financial Literacy Campaigns
+Grassroots programs in rural India & Bangladesh
+Women Empowerment Loans
+Micro-loans for women-led businesses across South Asia
+ZX Bank – Shaping tomorrow’s banking across South Asia 🌏
