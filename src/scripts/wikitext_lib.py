@@ -70,6 +70,8 @@ def _strip_file_embeds(text):
 
 
 def _clean_inline(text):
+    # __NOTOC__ 같은 매직워드는 렌더링 안 하면 문단에 그대로 남는다(탁류에서 발견).
+    text = re.sub(r"__[A-Z]+__", "", text)
     text = _strip_file_embeds(text)
     for _ in range(3):  # 남은 [[...]]가 중첩돼 있으면 안쪽부터 여러 번 돌려야 다 풀림
         new_text = WIKILINK_STRIP_RE.sub(r"\1", text)
