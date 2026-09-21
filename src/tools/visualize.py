@@ -8,7 +8,7 @@ from sentence_transformers import SentenceTransformer
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config import SRT_KOR_DIR, SRT_ENG_DIR, DOCX_ENG_DIR, RESULTS_DIR, SUBTITLE_DATASETS
 from loaders import load_file
-from chunkers import fixed_chunking, split_sentences, calculate_similarities, calculate_threshold, split_at_boundaries
+from splitters import split_sentences, calculate_similarities, calculate_threshold
 
 
 def plot_boundaries(similarities, threshold, save_path, title=""):
@@ -44,8 +44,6 @@ TITLE_LABELS = {
     _noah_en: "Noah (ENG subtitles)",
     _canada_doc: "Canada Gov Report (Phthalates Overview)",
 }
-CHUNK_SIZE = 512
-OVERLAP = 0
 METHOD = "percentile"
 AMOUNT = 10
 
@@ -59,10 +57,8 @@ def main():
         if not FILE_PATH.exists():
             continue
         doc = load_file(FILE_PATH)
-        text = doc.text
+        text = doc.page_content
         print("파일:", FILE_PATH.name, "(글자수:", len(text), ")")
-
-        fixed_chunks = fixed_chunking(text, CHUNK_SIZE, OVERLAP)
 
         sentences = split_sentences(text, 200)
         sentence_texts = [s[0] for s in sentences]
@@ -70,7 +66,6 @@ def main():
 
         similarities = calculate_similarities(vectors)
         threshold = calculate_threshold(similarities, METHOD, AMOUNT)
-        semantic_chunks = split_at_boundaries(sentences, similarities, threshold, text)
 
         save_name = FILE_PATH.stem + "_" + METHOD + str(AMOUNT) + ".png"
         save_path = str(RESULTS_DIR / save_name)

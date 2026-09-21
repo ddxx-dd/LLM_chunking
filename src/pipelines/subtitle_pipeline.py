@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config import SRT_KOR_DIR, SRT_ENG_DIR, RESULTS_DIR, SUBTITLE_DATASETS
 from loaders import load_srt
-from chunkers import default_subtitle_chunkers
+from splitters import default_subtitle_chunkers
 from eval.subtitle_translate import run_translation
 from pipelines._common import setup_models
 

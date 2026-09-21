@@ -13,7 +13,7 @@ from sentence_transformers import SentenceTransformer
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config import SRT_ENG_DIR, DOCX_ENG_DIR, DOCX_KOR_DIR, PDF_KOR_DIR, EMBED_MODEL, RESULTS_DIR
 from loaders import load_file
-from chunkers import fixed_chunking, split_sentences, calculate_similarities, calculate_threshold, split_at_boundaries
+from splitters import make_fixed_splitter, make_semantic_splitter, split_sentences, calculate_similarities, calculate_threshold
 
 # (파일 경로, fixed_chunk_size, semantic kwargs) - 실제 스크립트에서 쓰는 값 그대로.
 # Gutenberg/Wikipedia_설명문 경로는 코퍼스 개편으로 삭제되어 현재 코퍼스로 교체함
@@ -46,32 +46,31 @@ def main():
             continue
         print("처리중:", path.name)
         doc = load_file(path)
-        text = doc.text
+        text = doc.page_content
 
-        fixed_chunks = fixed_chunking(text, chunk_size=fixed_size)
+        fixed_chunks = make_fixed_splitter(chunk_size=fixed_size).create_documents([text])
+        semantic_chunks = make_semantic_splitter(embed_model, **sem_kwargs).create_documents([text])
 
+        # 뷰어에 보여줄 문장별 유사도/임계값은 실제 청커 내부 계산과 별개로 다시 뽑는다
+        # (semantic_chunks 자체는 이미 최종 경계만 담고 있어 중간 곡선을 안 갖고 있음).
         sentences = split_sentences(text, 200)
         sentence_texts = [s[0] for s in sentences]
         vectors = embed_model.encode(sentence_texts, show_progress_bar=False)
         similarities = calculate_similarities(vectors)
         threshold = calculate_threshold(similarities, sem_kwargs["method"], sem_kwargs["amount"])
-        semantic_chunks = split_at_boundaries(
-            sentences, similarities, threshold, text, tokenizer=embed_model.tokenizer,
-            max_chunk_tokens=sem_kwargs["max_chunk_tokens"], min_chunk_tokens=sem_kwargs["min_chunk_tokens"],
-        )
 
         docs_out.append({
-            "name": doc.name,
-            "fmt": doc.fmt,
+            "name": doc.metadata["name"],
+            "fmt": doc.metadata["fmt"],
             "text": text,
-            "units": [{"start": u.start, "end": u.end, "kind": u.kind} for u in doc.units],
+            "units": [{"start": u["start"], "end": u["end"], "kind": u["kind"]} for u in doc.metadata["units"]],
             "fixed": {
                 "chunk_size": fixed_size,
-                "chunks": [[c.start, c.end] for c in fixed_chunks],
+                "chunks": [[c.metadata["start_index"], c.metadata["start_index"] + len(c.page_content)] for c in fixed_chunks],
             },
             "semantic": {
                 **sem_kwargs,
-                "chunks": [[c.start, c.end] for c in semantic_chunks],
+                "chunks": [[c.metadata["start_index"], c.metadata["start_index"] + len(c.page_content)] for c in semantic_chunks],
                 "sentences": [[s[1], s[1] + len(s[0])] for s in sentences],
                 "similarities": [round(s, 4) for s in similarities],
                 "threshold": round(threshold, 4),

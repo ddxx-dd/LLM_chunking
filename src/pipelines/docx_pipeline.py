@@ -5,8 +5,9 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config import DOCX_ENG_DIR, RESULTS_DIR
 from loaders import load_docx_bundle
-from chunkers import fixed_chunking, semantic_chunking
+from splitters import make_fixed_splitter, make_semantic_splitter
 from eval.docx_compose import run_compose
+from llm import to_lc_pipeline
 from pipelines._common import setup_models
 
 # CloudWay-24(가상 항공사)의 수하물 관련 정책 5개 - 서로 다른 문서에 흩어진 내용을
@@ -28,17 +29,19 @@ FIXED_CHUNK_SIZE = 600
 def main():
     RESULTS_DIR.mkdir(exist_ok=True)
     device, embed_model, tokenizer, llm_model = setup_models()
+    lc_llm = to_lc_pipeline(tokenizer, llm_model)
 
     bundle_docs = load_docx_bundle([p for p in BUNDLE_FILES if p.exists()])
-    print("문서 묶음 로드 완료:", ", ".join(d.name for d in bundle_docs))
+    print("문서 묶음 로드 완료:", ", ".join(d.metadata["name"] for d in bundle_docs))
 
     chunkers = {
-        "fixed": lambda text: fixed_chunking(text, chunk_size=FIXED_CHUNK_SIZE),
-        "semantic": lambda text: semantic_chunking(text, embed_model, method="percentile", amount=15, max_chunk_tokens=500, min_chunk_tokens=128),
+        "fixed": make_fixed_splitter(chunk_size=FIXED_CHUNK_SIZE),
+        "semantic": make_semantic_splitter(embed_model, method="percentile", amount=15,
+                                            max_chunk_tokens=500, min_chunk_tokens=128),
     }
 
-    for label, chunker_fn in chunkers.items():
-        run_compose(label, chunker_fn, bundle_docs, QUERY, TOP_K, embed_model, tokenizer, llm_model, device, RESULTS_DIR)
+    for label, splitter in chunkers.items():
+        run_compose(label, splitter, bundle_docs, QUERY, TOP_K, embed_model, tokenizer, lc_llm, RESULTS_DIR)
 
 
 if __name__ == "__main__":

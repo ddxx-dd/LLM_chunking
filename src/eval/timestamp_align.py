@@ -11,12 +11,12 @@
 
 
 def _intersection(u, k):
-    return max(0.0, min(u.meta["t_end"], k.meta["t_end"]) - max(u.meta["t_start"], k.meta["t_start"]))
+    return max(0.0, min(u["meta"]["t_end"], k["meta"]["t_end"]) - max(u["meta"]["t_start"], k["meta"]["t_start"]))
 
 
 def _jaccard(u, k):
     inter = _intersection(u, k)
-    union = max(u.meta["t_end"], k.meta["t_end"]) - min(u.meta["t_start"], k.meta["t_start"])
+    union = max(u["meta"]["t_end"], k["meta"]["t_end"]) - min(u["meta"]["t_start"], k["meta"]["t_start"])
     return (inter + 1) / (union + 1)
 
 
@@ -30,9 +30,9 @@ def align_by_overlap(src_doc, ref_doc):
     중 33개뿐이고, 실제로 안 겹쳐도 간격이 1초 미만인 경우(자막 제작자마다 다른 컷 포인트로
     생기는 정상적인 오차)는 내용상 정상 매칭인 게 수동 확인됨 - 그래서 간격 크기가 아니라
     "겹침이 아예 없다"는 조건만 쓴다(더 정교한 간격 기반 제외는 향후 검토 대상으로 남겨둠).
-    반환: len(src_doc.units)와 같은 길이의 문자열 리스트(포지션이 곧 유닛 인덱스)."""
+    반환: len(src_doc.metadata["units"])와 같은 길이의 문자열 리스트(포지션이 곧 유닛 인덱스)."""
     out = []
-    for u in src_doc.units:
-        best = max(ref_doc.units, key=lambda k: _jaccard(u, k))
-        out.append(ref_doc.text[best.start:best.end] if _intersection(u, best) > 0 else "")
+    for u in src_doc.metadata["units"]:
+        best = max(ref_doc.metadata["units"], key=lambda k: _jaccard(u, k))
+        out.append(ref_doc.page_content[best["start"]:best["end"]] if _intersection(u, best) > 0 else "")
     return out

@@ -7,7 +7,7 @@ from docx import Document as DocxDocument
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 
-from schema import Doc, Unit
+from langchain_core.documents import Document
 
 SEP = "\n"
 ENCODINGS = ("utf-8-sig", "utf-8", "cp949", "euc-kr", "utf-16")
@@ -29,6 +29,8 @@ def normalize(s):
     return s.strip()
 
 class _Builder:
+    """LangChain Document(page_content, metadata)로 조립 - Unit은 metadata["units"]의
+    딕셔너리 리스트로 들어간다({"start":,"end":,"kind":,"meta":{...}})."""
     def __init__(self):
         self.parts = []
         self.units = []
@@ -39,12 +41,13 @@ class _Builder:
             return
         start = self.pos
         end = self.pos + len(text)
-        self.units.append(Unit(start, end, kind, meta or {}))
+        self.units.append({"start": start, "end": end, "kind": kind, "meta": meta or {}})
         self.parts.append(text + SEP)
         self.pos += len(text) + len(SEP)
 
     def done(self, name, fmt, log):
-        return Doc(name, "".join(self.parts), self.units, fmt, log)
+        return Document(page_content="".join(self.parts),
+                         metadata={"name": name, "fmt": fmt, "log": log, "units": self.units})
 
 CUE_RE = re.compile(
     r"(\d+)\s*\n(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})[^\n]*\n(.*?)(?=\n\s*\n|\Z)",

@@ -58,3 +58,18 @@ def generate_batch(tokenizer, model, device, list_of_messages, max_new_tokens=51
         raw_texts = tokenizer.batch_decode(new_ids, skip_special_tokens=True)
 
     return [raw.strip() for raw in raw_texts]
+
+
+def to_lc_pipeline(tokenizer, model, max_new_tokens=1400):
+    """HuggingFacePipeline로 감싸서 LCEL 체인(prompt | llm | parser)에 꽂는다 - docx
+    트랙 전용(검색+생성이라 체인 모양이 자연스러움). 자막 트랙은 RAG 구조가 아니라서
+    여전히 generate_batch()를 직접 호출 - 이미 검증된 결론 그대로 유지.
+    return_full_text=False가 핵심: 안 하면 프롬프트까지 출력에 포함되어 되돌아옴."""
+    from langchain_huggingface import HuggingFacePipeline
+    from transformers import pipeline as hf_pipeline
+    pipe = hf_pipeline(
+        "text-generation", model=model, tokenizer=tokenizer,
+        max_new_tokens=max_new_tokens, do_sample=False, repetition_penalty=1.1,
+        return_full_text=False,
+    )
+    return HuggingFacePipeline(pipeline=pipe)

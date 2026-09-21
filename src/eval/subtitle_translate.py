@@ -125,8 +125,9 @@ def _keep_marked_lines(raw):
 
 
 def translate_chunks_batch(doc, chunks, direction, tokenizer, model, device, batch_size=8, label=""):
-    """여러 청크를 batch_size씩 묶어 한 번의 generate_batch() 호출로 번역.
-    GPU를 순차 처리보다 더 채워서 처리량을 올린다."""
+    """chunks: Document 리스트(splitter.split_documents([doc])의 결과). 여러 청크를
+    batch_size씩 묶어 한 번의 generate_batch() 호출로 번역 - GPU를 순차 처리보다
+    더 채워서 처리량을 올린다."""
     pieces = []
     for i in range(0, len(chunks), batch_size):
         batch = chunks[i:i + batch_size]
@@ -165,21 +166,22 @@ def check_timestamp_integrity(out_srt_path, src_doc):
     안 된다 - 그래서 본문 파싱 없이 타임스탬프만 순서대로 직접 뽑는다."""
     raw = Path(out_srt_path).read_text(encoding="utf-8")
     out_ts = [(_to_sec(a), _to_sec(b)) for a, b in _TS_RE.findall(raw)]
-    if len(out_ts) != len(src_doc.units):
-        return False, [f"유닛 개수 불일치: 출력 {len(out_ts)} vs 원본 {len(src_doc.units)}"]
+    units = src_doc.metadata["units"]
+    if len(out_ts) != len(units):
+        return False, [f"유닛 개수 불일치: 출력 {len(out_ts)} vs 원본 {len(units)}"]
     bad = [
-        i for i, ((ot0, ot1), s) in enumerate(zip(out_ts, src_doc.units))
-        if abs(ot0 - s.meta["t_start"]) > 1e-6 or abs(ot1 - s.meta["t_end"]) > 1e-6
+        i for i, ((ot0, ot1), u) in enumerate(zip(out_ts, units))
+        if abs(ot0 - u["meta"]["t_start"]) > 1e-6 or abs(ot1 - u["meta"]["t_end"]) > 1e-6
     ]
     return (len(bad) == 0), bad
 
 
 def run_translation(direction, src_doc, ref_doc, chunkers, tokenizer, model, device, out_dir):
-    """chunkers: {method_label: chunker_fn(text) -> list[Chunk]}
+    """chunkers: {method_label: TextSplitter 인스턴스}
     ref_doc가 None이면(참조 자막이 없는 데이터셋) chrF/BLEU/BERTScore 비교를 건너뛴다."""
     cfg = DIRECTION_CONFIG[direction]
     print("=" * 70)
-    print(f"[{cfg['label']}] {src_doc.name} 전체 {len(src_doc.units)}줄")
+    print(f"[{cfg['label']}] {src_doc.metadata['name']} 전체 {len(src_doc.metadata['units'])}줄")
     print("=" * 70)
 
     # 방향당 한 번만 계산 - fixed/semantic 양쪽에 동일하게 재사용(공정성 유지).
@@ -187,14 +189,15 @@ def run_translation(direction, src_doc, ref_doc, chunkers, tokenizer, model, dev
     aligned_reference = align_by_overlap(src_doc, ref_doc) if ref_doc is not None else None
 
     results = {}
-    for method_label, chunker_fn in chunkers.items():
-        chunks = chunker_fn(src_doc.text)
+    for method_label, splitter in chunkers.items():
+        chunks = splitter.split_documents([src_doc])
         print(f"  [{method_label}] 청크 {len(chunks)}개 번역 중...", flush=True)
         pieces = translate_chunks_batch(src_doc, chunks, direction, tokenizer, model, device,
                                          batch_size=8, label=method_label)
         unit_texts = merge_to_units(src_doc, pieces)
 
-        out_path = Path(out_dir) / f"{src_doc.name.rsplit('.', 1)[0]}_{direction}_{method_label}.srt"
+        src_name = src_doc.metadata["name"]
+        out_path = Path(out_dir) / f"{src_name.rsplit('.', 1)[0]}_{direction}_{method_label}.srt"
         write_srt(src_doc, unit_texts, str(out_path))
 
         ts_ok, ts_bad = check_timestamp_integrity(out_path, src_doc)
