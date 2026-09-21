@@ -2,13 +2,14 @@
 표는 검색된 청크에 실제로 들어있는 행만 원본 그대로 렌더링(LLM이 보정 안 함)."""
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 from docx import Document as DocxDocument
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from pipeline.bundle import chunk_bundle
-from retrieval.retriever import retrieve_top_k_bundle
-from llm.client import generate
+from mapper import chunk_bundle
+from retriever import retrieve_top_k_bundle
+from llm import generate
 
 
 def extract_row_dicts(text):
@@ -151,7 +152,7 @@ def run_compose(label, chunker_fn, bundle_docs, query, top_k, embed_model, token
             print(f"    표 행 {len(rows)}개 검색됨 (출처: {r['doc_name']})")
         prose_text = strip_row_json(r["chunk"].text)
         if prose_text.strip():
-            prose_retrieved.append({**r, "chunk": r["chunk"]._replace(text=prose_text)})
+            prose_retrieved.append({**r, "chunk": replace(r["chunk"], text=prose_text)})
 
     prompt = build_compose_prompt(query, prose_retrieved)
     body_md = generate(tokenizer, model, device, [{"role": "user", "content": prompt}], max_new_tokens=1400)

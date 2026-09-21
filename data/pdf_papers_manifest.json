@@ -92,17 +92,17 @@
   },
   {
     "file": "/root/jupyter/LLM_chunking/data/pdf_eng/PLOS_논문/pmen.0000700_Human-centred resilience quantification.pdf",
-    "source": "PLOS (plosmentalhealth)",
+    "source": "PLOS (mentalhealth)",
     "doi": "10.1371/journal.pmen.0000700",
-    "url": "https://journals.plos.org/plosmentalhealth/article/file?id=10.1371/journal.pmen.0000700&type=printable",
+    "url": "https://journals.plos.org/mentalhealth/article/file?id=10.1371/journal.pmen.0000700&type=printable",
     "bytes": 261690,
     "license": "CC BY"
   },
   {
     "file": "/root/jupyter/LLM_chunking/data/pdf_eng/PLOS_논문/pcsy.0000115_Opinion polarization from compression-based decision making.pdf",
-    "source": "PLOS (ploscomplexsystems)",
+    "source": "PLOS (complexsystems)",
     "doi": "10.1371/journal.pcsy.0000115",
-    "url": "https://journals.plos.org/ploscomplexsystems/article/file?id=10.1371/journal.pcsy.0000115&type=printable",
+    "url": "https://journals.plos.org/complexsystems/article/file?id=10.1371/journal.pcsy.0000115&type=printable",
     "bytes": 1916131,
     "license": "CC BY"
   }
