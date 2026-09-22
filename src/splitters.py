@@ -137,19 +137,12 @@ class SemanticTextSplitter(TextSplitter):
         return chunks
 
 
-def make_semantic_splitter(embed_model, method="percentile", amount=15, max_sentence_length=200,
-                            max_chunk_tokens=None, min_chunk_tokens=None):
-    return SemanticTextSplitter(embed_model, method=method, amount=amount,
-                                 max_sentence_length=max_sentence_length,
-                                 max_chunk_tokens=max_chunk_tokens, min_chunk_tokens=min_chunk_tokens)
-
-
 def default_subtitle_chunkers(embed_model):
     """자막 실험 스크립트들이 공유하는 fixed/semantic 기본 설정(실측 검증된 값) -
     스크립트마다 따로 들면 한쪽만 갱신되는 드리프트가 생겨서 여기 하나로 모음.
     반환값은 TextSplitter 인스턴스 - 호출부는 splitter.split_documents([doc])로 쓴다."""
     return {
         "fixed": make_fixed_splitter(chunk_size=500),
-        "semantic": make_semantic_splitter(embed_model, method="percentile", amount=15,
-                                            min_chunk_tokens=128, max_chunk_tokens=1024),
+        "semantic": SemanticTextSplitter(embed_model, method="percentile", amount=15,
+                                          min_chunk_tokens=128, max_chunk_tokens=1024),
     }

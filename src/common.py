@@ -1,9 +1,6 @@
-import sys
-from pathlib import Path
 import torch
 from sentence_transformers import SentenceTransformer
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config import EMBED_MODEL, TOKENIZER
 from llm import load_llm
 

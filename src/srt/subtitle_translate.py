@@ -7,10 +7,10 @@ import bert_score
 import sacrebleu
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from loaders import _to_sec
-from mapper import build_prompt, parse_marked, merge_to_units, write_srt
+from srt.loader import _to_sec
+from srt.mapper import build_prompt, parse_marked, merge_to_units, write_srt
 from llm import generate_batch
-from eval.timestamp_align import align_by_overlap
+from srt.timestamp_align import align_by_overlap
 
 _TS_RE = re.compile(r"(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})")
 

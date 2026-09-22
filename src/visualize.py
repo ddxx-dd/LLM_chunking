@@ -1,14 +1,14 @@
-import sys
-from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sentence_transformers import SentenceTransformer
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config import SRT_KOR_DIR, SRT_ENG_DIR, DOCX_ENG_DIR, RESULTS_DIR, SUBTITLE_DATASETS
-from loaders import load_file
+from config import SRT_KOR_DIR, SRT_ENG_DIR, ALLGANIZE_DIR, RESULTS_DIR, SUBTITLE_DATASETS
+from srt.loader import load_srt
+from docx_track.loader import load_docx
 from splitters import split_sentences, calculate_similarities, calculate_threshold
+
+_LOAD_BY_SUFFIX = {".srt": load_srt, ".docx": load_docx}
 
 
 def plot_boundaries(similarities, threshold, save_path, title=""):
@@ -29,20 +29,20 @@ def plot_boundaries(similarities, threshold, save_path, title=""):
     plt.close()
 
 _noah_en, _noah_ko = SUBTITLE_DATASETS["Noah"]
-# 예전엔 docx_kor의 강의노트("3-1.큐.docx")를 썼는데 코퍼스가 대용량문서로 개편되며
-# 삭제됨 - 현재 코퍼스(Canada_Government)의 보고서 하나로 교체.
-_canada_doc = "2020-2021-phthalates-in-ready-to-eat-meals-vegetable-fats-and-oils-overview.docx"
+# 예전엔 docx_eng의 Canada_Government 보고서를 썼는데 코퍼스가 allganize로 교체되며 삭제됨
+# - 현재 코퍼스(allganize, finance 도메인)의 문서 하나로 교체.
+_allganize_doc = "한-호주_퇴직연금_포럼_책자_최종_.docx"
 FILES = [
     SRT_KOR_DIR / _noah_ko,
     SRT_ENG_DIR / _noah_en,
-    DOCX_ENG_DIR / "Canada_Government" / _canada_doc,
+    ALLGANIZE_DIR / "docx" / "finance" / _allganize_doc,
 ]
 # matplotlib 기본 폰트(DejaVu Sans)가 한글 글리프를 지원하지 않아 그래프 제목이
 # 깨지는 걸 막기 위해, 그래프에 넣을 라벨만 영문으로 매핑한다(저장 파일명은 원래대로).
 TITLE_LABELS = {
     _noah_ko: "Noah (KOR subtitles)",
     _noah_en: "Noah (ENG subtitles)",
-    _canada_doc: "Canada Gov Report (Phthalates Overview)",
+    _allganize_doc: "Allganize Finance Doc (KR-AUS Pension Forum)",
 }
 METHOD = "percentile"
 AMOUNT = 10
@@ -56,7 +56,7 @@ def main():
     for FILE_PATH in FILES:
         if not FILE_PATH.exists():
             continue
-        doc = load_file(FILE_PATH)
+        doc = _LOAD_BY_SUFFIX[FILE_PATH.suffix.lower()](str(FILE_PATH))
         text = doc.page_content
         print("파일:", FILE_PATH.name, "(글자수:", len(text), ")")
 

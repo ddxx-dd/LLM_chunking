@@ -10,12 +10,12 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from mapper import chunk_bundle, covered_units
+from docx_track.mapper import chunk_bundle, covered_units
 from indexing import build_retriever
 
 
 class _TableHTMLParser(HTMLParser):
-    """loaders.py: _table_rows_to_html()의 역변환 - <table><tr><td colspan= rowspan=>
+    """loader.py: _table_rows_to_html()의 역변환 - <table><tr><td colspan= rowspan=>
     ...</td></tr></table> -> 행 리스트([[{"text","colspan","rowspan"}, ...], ...])."""
 
     def __init__(self):
