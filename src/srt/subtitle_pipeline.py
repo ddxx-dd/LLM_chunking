@@ -7,9 +7,18 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config import SRT_KOR_DIR, SRT_ENG_DIR, RESULTS_DIR, SUBTITLE_DATASETS
 from srt.loader import load_srt
-from splitters import default_subtitle_chunkers
+from srt.splitters import make_fixed_splitter, SemanticTextSplitter
 from srt.subtitle_translate import run_translation
 from common import setup_models
+
+
+def default_subtitle_chunkers(embed_model):
+    """자막 실험이 쓰는 fixed/semantic 기본 설정(실측 검증된 값)."""
+    return {
+        "fixed": make_fixed_splitter(chunk_size=500),
+        "semantic": SemanticTextSplitter(embed_model, method="percentile", amount=15,
+                                          min_chunk_tokens=128, max_chunk_tokens=1024),
+    }
 
 
 def main():

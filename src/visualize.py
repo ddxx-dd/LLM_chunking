@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 from config import SRT_KOR_DIR, SRT_ENG_DIR, ALLGANIZE_DIR, RESULTS_DIR, SUBTITLE_DATASETS
 from srt.loader import load_srt
 from docx_track.loader import load_docx
-from splitters import split_sentences, calculate_similarities, calculate_threshold
+from srt.splitters import split_sentences, calculate_similarities, calculate_threshold
 
 _LOAD_BY_SUFFIX = {".srt": load_srt, ".docx": load_docx}
 
