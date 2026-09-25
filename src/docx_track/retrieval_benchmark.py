@@ -11,17 +11,23 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_huggingface import HuggingFaceEmbeddings
+from transformers import AutoTokenizer
 
 from config import ALLGANIZE_DIR, RESULTS_DIR
 from docx_track.loader import load_docx
 from indexing import build_retriever
+from smart_chunker import SmartChunker, SmartTextSplitter
 
 TOP_K = 5
 # 문헌/공식 가이드에 이 문서 유형(표 섞인 리포트)에 맞는 정해진 값이 없어서
 # (Pinecone 가이드·SemanticChunker 원 출처인 Kamradt 노트북 둘 다 "직접 실험해서
 # 정하라"는 입장) 소규모 그리드로 직접 비교해서 정한다.
-FIXED_CHUNK_SIZES = []  # 임시: 이미 재현 확인된 fixed_256/500/1000은 재실행 생략
-SEMANTIC_BREAKPOINT_AMOUNTS = [90, 95]  # 임시: OOM으로 못 끝낸 90/95만 재실행
+FIXED_CHUNK_SIZES = [256, 500, 1000]
+SEMANTIC_BREAKPOINT_AMOUNTS = [80, 90, 95]
+# smart_chunk.md 예시값 - min/max 토큰은 bge-m3 자체 토크나이저 기준(이 파이프라인엔
+# Gemma가 없고 bge-m3만 청크 텍스트를 실제로 처리하므로, smart_chunker.py 설명 참고).
+SMART_MIN_TOKENS = 100
+SMART_MAX_TOKENS = 400
 
 
 def load_qa_and_docs():
@@ -131,12 +137,19 @@ def main():
         print(f"  [{i}/{len(docx_path_by_orig_name)}] {path.name}", flush=True)
 
     embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-m3", encode_kwargs={"normalize_embeddings": True})
+    # smart_chunker의 embed_model은 SentenceTransformer 인스턴스가 필요 - HuggingFaceEmbeddings가
+    # 이미 내부에 들고 있는 걸 재사용해서 bge-m3를 GPU에 두 번 안 올린다.
+    bge_tokenizer = AutoTokenizer.from_pretrained("BAAI/bge-m3")
+    count_tokens = lambda s: len(bge_tokenizer.encode(s, add_special_tokens=False))
 
     configs = [(f"fixed_{size}", CharacterTextSplitter(separator="", chunk_size=size, chunk_overlap=0))
                for size in FIXED_CHUNK_SIZES]
     configs += [(f"semantic_{amount}", SemanticChunker(
                     embeddings, breakpoint_threshold_type="percentile", breakpoint_threshold_amount=amount))
                 for amount in SEMANTIC_BREAKPOINT_AMOUNTS]
+    configs += [("smart", SmartTextSplitter(SmartChunker(
+                    embeddings._client, count_tokens, mode="docx", lang="ko",
+                    min_tokens=SMART_MIN_TOKENS, max_tokens=SMART_MAX_TOKENS)))]
 
     overall_by_label = {}
     for i, (label, splitter) in enumerate(configs, 1):
@@ -147,7 +160,7 @@ def main():
     fixed_labels = [f"fixed_{size}" for size in FIXED_CHUNK_SIZES]
     semantic_labels = [f"semantic_{amount}" for amount in SEMANTIC_BREAKPOINT_AMOUNTS]
     print("\n=== 그리드 서치 요약 (hit_rate 기준) ===")
-    for label in fixed_labels + semantic_labels:
+    for label in fixed_labels + semantic_labels + ["smart"]:
         print(f"  {label}: {overall_by_label[label]}")
     if fixed_labels:
         best_fixed = max(fixed_labels, key=lambda l: overall_by_label[l]["hit_rate"])
