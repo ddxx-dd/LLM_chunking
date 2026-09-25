@@ -12,6 +12,8 @@ data/vectara_ragbench/*
 venv/
 results/*.json
 .venv311/
+.venv-eval/
+data/processed/
 *.log
 .env
 .pytest_cache/

@@ -1,338 +1,333 @@
-# 스마트 청킹 비교 실험 계획 (프로젝트 2-1)
+# 스마트 청킹 · 번역 · 병합 파이프라인 (프로젝트 2-1) — 최종 설계
 
-> 기준 레포: `ddxx-dd/LLM_chunking` · 작성일 2026-09-24, 검토/수정 2026-09-24
-> 목표: **LangChain 글자수 분할 vs 의미 분할 vs 내가 만든 스마트 청커**를
-> SRT · docx · pdf · LongBench 네 데이터셋에서 같은 조건으로 비교한다.
->
-> **진행 순서(확정): docx_track → pdf_track(로더 보강 먼저) → SRT(한 줄 추가) → LongBench.**
-> docx_track이 이미 100% 검증된 유일한 트랙이라 리스크가 제일 적어서 먼저 붙인다.
-> 아래 각 절의 수정 사항은 실제 코드(`srt/loader.py`, `pdf_track/loader.py`,
-> `docx_track/*`, `data/` 실제 파일)를 대조 확인해서 반영한 것.
+> 기준 레포: `ddxx-dd/LLM_chunking` · 최초 작성 2026-09-24, 전면 재작성 2026-09-25(2차)
+> 이전 버전(Docling+python-docx 분리안, Phase1/Phase2안)을 모두 대체한다.
+
+## 0. 목표와 원칙
+
+**핵심 질문**: fixed(글자수 분할) / semantic(의미 분할) / smart(구조+의미+크기 분할) 세 청커가
+검색·요약·번역 결과에 어떤 영향을 미치는가?
+
+**원칙**:
+1. 네 데이터셋(SRT, Allganize-docx, Vectara-pdf, LongBench)에서 세 청커를 같은 조건으로 비교
+2. **번역 채점은 항상 요소(표는 셀) 단위** — 청크를 통째로 채점하지 않는다. fixed/semantic도
+   예외 아님(이번에 확정됨 — 처음엔 smart만이라고 했었는데, 공정한 비교를 위해 세 청커 다 같은
+   단위로 채점해야 한다는 게 맞음)
+3. 번역 결과를 원본 구조 그대로 파일에 되돌려 넣는 "병합"은 **smart만** 수행
+4. 문서 하나당 파싱은 1번만, JSON 캐싱
+5. 파싱 직후 **항등 테스트**(원문 그대로 되돌려 썼을 때 원본과 같은지) 통과 전에는 다음 단계로
+   안 넘어감
+6. 학부 3학년 프로젝트 규모 — 서식 보존/번역 재시도/폰트 서브셋은 스트레치 골
 
 ---
 
-## 1. 한눈에 보기
+## 1. 데이터셋 현황
 
-| 데이터셋 | 형식 | 청킹 후 하는 일 | 평가 방법 (원본 벤치마크 방식 그대로) |
-|---|---|---|---|
-| OpenSubtitles | SRT (EN↔KO) | 청크 단위 번역 → 큐 타임스탬프에 다시 매핑 | chrF, BLEU, BERTScore (지금 코드 그대로) + 타임스탬프 보존 |
-| Allganize | docx (한국어) | 검색 → Gemma 답변 | 검색 적중(문서·페이지) + 답변 O/X 판정 (Allganize 방식) |
-| Vectara Open RAG Bench | pdf (영어 논문) | 검색 → Gemma 답변 | 검색 적중(섹션) + MRR |
-| LongBench v1 | 긴 텍스트 (영어) | 검색 → Gemma 답변 | LongBench 공식 지표 (QA F1) |
-
-비교하는 청커는 딱 3개입니다.
-
-| 이름 | 구현 | 설명 |
+| 트랙 | 데이터 | 상태 |
 |---|---|---|
-| `fixed` | LangChain `CharacterTextSplitter(separator="")` | 단순 글자수 분할 |
-| `semantic` | LangChain `SemanticChunker` (SRT는 기존 `SemanticTextSplitter`) | 인접 문장 임베딩 유사도로 분할 |
-| `smart` | `SmartTextSplitter` (새로 작성, 첨부 파일) | 구조 우선 → 의미 분할 → 크기 조절 |
-
-> SRT만 기존 `SemanticTextSplitter`를 쓰는 이유: LangChain `SemanticChunker`는 문장을
-> `" ".join()`으로 다시 붙여서 원문 위치(offset)가 깨지고, 그러면 타임스탬프 매핑이 안 됩니다.
-> 알고리즘은 같습니다(percentile 임계값). 이미 레포에 있는 것을 그대로 씁니다.
+| SRT | OpenSubtitles 5편 | **완료**, 이 설계와 무관 |
+| docx | Allganize, 45개 문서·211 QA | 검색용 그리드서치 완료, **파서 재작성 필요**(아래 3절) |
+| pdf | Vectara, 50개 논문·273 QA | 로더는 Docling으로 교체됨, **파서 재작성 필요**(아래 4절) |
+| LongBench | THUDM/LongBench | 미구현, 이 설계와 무관 |
 
 ---
 
-## 2. 스마트 청커 알고리즘 (3단계)
-
-참고: 기존 연구에서 반복해서 나오는 결론이 있습니다.
-**"의미 분할이 항상 좋은 건 아니다"**. 의미 분할은 너무 작은 조각을 만들고,
-문서 구조(제목, 표)를 무시하기 때문입니다. 그래서 스마트 청커는 이 두 약점만 고칩니다.
-
-```
-① 구조로 먼저 자른다
-   - docx/pdf: 제목(#, "3.1 Method")이 나오면 새 섹션. 표는 절대 안 쪼갬
-   - LongBench: "Passage N:" 마다 새 섹션
-   - SRT: 큐 하나 = 쪼갤 수 없는 조각 (큐 중간은 절대 안 자름)
-
-② 섹션이 max_tokens보다 크면, 의미가 가장 많이 바뀌는 곳에서 반으로 자른다
-   - 조각 i와 i+1 사이 점수 = (왼쪽 2문장 평균 임베딩) · (오른쪽 2문장 평균 임베딩)
-   - 점수가 가장 낮은 곳에서 자르고, 양쪽이 max_tokens 이하가 될 때까지 반복
-   - SRT: 문장이 다음 큐로 이어지면("I was thinking that" → "maybe we could go")
-     그 사이는 자르지 않도록 점수 +1
-
-③ min_tokens보다 작은 청크는 다음 청크와 합친다
-```
-
-**기존 SemanticChunker와 다른 점 3가지**
-
-1. 제목·표·큐 같은 **구조를 먼저 지킨다** → 표가 반으로 잘리지 않음
-2. 인접 문장 1쌍이 아니라 **좌우 2문장 평균**으로 비교 → 문장 하나 튀는 것에 덜 흔들림
-3. **토큰 수로 최소·최대 크기를 강제** → 43토큰짜리 자투리나 2000토큰짜리 덩어리가 안 생김
-   (RFP의 "토크나이저로 엄격한 토큰 카운팅·로드 밸런싱"이 바로 이 부분)
-
-**`smart_chunker.py` 검토 중 발견해서 고친 버그 2개** (코드에 반영 완료):
-1. `merge_small()`이 **문서(정확히는 섹션) 맨 마지막 청크**는 "다음 청크"가 없어서 한 번도
-   합쳐지는지 검사되지 않던 문제 → 마지막 청크가 여전히 `min_tokens` 미만이면 이전 청크와
-   합치는 로직 추가.
-2. `merge_small()`이 원래 `chunk_spans()`에서 **전체 문서의 그룹을 다 모은 뒤 한 번에** 호출돼서,
-   `A섹션의 작은 마지막 청크가 B섹션(다른 헤더 밑)의 첫 청크와 합쳐지는` 문제가 있었음(헤더
-   경계를 넘어 서로 다른 절의 내용이 한 청크로 섞임) → `chunk_spans()`가 **섹션마다** `merge_small()`을
-   개별 호출하도록 수정. SRT는 원래 섹션이 문서 전체 하나뿐이라 동작 변화 없음.
-
-**의도된 트레이드오프(버그 아님, 알아두기)**: 표 하나가 그 자체로 `max_tokens`를 넘는 초대형
-표라면, "표는 절대 안 쪼갠다"는 원칙이 크기 제한보다 우선이라 **그 표만 담은 청크가 `max_tokens`를
-초과한 채로 나올 수 있음**.
-
-**사용법** (첨부 `smart_chunker.py`, 약 150줄)
+## 2. 문서 객체 모델 (`docobj.py`)
 
 ```python
-from transformers import AutoTokenizer
-from smart_chunker import SmartChunker, SmartTextSplitter
-
-# docx_track에서는 임베딩 모델을 또 로드하지 않고, retrieval_benchmark.py가 이미
-# 들고 있는 HuggingFaceEmbeddings 인스턴스의 내부 SentenceTransformer(`._client`)를
-# 그대로 재사용한다 - GPU에 bge-m3가 두 번 안 올라가게(OOM 예방).
-embed = embeddings._client                                   # HuggingFaceEmbeddings 인스턴스에서 추출
-tok = AutoTokenizer.from_pretrained("BAAI/bge-m3")          # SRT는 Gemma 토크나이저
-count = lambda s: len(tok.encode(s, add_special_tokens=False))
-
-smart = SmartTextSplitter(SmartChunker(embed, count, mode="docx", lang="ko",
-                                       min_tokens=100, max_tokens=400))
-chunks = smart.split_documents(docs)     # 기존 fixed/semantic과 똑같이 사용
+elements = [
+    {"id": 0, "label": "section_header", "level": 1, "text": "...", "loc": {...}, "span": (0, 23)},
+    {"id": 1, "label": "text", "level": None, "text": "...", "loc": {...}, "span": (24, 110)},
+    {"id": 2, "label": "table", "text": "<마크다운 표 전체>", "loc": None, "span": (111, 400),
+     "table_id": 0, "caption_ids": [3], "n_rows": 4, "n_cols": 3,
+     "cells": [
+        {"cell_id": 0, "row": 0, "col": 0, "row_span": 1, "col_span": 1, "header": True,
+         "text": "구분", "span_in_table": (2, 4), "loc": {...}},
+        ...
+     ]},
+]
 ```
 
-`mode`는 `"docx"`, `"pdf"`, `"longbench"`, `"srt"` 네 가지입니다. 이게 곧 **문서 유형 라우터**입니다
-(데이터셋마다 "무엇을 구조로 볼지"만 다르고 나머지 알고리즘은 동일).
+**두 가지가 새로 추가됨**:
+1. **`span`**: 모든 요소가 "이어붙인 평문(`flat_text`)" 안에서 차지하는 (시작,끝) 문자 오프셋.
+   `flat_text = "\n".join(e["text"] for e in elements)`로 만들면서 기록 — fixed/semantic
+   청커가 이 평문을 자르면, 청크의 `start_index`(LangChain `add_start_index=True`로 얻음)와
+   `span`을 비교해서 "이 청크가 어느 요소(들)를 걸쳤는지"를 알 수 있다. **이게 있어야
+   fixed/semantic도 번역을 요소 단위로 채점할 수 있음**(1절 원칙 2번의 근거).
+2. **표는 이제 "표 요소 1개 + `cells` 목록"의 두 층 구조**(6절 참고) — 셀을 낱개 요소로
+   펼치지 않는다. 표 하나 = elements 리스트에서 `label:"table"`인 요소 딱 1개.
 
-출력은 항상 원문을 그대로 자른 조각(`text[start:end]`)입니다. **이게 실제로 의미 있는 트랙은
-SRT/pdf뿐**입니다 - 이 둘의 로더는 지금도 `_Builder`/`metadata["units"]`(오프셋 기반 구조,
-직접 확인함)를 쓰기 때문에 `add_start_index`/`fragments()`/`merge_to_units()`가 그대로
-동작해야 함. **docx_track은 이번 세션에 이 오프셋 체계를 아예 없앴기 때문에(`doc_name`+내용
-F1로만 채점, offset 불필요) 이 성질이 docx에선 그냥 안 쓰이는 부가 기능일 뿐 - 필요해서가
-아니라 공짜로 딸려오는 것**.
+`loc`(요소 위치, 병합 쓰기용): docx는 `{"paraId": "..."}`, pdf는 `{"page":, "bbox":{...}}`.
 
 ---
 
-## 3. SRT 트랙: 번역 → 타임스탬프 매핑
+## 3. docx 파싱 (`docx_track/parse.py`)
 
-**지금 레포 코드가 이미 원하는 동작을 합니다. 그대로 유지하세요.**
+### 순서
 
 ```
-fixed가 큐 중간을 자른 경우:
-  큐 17 = "I was thinking that we should go"
-  청크 A 끝: "...I was thinking"      → [5] I was thinking        → 번역 → "내 생각엔"
-  청크 B 시작: "that we should go..." → [1] that we should go     → 번역 → "우리가 가야 할 것 같아"
-  merge_to_units(): 큐 17 = "내 생각엔 우리가 가야 할 것 같아"  → 원래 타임스탬프로 저장
+1. python-docx로 원본 열기 → 모든 문단에 w14:paraId 없으면 부여 → *.anchored.docx로 저장
+   (python-docx의 nsmap에 w14가 이미 등록되어 있음 - 확인됨)
+
+2. MsWordDocumentBackend(in_doc, anchored_path).convert() 직접 호출
+   → backend.paragraph_to_items: dict[etree._Element, list[RefItem]] 를
+     "self_ref → paraId" 역인덱스로만 사용한다 - 이걸 그대로 순회해서 elements를 만들면
+     안 됨(표가 본문 흐름과 다른 시점에 paragraph_to_items에 채워질 수 있어서, 그대로
+     쓰면 표가 문서 끝으로 밀려나 smart의 제목 경계·캡션 묶기가 깨짐).
+
+3. **진짜 순회는 doc.iterate_items()로** - 이게 진짜 문서 순서(제목→본문→표→본문...)를 보존함.
+   각 아이템의 self_ref로 역인덱스에서 paraId를 찾는다.
+   RefItem은 cref만 갖고 있으므로(RefItem.model_fields == ['cref'], 실측 확인) doc.resolve()로
+   실제 아이템을 얻어야 함.
+
+4. 같은 paraId에서 여러 RefItem이 나오는 경우(문단 하나가 서식 등으로 여러 Docling 텍스트
+   조각으로 쪼개진 "인라인 그룹") → 문단 하나 = 요소 하나로 합침(텍스트 이어붙임).
+
+5. 조상에 w:tbl이 있는 문단(표 셀 안의 문단)은 별도 "text" 요소로 만들지 않음 -
+   표 요소의 cells 안에서만 다뤄짐(중복 방지).
+
+6. 텍스트 상자 안 문단도 body.iter(w:p)로 찾아지므로 paraId가 정상적으로 붙는다 -
+   본문과 똑같이 병합 가능(다만 이번 세션에 직접 실행 검증은 안 했음, 설계 단계).
 ```
 
-- `srt/mapper.py`의 `fragments()`가 청크와 큐의 겹치는 부분을 찾고,
-  `merge_to_units()`가 같은 큐 조각들을 다시 이어 붙이고, `write_srt()`가 원본 타임스탬프로 씁니다.
-- 즉 **각 청커가 자른 그대로 LLM에 넣고 결과를 보여줍니다.** fixed가 큐를 자르면 번역이 어색해지는
-  것 자체가 실험 결과입니다.
-- smart는 큐 경계에서만 자르므로 잘린 큐가 0개입니다.
+### skip 규칙 (번역·병합만 제외, 청킹·검색·요약엔 포함)
+- 공통: `formula`, `picture`, `page_header`/`page_footer`(furniture)
+- docx 전용: 문단에 `w:fldChar`/`w:instrText`(필드 코드) / `w:footnoteReference` / `w:ins`·`w:del`(변경추적)
 
-**추가할 것 (작게)**
-
-1. `subtitle_pipeline.py`의 `default_subtitle_chunkers()`에 `smart` 한 줄 추가
-   ```python
-   "smart": SmartTextSplitter(SmartChunker(embed_model, gemma_count, mode="srt",
-                                           lang=src_lang, min_tokens=128, max_tokens=512)),
-   ```
-2. 결과표에 두 열 추가: **청크 수**, **잘린 큐 수** (`fragments()`의 4번째 값 `w`가 False인 큐 개수)
-3. fixed 500자는 한국어와 영어에서 정보량이 크게 다릅니다. 보고서에 방향별 평균 토큰 수를 같이 적으세요.
+### 헤더 감지
+스타일 기반(`Heading N`/`Title`). 45개 중 43개(95.6%)가 실제 스타일 보유(실측). 예외 2개는
+알려진 한계.
 
 ---
 
-## 4. docx 트랙 (Allganize): 원본 벤치마크 방식 — **다음에 만질 곳**
-
-Allganize 리더보드 방식은 **"문서 검색 → LLM 답변 → 정답과 비교해 O/X"** 입니다.
-원본은 LLM 4개가 투표로 O/X를 정했습니다. 우리는 Gemma 1개로 판정합니다.
-
-이미 `fixed`(chunk_size 256/500/1000)와 `semantic`(percentile 80/90/95) 그리드서치를
-211개 QA 전체로 돌려서 최적값을 찾아둔 상태 (`fixed_500`: hit_rate 0.948/MRR 0.886 최고,
-`fixed_256`: F1 0.209 최고, `semantic_80`: percentile 중 최고지만 fixed에는 전부 못 미침).
-**smart는 이 최적값들과 3파전으로 비교하는 게 다음 단계.**
-
-**평가 순서**
-
-1. 45개 docx → 3개 청커로 청킹 (기존 `retrieval_benchmark.py` 구조 그대로, smart는
-   `embeddings._client` 재사용 - 위 2절 참고)
-2. 질문으로 top-k 검색 (bge-m3, k=5)
-3. **검색 지표** (LLM 없음, 빠름) — `doc_hit@5`, `MRR`: 기존 코드 그대로 (정답 파일에서 나온 청크가 있는가)
-4. **답변 지표**: 검색된 청크를 Gemma에 넣어 답변 → Gemma에게 "정답과 같은 의미인가? O/X" 판정
-5. `context_type`(paragraph / table / image)별로 따로 표를 만듭니다.
-   **스마트 청커의 차이는 table에서 가장 크게 날 것**입니다. image 질문은 그림을 빼고 변환했으므로 참고용입니다.
-
-> **`page_hit@5`는 지금 뺀다 (보류, 원 계획에서 삭제).** 원본 PDF 페이지 텍스트가 필요한데
-> `data/allganize/`엔 `docx/`만 있고 **원본 PDF가 로컬에 없음**(실측 확인). `documents.csv`의
-> `url`로 새로 받아야 하는데, 그러면 예전에 "9개 법률 문서 파일명 안 맞음"으로 겪었던
-> 매칭 문제를 또 거칠 가능성이 있음 - 원본 PDF를 실제로 확보하기 전까지는 선택 항목으로 둔다.
+## 4. pdf 파싱 (`pdf_track/parse.py`)
 
 ```python
-# eval_common.py - 겹침 판정 (페이지·섹션 적중에 공통으로 사용)
-def overlap_ratio(chunk_text, gold_text):
-    """청크 단어 중 정답 구간에도 있는 단어 비율"""
-    c, g = chunk_text.split(), set(gold_text.split())
-    return sum(w in g for w in c) / max(len(c), 1)
+result = _converter.convert(filepath)   # do_ocr=False, TableFormerMode.FAST
+doc = result.document
+for item in doc.texts:
+    provs = []
+    for p in item.prov:                      # ★ prov 전체를 저장(문단이 페이지/단을 넘으면 여러 개)
+        page_h = doc.pages[p.page_no].size.height
+        bbox = p.bbox if p.bbox.coord_origin.name == "TOPLEFT" else p.bbox.to_top_left_origin(page_h)
+        provs.append({"page": p.page_no, "bbox": {...}, "charspan": p.charspan})
+    elements.append({..., "loc": {"prov": provs}})   # loc이 리스트를 담을 수 있음
+```
+**이전 버전과 차이**: `item.prov[0]`만 쓰던 걸 **`item.prov` 전체**로 바꿈 — 문단이 페이지나
+단(2단 논문)을 넘으면 prov가 여러 개 나오기 때문.
 
-def is_hit(chunk_text, gold_text, threshold=0.5):
-    return overlap_ratio(chunk_text, gold_text) >= threshold
+### 표: 두 층 구조 (6절과 동일 원칙)
+`doc.tables`의 표 하나 = elements의 `label:"table"` 요소 1개. `table.data.table_cells`를
+순회해서 `cells` 리스트를 만들고, 표 전체 텍스트는 마크다운으로 직렬화(6절 참고).
+
+### 수식 글꼴 skip (pdf 전용, 참고 패턴 — 검증 필요)
+```
+(CM[^R]|MS.M|XY|MT|BL|RM|EU|LA|RS|LINE|LCIRCLE|TeX-|rsfs|txsy|wasy|stmary|.*Sym|.*Math)
+```
+`.*Ital`/`.*Mono`/`.*Code`는 **제외하고 시작** — `.*Ital`은 일반 이탤릭 본문(Times-Italic 등)까지
+잡아버림. `page.get_text("dict", clip=bbox)`로 글꼴명을 읽어 판정. **이 패턴은 PDFMathTranslate의
+`converter.py`에서 유래했다고 하는데, 이번 세션에 그 소스를 직접 열어본 적은 없음(미검증)** —
+우리 50개 코퍼스 중 수식이 있는 논문 2~3개로 실제 겹치는지 검증 후 확정할 것.
+
+### 실측 결과 (변경 없음)
+50개 전체 스캔: 실패 0, `section_header` 0개 문서 0, 요소 수 30개 미만 문서 0. **페이지 넘는
+표**: `table.prov` 길이 1 초과(Docling 자체 인식) 0건. 대신 "인접 페이지 열 개수 일치"로 찾은
+분할 의심 59건 중 `2404.09358v3.pdf`(7열, 11페이지 연속), `2410.22706v2.pdf`(6~9열, 여러
+페이지 연속)는 실제 분할된 표일 가능성이 높음(우연이라기엔 규칙적, 두 문서 다 `table_cell`
+수가 전체 중 최다 수준이었음) — smart `group_elements()` 구현 후 이 두 문서를 스팟체크할 것.
+
+---
+
+## 5. 청킹 (`smart_chunker.py`)
+
+### fixed/semantic — 이제 요소 단위 채점을 위해 오프셋을 추적함
+
+```python
+flat_text = "\n".join(e["text"] for e in elements if e["label"] not in FURNITURE)
+# elements에 span 기록(위 2절)
+
+fixed_chunks = CharacterTextSplitter(separator="", chunk_size=500,
+                                      add_start_index=True).create_documents([flat_text])
+# ★ 번역용 semantic은 LangChain SemanticChunker를 쓰지 않는다 - " ".join() 재조합으로
+#   오프셋이 깨지는 게 이미 이 레포에서 실측 확인된 문제. 대신 레포의 오프셋 보존판
+#   SemanticTextSplitter(srt/splitters.py, add_start_index=True 기본)를 그대로 재사용.
+#   (주의: docx_track 검색 전용 그리드서치는 여전히 LangChain SemanticChunker를 씀 -
+#   검색은 오프셋이 필요 없어서 그대로 두고, "번역"에서만 오프셋 보존판으로 바꾸는 것)
+semantic_chunks = SemanticTextSplitter(embed_model, ...).create_documents([flat_text])
+
+for chunk in fixed_chunks:  # semantic_chunks도 동일
+    start, end = chunk.metadata["start_index"], chunk.metadata["start_index"] + len(chunk.page_content)
+    covered = [e for e in elements if e["span"][0] < end and start < e["span"][1]]
+    # covered의 각 요소(또는 겹치는 부분)에 [n] 번호 부여해서 번역 → 요소 단위로 CometKiwi 채점
 ```
 
-> LLM 판정은 틀릴 수 있습니다. 50개 정도는 직접 채점해서 Gemma 판정과 몇 % 일치하는지
-> 보고서에 적으면 신뢰도가 올라갑니다. (Allganize도 사람 채점과 약 8% 차이가 있었다고 밝힘)
+### smart — `group_elements()`
+```python
+def group_elements(elements, count_tokens, min_tokens=100, max_tokens=400, window=2):
+    # 구조 우선: section_header 경계에서 새 그룹, 표+캡션(caption_ids로 연결)은 한 그룹
+    # 표 하나가 max_tokens를 넘으면: 행 묶음으로 나누고, 나뉜 조각마다 헤더 행을 반복해서 앞에 붙임
+    # 의미 분할: 그 외 그룹이 max_tokens 넘으면 요소 경계(중간 아님)에서 좌우 window 유사도 최저점 분할
+    # 크기 조절: min_tokens 미만 그룹은 이웃과 병합
+    return [{"element_ids": [...], "text": "..."}]
+```
+
+### 세 청커 공정성 (중요)
+- 세 청커 다 **정확히 같은 elements 집합, 같은 `flat_text`**에서 출발(furniture 제외는 공통,
+  formula/필드코드 등은 청킹엔 포함).
+- 표의 `text`(마크다운 직렬화)는 파싱 시점에 한 번 정해지고, 세 청커 다 같은 표현을 씀 —
+  fixed/semantic은 표 중간에서 잘릴 수 있음(이게 비교 포인트, 의도된 것). smart만 표를 안 자름.
 
 ---
 
-## 5. pdf 트랙 (Vectara Open RAG Bench) — **로더 보강이 먼저 필요**
+## 6. 표: "표 요소 1개 + 셀 목록" 두 층 구조
 
-데이터에 `queries.json`(질문), `qrels.json`(정답 논문 id + **섹션 번호**), `answers.json`,
-`corpus/`(논문별 섹션 텍스트), 논문 PDF 50편이 로컬에 실제로 있음(실측 확인, 실행 자체는 바로 가능
-- 원 계획의 "100~200편"보다 적으니 아래 1번은 "50편 전부 사용"으로 수정).
+셀을 낱개 요소로 펼치면 셀 간 관계·헤더·병합·캡션 연결이 사라진다(지난번 발견한 문제).
+그래서 표는 항상 이렇게 저장:
 
-**smart를 붙이기 전에 `pdf_track/loader.py`에 먼저 손볼 것 2가지**:
+```python
+{"id":.., "label": "table", "table_id": 0, "caption_ids": [..],
+ "n_rows":.., "n_cols":.., "text": "<마크다운 표>",   # 세 청커 공통 직렬화
+ "cells": [
+    {"cell_id":.., "row":.., "col":.., "row_span":.., "col_span":.., "header": bool,
+     "text": "..", "span_in_table": (start,end),  # 이 셀 글자가 표 text 문자열 안에서 차지하는 위치
+     "loc": {...}},                                # pdf: 셀 bbox / docx: 셀 첫 문단 paraId
+    ...
+ ]}
+```
+병합 셀은 한 번만 기록(Docling `TableCell`의 시작 행·열 + span 사용, docx도 python-docx가
+이미 병합을 해석해서 주므로 동일 원칙).
 
-1. **헤더 감지 추가** — 지금 로더(`load_pdf`)는 폰트 크기로 각주만 구분하고(`avg_size <
-   footnote_threshold`) 제목은 아예 구분 안 함(`{"heading": False}`가 하드코딩, 실제로
-   `True`로 세팅하는 코드가 없음). 헤더 텍스트가 본문 문단에 그냥 섞여 들어가서, 지금
-   상태로 smart를 돌리면 `PDF_HEADING_RE`가 찾을 헤더 자체가 텍스트에 안 남아있을 확률이
-   큼(구조 1단계가 사실상 무력화). `_dominant_body_size`보다 확연히 큰 폰트 줄을
-   `kind="heading"`으로 별도 flush하도록 추가해야 함.
-2. **표를 JSON 대신 마크다운으로** — 지금은 표 행마다 `json.dumps({...})`를 `kind="row"`
-   Unit으로 저장. `smart_chunker.py`의 표 감지(`body.startswith(("|", "<table", "{"))`)는
-   `|`도 이미 인식하므로, PyMuPDF가 주는 `rows`/`header`로 마크다운 표 문자열을 만들어
-   `kind="table"` Unit 하나로 저장하면 (a) docx와 표현 방식이 통일되고 (b) bge-m3 임베딩
-   입장에서 JSON보다 자연스러운 텍스트라 의미 경계 판단에 유리하고 (c) `smart_chunker.py`는
-   손댈 필요가 없음(`|`-prefix 병합 로직이 이미 있음). 이 JSON 포맷을 읽는 다운스트림
-   코드는 현재 전혀 없음(실측 확인, `pdf_track/mapper.py`는 kind에 무관하게 동작) - 안전한 변경.
-
-**평가 순서** (위 로더 보강 후)
-
-1. 로컬에 있는 논문 PDF 50편 전부 사용 + 해당 질문들
-2. 보강된 `pdf_track/loader.py`로 PDF 로드 → 3개 청커로 청킹
-3. 질문으로 top-5 검색 → 정답 섹션 텍스트(`corpus/`에서 가져옴)와 `is_hit()`로 비교
-4. 지표: `section_hit@5`, `MRR`, (여유 있으면) 답변 생성 후 O/X
-5. 질문 유형(text-only / text-table)별로 나눠 보고. 이미지 질문은 제외
-
-주의: `corpus/`의 섹션 텍스트는 **채점에만** 쓰고 청커에는 넣지 않습니다(정답을 미리 보는 셈이라).
-
-> `pdf_track/mapper.py`를 손대는 김에: 지금 `chunk_bundle()`이 문서마다 `split_documents([doc])`를
-> 따로 호출하는 per-doc 루프인데, 이건 docx_track에서 이미 "`split_documents()`에 여러 문서를
-> 한번에 넘겨도 문서 경계를 안 넘는다"는 걸 실측으로 증명하고 지운 것과 똑같은 불필요한
-> 패턴 - 같이 정리하면 일관성 있음(이번 계획의 핵심은 아니라 선택 사항).
+**청킹·검색·요약**: 표 요소의 `text`(마크다운) 사용. **번역·채점·병합만 셀 단위**: 번역 청크가
+걸친 셀(`span_in_table` 기준)마다 `[n]` 번호 부여, 숫자/기호만 있는 셀은 skip(원문 유지).
+선택 사항으로 표 전체를 "참고용, 번역 금지" 문맥으로 프롬프트 앞에 붙여 셀 번역에 맥락 제공
+가능. 병합(smart만)은 각 셀의 `loc`에 씀.
 
 ---
 
-## 6. LongBench 트랙: 공식 방식 그대로 — 순서상 제일 마지막
+## 7. 병합 (`docx_track/writer.py`, `pdf_track/writer.py` — smart 번역만)
 
-> LongBench는 "삭제"된 게 아니라, 2026-09-22 세션에 "폴더만 만들어두고 구현은 나중에"로
-> **의도적으로 미뤄둔 상태**였음(`src/longbench/`엔 `__init__.py`만 있음, 실측 확인). 이 계획이
-> 이걸 다시 꺼내는 건 번복이 아니라 원래 예정된 순서를 재개하는 것 - 다만 4개 트랙 중
-> 가장 나중(SRT/docx/pdf 끝난 뒤)에 시작.
+### docx
+```python
+doc = DocxDocument(anchored_path)   # ★ 원본이 아니라 *.anchored.docx를 열어야 함(paraId가 거기만 있음)
+for eid, translated_text in translations.items():
+    para = find_paragraph_by_paraId(doc, elements[eid]["loc"]["paraId"])
+    for content in para.iter_inner_content():   # run + 하이퍼링크 모두 순회(p.runs만 쓰면
+                                                  # 링크 글자가 안 지워지는 버그가 있었음)
+        ...  # 1차: 첫 run에 번역문 전체, 나머지는 비움. cell.merge() 호출 안 함.
+doc.save(f"results/docx/{name}_translated.docx")
+```
 
-LongBench 논문에도 **"긴 문맥을 청크로 잘라 검색해서 모델에 넣는"** 실험이 있습니다
-(200단어 청크 top-7 / 500단어 청크 top-3). 이 설정을 그대로 따라 하면 됩니다.
-
-| 하위셋 | 유형 | 공식 지표 |
-|---|---|---|
-| qasper, multifieldqa_en | 단일 문서 QA | QA F1 |
-| hotpotqa, 2wikimqa | 여러 문서 QA | QA F1 |
-| narrativeqa | 소설 QA | QA F1 |
-| (선택) gov_report | 요약 | ROUGE-L |
-
-1. `datasets.load_dataset("THUDM/LongBench", name)`으로 로드. 하위셋당 100개
-2. 샘플마다 `context`를 3개 청커로 청킹 → `input`(질문)으로 검색
-3. **검색된 청크를 약 1,500단어(≈2,000토큰)까지** 담아 Gemma에 넣음 (모든 청커 동일)
-4. 프롬프트는 LongBench 공식 `dataset2prompt.json`, 채점은 공식 `metrics.py`의
-   `qa_f1_score`를 복사해서 사용 → 다른 논문 숫자와 비교 가능
-5. (선택) gov_report는 "청크마다 요약 → 요약들을 다시 요약"(map-reduce)으로 RFP의
-   "요약 품질" 비교에 사용
+### pdf — 페이지마다 정해진 순서로 처리(bbox 겹침 시 방금 쓴 걸 지우는 사고 방지)
+```python
+for page_no, page_elements in group_by_page(translations):
+    page = pdf[page_no - 1]
+    # (a) 빈 임시 페이지에 먼저 넣어보고 들어가는지 확인
+    fits = [e for e in page_elements if test_fit(scratch_page, e["bbox"], e["translated_text"])]
+    # (b) 들어가는 요소만 전부 redact 표시
+    for e in fits:
+        page.add_redact_annot(fitz.Rect(e["bbox"]).__add__/*1pt 안쪽*/)
+    # (c) 한 번에 적용
+    page.apply_redactions(images=PDF_REDACT_IMAGE_NONE, graphics=PDF_REDACT_LINE_ART_NONE)
+    # (d) 그다음에 전부 쓰기
+    for e in fits:
+        spare_height, scale = page.insert_htmlbox(rect, e["translated_text"],
+            css="font-family:NotoSansKR", archive=pymupdf.Archive("fonts/"), scale_low=0.6)
+        # ★ 반환값은 (spare_height, scale) 튜플. spare_height<0이면 아무것도 안 쓰인 것(실패)
+        if spare_height < 0:
+            log_failed(e["id"]); continue   # 원문 유지
+        log_scale(e["id"], scale)
+pdf.subset_fonts()   # 맨 마지막에 한 번
+pdf.save(f"results/pdf/{name}_translated.pdf")
+```
+**여러 칸(prov 여러 개)에 걸친 문단**: 1차 구현은 **첫 번째 칸에만 쓰고 나머지 칸은 원문
+유지**(charspan 값이 항상 신뢰 가능한지 미확인 — `document.py:4642`에 `charspan=(0,0)`
+placeholder로 쓰는 코드가 있는 걸 봐서 항상 의미있는 값은 아닐 수 있음). charspan 비율로
+쪼개 배치하는 건 스트레치 골로 미룸.
 
 ---
 
-## 7. 공정한 비교를 위한 규칙 (보고서에 그대로 적기)
+## 8. 평가
 
-1. 임베딩(bge-m3), 검색(top-k 또는 같은 토큰 예산), LLM(Gemma, greedy), 프롬프트를 모두 고정
-2. 청커 크기는 **평균 청크 토큰 수가 비슷하게** 맞춤 (예: 모두 300~400토큰 근처)
-3. 모든 결과표에 **청크 개수 / 평균 토큰 수**를 같이 적음 (큰 청크가 유리해 보이는 착시 방지)
-4. 파라미터(max_tokens, percentile 등)는 데이터 일부(20%)로만 고르고, 나머지로 최종 점수 계산
+| 대상 | 방법 |
+|---|---|
+| 검색 | doc_hit@5/section_hit@5, MRR, F1 |
+| 요약 | QA 커버리지(Gemma O/X) |
+| 번역 | **CometKiwi, 요소(표는 셀) 단위 — 세 청커 전부**(fixed/semantic 포함, 1절 원칙 2번). `.venv-eval`에서 저장된 (원문,번역) 쌍 읽어서 채점. 실제 작동 확인됨(테스트 점수 0.888) |
+| 병합 | **항등 테스트가 최우선**(파싱 직후 실행, 통과해야 다음 단계) — docx는 텍스트 완전 일치, pdf는 페이지 텍스트/이미지 거의 일치. 그다음 번역 커버리지, 잘린 요소 수, 번호 누락 수, pdf 축소 배율/실패 수, skip 사유별 수 |
+| 공통 | 청크 수, 평균 토큰 수, 청킹 시간 |
+
+CometKiwi는 `.venv311`(번역 실행) → 결과 파일 저장 → 프로세스 종료 → `.venv-eval`(채점)
+순서로 완전히 분리해서 실행(같은 프로세스에서 절대 같이 못 씀).
 
 ---
 
-## 8. 폴더 구조 (지금 구조에서 최소 변경)
-
-> **`chunkers/baselines.py`(fixed까지 래퍼로 감싸는 공유 폴더) 안 씀.** 이번 세션에
-> docx_track의 `splitters.py`(`make_fixed_splitter` 같은 순수 pass-through 래퍼)를 "의미
-> 없는 간접화"라고 판단해서 지우고 `CharacterTextSplitter`/`SemanticChunker`를 트랙마다
-> 직접 호출하게 바꿨음 - 공유 폴더를 새로 만들면 그 결정을 되돌리는 셈. **진짜 커스텀
-> 로직(`smart_chunker.py`, srt의 `SemanticTextSplitter`)만 공유하고, fixed/semantic은
-> 지금처럼 각 트랙이 LangChain 클래스를 직접 호출한다.**
+## 9. 폴더 구조
 
 ```
 LLM_chunking/
-├─ requirements.txt          # ★ langchain-core, langchain-text-splitters, langchain-experimental,
-│                            #   langchain-huggingface, docling, pymupdf, datasets 추가
+├─ requirements.txt          # docling==2.127.0 정확히 고정(내부 API 의존)
+├─ requirements-eval.txt     # unbabel-comet>=2.0.0
 ├─ src/
-│  ├─ config.py, common.py, llm.py, indexing.py   # 그대로
-│  ├─ smart_chunker.py        # 새로: 첨부 파일 (공유 - mode 파라미터로 4트랙 라우팅)
-│  ├─ eval_common.py          # 새로: overlap_ratio, is_hit, MRR, 토큰 예산 검색
-│  ├─ srt/                    # 그대로(splitters.py의 SemanticTextSplitter 포함) +
-│  │                          # subtitle_pipeline.py에 smart 한 줄 추가
-│  ├─ docx_track/
-│  │  ├─ loader.py            # 그대로
-│  │  └─ retrieval_benchmark.py  # fixed/semantic/smart 3파전 (page_hit은 보류)
-│  ├─ pdf_track/
-│  │  ├─ loader.py            # 헤더 감지 + 마크다운 표로 보강 (5절)
-│  │  └─ vectara_benchmark.py # 새로
-│  └─ longbench/
-│     ├─ benchmark.py         # 새로: 로드 → 청킹 → 검색 → Gemma → F1
-│     └─ metrics.py           # LongBench 공식 metrics.py 복사
-├─ tests/
-│  └─ test_srt_roundtrip.py   # "번역" 대신 원문 그대로 넣어서 원본 SRT가 복원되는지 확인
-└─ results/
+│  ├─ config.py, common.py, llm.py, indexing.py   (그대로)
+│  ├─ docobj.py              # elements 스키마(표 2층 구조 포함) + save/load
+│  ├─ smart_chunker.py       # group_elements() 추가, 기존 코드 유지
+│  ├─ pipeline.py            # --dataset --task 공통 실행 진입점
+│  └─ merge_checks.py        # 항등 테스트 등
+├─ docx_track/
+│  ├─ parse.py               # paraId 앵커링 + iterate_items 순회 + 표 2층
+│  ├─ writer.py               # python-docx 병합(anchored 파일 사용)
+│  └─ retrieval_benchmark.py / translate_benchmark.py / summary_benchmark.py
+├─ pdf_track/
+│  ├─ parse.py               # prov 전체 + 표 2층 + 수식 글꼴 skip
+│  ├─ writer.py               # PyMuPDF 병합(test-fit→redact→apply→insert 순서)
+│  └─ retrieval_benchmark.py / translate_benchmark.py / summary_benchmark.py
+├─ evals/comet_score.py      # .venv-eval 전용
+├─ fonts/                    # NotoSansKR 등
+├─ srt/, longbench/          (그대로/미구현, 무관)
+├─ .venv311/, .venv-eval/    (둘 다 이미 존재)
+└─ data/processed/           # <문서명>.json 캐시
 ```
 
 ---
 
-## 9. 일정 (중간발표 8주차 기준)
+## 10. 구현 순서 (확정)
 
-| 주차 | 할 일 | 결과물 |
+| 순서 | 할 일 | 통과 조건 |
 |---|---|---|
-| 5 | `smart_chunker.py` 넣기, requirements 정리. **docx_track부터**: fixed/semantic 최적값(이미 그리드서치로 확보) + smart 3파전 | Allganize 검색 결과표 (fixed/semantic/smart) |
-| 6 | pdf_track 로더 보강(헤더 감지 + 마크다운 표) → 3개 청커 × 검색 지표(section_hit, MRR) | Vectara 검색 결과표 |
-| 7 | SRT에 smart 한 줄 추가해서 5편 돌리기 + LongBench 구현 시작(QA 2개 하위셋) | 4개 데이터셋 1차 표 |
-| 8 | **중간 발표**: 어디서 이기고 어디서 지는지 | 중간 슬라이드 |
-| 9 | 답변 생성 평가 (Allganize O/X, LongBench F1 전체) | 2차 결과표 |
-| 10 | 어블레이션: 스마트 청커에서 ①구조 끄기 ②창 크기 1 vs 2 ③min/max 바꾸기 | 어블레이션 표 |
-| 11 | 엣지 케이스: 깨진 타임스탬프, cp949, 빈 큐, 아주 큰 표 | 테스트 코드 |
-| 12–13 | 코드 정리, README 재현 절차, 결과 재현 확인 | GitHub 정리 |
-| 14 | 데모 + 최종 발표 | Tech Report |
-
-**어블레이션이 곧 "내 알고리즘의 어느 부분이 효과가 있었나"의 증거**입니다.
-스마트 청커가 3단계라서 단계별로 하나씩 끄면 표 하나가 나옵니다.
+| 1 | docx parse(paraId 앵커 + iterate_items 순서 + 표 2층) / pdf parse(prov 전체 + 표 2층) | 코드 작성 |
+| 2 | **항등 테스트** (docx·pdf) | 원문 그대로 되돌려 쓴 결과가 원본과 일치 — **통과해야 3번으로** |
+| 3 | 45개·50개 전체 재스캔 | label 분포, 표 수, skip 수 확인 |
+| 4 | `group_elements()` | 표+캡션 안 잘리는지, 큰 표 헤더 반복되는지 육안 확인 |
+| 5 | 검색·요약(세 청커) | 기존 지표로 비교 |
+| 6 | 번역 `[n]`(세 청커, 요소/셀 단위 채점) | 번호 누락 개수 기록 |
+| 7 | smart 병합 + 병합 지표 | 커버리지, 잘린 요소 수, skip 사유별 수, 숫자 보존율 |
+| 8 | 스트레치(시간 남으면) | 서식 태그화, 번역 재시도, pdf 여러 칸 문단 나누기, 수식 자리표시자 |
 
 ---
 
-## 10. 예상되는 문제와 대처 (보고서의 트러블슈팅 절에 쓸 것)
+## 11. 트러블슈팅 기록 (보고서용)
 
 | 문제 | 원인 | 대처 |
 |---|---|---|
-| `semantic_90/95`에서 OOM | percentile이 높으면 경계가 적어져 청크가 매우 커지고, bge-m3가 긴 청크를 한 배치에 여러 개 임베딩 | `encode(batch_size=4)`, 임베딩 전에 길이순 정렬, fp16 |
-| Gemma와 bge-m3 동시 로드 시 메모리 부족 | 24GB 한 장 | 검색 결과를 파일로 저장 → 임베딩 모델 내리고 Gemma 로드 |
-| 번역 출력에 `[n]` 번호 누락 | 청크가 너무 길거나 모델이 합쳐서 번역 | 누락 개수를 결과표에 기록, 청크 크기 줄이기 |
-| 스마트 청커가 이기지 못하는 데이터셋 | 서술형 텍스트(narrativeqa)는 구조가 없음 | 정상적인 결과. "구조가 있는 문서에서만 효과"라고 솔직히 적기 |
-
-> **실제로 이 표의 첫 줄을 그대로 겪음(2026-09-24, docx_track 그리드서치 중).**
-> `semantic_90`에서 정확히 예측된 지점에 CUDA OOM 발생 — 다만 실측해보니 우리 자신의
-> 배치 크기보다도 **공유 GPU에 동시에 떠 있던 외부 프로세스(16.57GiB 사용 중)와의 경합이
-> 더 직접적인 원인**으로 보였음(`nvidia-smi`로 그 프로세스가 크래시 직후 매번 사라진 걸
-> 확인, 재현 시도마다 다른 PID인데 메모리 사용량은 동일 - 이 서버에 주기적으로 도는 다른
-> 작업으로 추정). 적용한 완화책은 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`(에러
-> 메시지가 직접 권장)였고 이후 재현 안 됨. **이 표가 제안한 `encode(batch_size=4)` +
-> 길이순 정렬도 우리 쪽 최대 배치 크기 자체를 줄여서 외부 경합에 더 안전해지므로 같이
-> 적용할 가치 있음** — 두 대처가 상호 배타적이지 않고 상호 보완적.
+| Docling PDF 변환 시 `CUDNN_STATUS_NOT_INITIALIZED` | 드라이버/cuDNN 버전 불일치 | `torch.backends.cudnn.enabled = False` |
+| `semantic_90/95`에서 OOM | 공유 GPU 경합(실측) | `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` |
+| CometKiwi가 transformers 5.x와 충돌 | `unbabel-comet`이 `transformers<5.0` 강제 | `.venv-eval` 분리 — 실제 작동 확인됨 |
+| markitdown: 단어 사이 공백 소실 | pdfminer 계열 커닝 처리 문제 | 후보 제외 |
+| marker-pdf: 환경 자체에서 실행 실패 | GPU모드 Docker 필요, CPU모드 내부 서버 500 | 후보 제외 |
+| python-docx 단독으로 docx 읽으면 텍스트 깨짐 | 겹친 텍스트박스+본문이 섞여 읽힘(실측) | Docling 유지 + paraId 앵커링 |
+| pdf 표가 페이지 경계를 넘음 | Docling 표 구조 모델이 페이지 단위 독립 처리(소스 확인) | **실제 사례 확인됨**(2404.09358v3.pdf, 2410.22706v2.pdf) — `group_elements()` 구현 후 스팟체크 |
 
 ---
 
 ## 참고 자료
 
-- [KT Cloud Tech Blog — RAG 청킹 전략과 최적화](https://tech.ktcloud.com/entry/2025-11-ktcloud-rag-ai-%EC%B2%AD%ED%82%B9%EC%A0%84%EB%9E%B5-%EC%B5%9C%EC%A0%81%ED%99%94): 고정/의미/구조 기반 비교, Recall@k·nDCG 지표
-- [forge-tutorial-rag 4.5 청킹 전략 비교 실험](https://github.com/jsonpassion/forge-tutorial-rag): Recursive(400, overlap 0) 베이스라인 우선, 구조+재귀 2단계 분할
+- [KT Cloud Tech Blog — RAG 청킹 전략과 최적화](https://tech.ktcloud.com/entry/2025-11-ktcloud-rag-ai-%EC%B2%AD%ED%82%B9%EC%A0%84%EB%9E%B5-%EC%B5%9C%EC%A0%81%ED%99%94)
+- [forge-tutorial-rag](https://github.com/jsonpassion/forge-tutorial-rag)
 - [Is Semantic Chunking Worth the Computational Cost? (Vectara, NAACL 2025)](https://arxiv.org/abs/2410.13070)
 - [Chroma — Evaluating Chunking Strategies for Retrieval](https://www.trychroma.com/research/evaluating-chunking)
-- [Meta-Chunking (arXiv 2410.12788)](https://arxiv.org/abs/2410.12788), [MoC (ACL 2025)](https://arxiv.org/abs/2503.09600): LLM 기반 청킹 관련 연구 (관련 연구 절에 인용)
+- [Meta-Chunking (arXiv 2410.12788)](https://arxiv.org/abs/2410.12788), [MoC (ACL 2025)](https://arxiv.org/abs/2503.09600)
 - [allganize/RAG-Evaluation-Dataset-KO](https://huggingface.co/datasets/allganize/RAG-Evaluation-Dataset-KO)
 - [vectara/open_ragbench](https://huggingface.co/datasets/vectara/open_ragbench)
 - [LongBench (THUDM)](https://github.com/THUDM/LongBench)
+- [CometKiwi](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) — 실제 작동 확인됨
+- PDF 번역 조립(미검증, 참고): [Artifex PyMuPDF 가이드](https://artifex.com/blog/translating-pdfs-a-practical-pymupdf-guide), [PDFMathTranslate](https://github.com/PDFMathTranslate/PDFMathTranslate)
