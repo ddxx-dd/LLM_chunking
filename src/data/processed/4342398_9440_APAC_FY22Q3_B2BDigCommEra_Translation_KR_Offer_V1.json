@@ -1,0 +1,3102 @@
+{
+  "name": "4342398_9440_APAC_FY22Q3_B2BDigCommEra_Translation_KR_Offer_V1",
+  "fmt": "docx",
+  "elements": [
+    {
+      "id": 0,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": 1,
+      "label": "title",
+      "level": null,
+      "text": "디지털 커머스 시대, B2B 비즈니스 생존 전략",
+      "loc": {
+        "paraId": "7A6D285B"
+      },
+      "skip": null,
+      "span": [
+        1,
+        27
+      ]
+    },
+    {
+      "id": 2,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        28,
+        28
+      ]
+    },
+    {
+      "id": 3,
+      "label": "text",
+      "level": null,
+      "text": "B2B 비즈니스를 e커머스에 통합해야 하는 3가지 이유",
+      "loc": {
+        "paraId": "3BE32FD0"
+      },
+      "skip": null,
+      "span": [
+        29,
+        59
+      ]
+    },
+    {
+      "id": 4,
+      "label": "text",
+      "level": null,
+      "text": "2",
+      "loc": {
+        "paraId": "5C4EA008"
+      },
+      "skip": null,
+      "span": [
+        60,
+        61
+      ]
+    },
+    {
+      "id": 5,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        62,
+        62
+      ]
+    },
+    {
+      "id": 6,
+      "label": "section_header",
+      "level": 2,
+      "text": "목차",
+      "loc": {
+        "paraId": "6CC98D93"
+      },
+      "skip": null,
+      "span": [
+        63,
+        65
+      ]
+    },
+    {
+      "id": 7,
+      "label": "text",
+      "level": null,
+      "text": "e커머스의 급성장\t3",
+      "loc": {
+        "paraId": "44419F82"
+      },
+      "skip": null,
+      "span": [
+        66,
+        77
+      ]
+    },
+    {
+      "id": 8,
+      "label": "text",
+      "level": null,
+      "text": "B2B e커머스 장점 1. 미래 전략\t4",
+      "loc": {
+        "paraId": "3F137E42"
+      },
+      "skip": null,
+      "span": [
+        78,
+        100
+      ]
+    },
+    {
+      "id": 9,
+      "label": "text",
+      "level": null,
+      "text": "B2B e커머스 장점 2. 비용 절감\t8",
+      "loc": {
+        "paraId": "04D1761C"
+      },
+      "skip": null,
+      "span": [
+        101,
+        123
+      ]
+    },
+    {
+      "id": 10,
+      "label": "text",
+      "level": null,
+      "text": "B2B e커머스 장점 3. 매출 증가\t13",
+      "loc": {
+        "paraId": "45C22EC1"
+      },
+      "skip": null,
+      "span": [
+        124,
+        147
+      ]
+    },
+    {
+      "id": 11,
+      "label": "text",
+      "level": null,
+      "text": "결론\t17",
+      "loc": {
+        "paraId": "02AE8682"
+      },
+      "skip": null,
+      "span": [
+        148,
+        153
+      ]
+    },
+    {
+      "id": 12,
+      "label": "text",
+      "level": null,
+      "text": "B2B e커머스의 가치\t18",
+      "loc": {
+        "paraId": "556B288D"
+      },
+      "skip": null,
+      "span": [
+        154,
+        169
+      ]
+    },
+    {
+      "id": 13,
+      "label": "text",
+      "level": null,
+      "text": "출처\t19",
+      "loc": {
+        "paraId": "628CC546"
+      },
+      "skip": null,
+      "span": [
+        170,
+        175
+      ]
+    },
+    {
+      "id": 14,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        176,
+        176
+      ]
+    },
+    {
+      "id": 15,
+      "label": "section_header",
+      "level": 2,
+      "text": "e커머스의 급성장",
+      "loc": {
+        "paraId": "75BCC205"
+      },
+      "skip": null,
+      "span": [
+        177,
+        186
+      ]
+    },
+    {
+      "id": 16,
+      "label": "text",
+      "level": null,
+      "text": "e커머스의 글로벌 성장은 디지털 전환에 대한 B2B 업계 전반의 인식을 완전히 바꿔놓았습니다. B2B 기업의 온라인 매출은 2018년 $9,000억 규모에서 2020년에는 $1조 3,000억 규모로 40% 증가했습니다. Gartner는 2025년까지 공급자와 구매자 간 B2B 거래의 무려 80%가 온라인에서 수행될 것으로 전망했습니다.",
+      "loc": {
+        "paraId": "6316F316"
+      },
+      "skip": null,
+      "span": [
+        187,
+        375
+      ]
+    },
+    {
+      "id": 17,
+      "label": "text",
+      "level": null,
+      "text": "e커머스 통합을 차일피일 미루는 조직은 그로 인한 손해를 고스란히 떠안게 됩니다. e커머스 통합이 아닌 다른 선택은 비용이 많이 들고 비생산적이며, 새로운 기술을 앞다퉈 도입하는 경쟁사와 격차만 더 커질 뿐입니다. 통합을 망설이는 주요 의사결정자에게 디지털 커머스의 가치를 효과적으로 설명하려면 미래를 예측하고 대응하는 전략, 비용 절감, 매출 증가 등 경영진이 관심을 가질 만한 설득력 있는 사례를 제시해야 합니다.",
+      "loc": {
+        "paraId": "1B8CE945"
+      },
+      "skip": null,
+      "span": [
+        376,
+        609
+      ]
+    },
+    {
+      "id": 18,
+      "label": "text",
+      "level": null,
+      "text": "비즈니스에 필요한 변화의 선두 주자가 되십시오. 이 안내서는 기업의 이해관계자에게 디지털 통합의 가치를 설명하는 데 도움을 드리기 위해 선도적인 조사 기관의 여러 데이터가 입증하는 3가지 설득 근거(미래 전략, 비용 절감, 매출 증가)를 소개합니다.",
+      "loc": {
+        "paraId": "4DE7C069"
+      },
+      "skip": null,
+      "span": [
+        610,
+        749
+      ]
+    },
+    {
+      "id": 19,
+      "label": "text",
+      "level": null,
+      "text": "3",
+      "loc": {
+        "paraId": "1E26844D"
+      },
+      "skip": null,
+      "span": [
+        750,
+        751
+      ]
+    },
+    {
+      "id": 20,
+      "label": "text",
+      "level": null,
+      "text": "B2B e커머스 장점",
+      "loc": {
+        "paraId": "37076ADB"
+      },
+      "skip": null,
+      "span": [
+        752,
+        763
+      ]
+    },
+    {
+      "id": 21,
+      "label": "section_header",
+      "level": 2,
+      "text": "1 미래 전략",
+      "loc": {
+        "paraId": "4C68F418"
+      },
+      "skip": null,
+      "span": [
+        764,
+        771
+      ]
+    },
+    {
+      "id": 22,
+      "label": "section_header",
+      "level": 5,
+      "text": "e커머스 통합으로 미래 변화에 대응할 수 있습니다.",
+      "loc": {
+        "paraId": "253B5A57"
+      },
+      "skip": null,
+      "span": [
+        772,
+        800
+      ]
+    },
+    {
+      "id": 23,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        801,
+        801
+      ]
+    },
+    {
+      "id": 24,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        802,
+        802
+      ]
+    },
+    {
+      "id": 25,
+      "label": "text",
+      "level": null,
+      "text": "디지털 커머스 시대에서 성공하려면 고객층의 인구통계와 서비스에 대한 기대 수준을 먼저 파악해야 합니다. 또한 귀사의 업계에 진입한 경쟁사를 파악하고, 이들과 경쟁하기 위해 얼마나 잘 준비되어 있는지를 아는 것도 중요합니다. 이렇게 해야 조직의 기존 인프라에서 개선할 점을 파악하고, 디지털 커머스의 가치를 설파할 명분을 얻을 수 있습니다.",
+      "loc": {
+        "paraId": "4BC7BBF8"
+      },
+      "skip": null,
+      "span": [
+        803,
+        992
+      ]
+    },
+    {
+      "id": 26,
+      "label": "text",
+      "level": null,
+      "text": "4",
+      "loc": {
+        "paraId": "048A86A1"
+      },
+      "skip": null,
+      "span": [
+        993,
+        994
+      ]
+    },
+    {
+      "id": 27,
+      "label": "text",
+      "level": null,
+      "text": "B2B 구매자는 온라인 쇼핑을 이미 수용했고, 이들의",
+      "loc": {
+        "paraId": "441A7A04"
+      },
+      "skip": null,
+      "span": [
+        995,
+        1024
+      ]
+    },
+    {
+      "id": 28,
+      "label": "text",
+      "level": null,
+      "text": "요구는 더욱 세분화되고 있습니다. 판매자가 시장 의제를 선점하지 못하면 시장에 수동적으로 따를 수밖에 없습니다.”",
+      "loc": {
+        "paraId": "4E5E103B"
+      },
+      "skip": null,
+      "span": [
+        1025,
+        1088
+      ]
+    },
+    {
+      "id": 29,
+      "label": "text",
+      "level": null,
+      "text": "Ed Kennedy",
+      "loc": {
+        "paraId": "1F46FAC9"
+      },
+      "skip": null,
+      "span": [
+        1089,
+        1099
+      ]
+    },
+    {
+      "id": 30,
+      "label": "text",
+      "level": null,
+      "text": "B2B 커머스 제품 마케팅 관리자",
+      "loc": {
+        "paraId": "338494A7"
+      },
+      "skip": null,
+      "span": [
+        1100,
+        1118
+      ]
+    },
+    {
+      "id": 31,
+      "label": "text",
+      "level": null,
+      "text": "Adobe",
+      "loc": {
+        "paraId": "2744566B"
+      },
+      "skip": null,
+      "span": [
+        1119,
+        1124
+      ]
+    },
+    {
+      "id": 32,
+      "label": "text",
+      "level": null,
+      "text": "5",
+      "loc": {
+        "paraId": "1D3E4014"
+      },
+      "skip": null,
+      "span": [
+        1125,
+        1126
+      ]
+    },
+    {
+      "id": 33,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        1127,
+        1127
+      ]
+    },
+    {
+      "id": 34,
+      "label": "section_header",
+      "level": 4,
+      "text": "변화하는 시대, 변화하는 구매자",
+      "loc": {
+        "paraId": "70357EBF"
+      },
+      "skip": null,
+      "span": [
+        1128,
+        1145
+      ]
+    },
+    {
+      "id": 35,
+      "label": "text",
+      "level": null,
+      "text": "Merit는 2025년까지 디지털 사용이 익숙한 밀레니얼 세대가 구매 담당 책임자급으로 빠르게 전환되어 노동력의 44%를 차지할 것으로 내다봅니다. Merit의 보고서에 따르면 현재 20세~35세의 73%가 회사에서 구매할 제품 및 서비스 결정에 도움을 주고 있으며, 이 인구 집단의 1/3은 단독 의사결정자였습니다. 급격한 기술 혁신의 시대에 성장기를 보낸 밀레니얼 세대는 소비자로서 탐색하는 것과 동일한 e커머스 환경이 반영된 B2B 구매 경험을 기대합니다.",
+      "loc": {
+        "paraId": "42468300"
+      },
+      "skip": null,
+      "span": [
+        1146,
+        1404
+      ]
+    },
+    {
+      "id": 36,
+      "label": "list_item",
+      "level": null,
+      "text": "구매의 기본 환경이 된 디지털",
+      "loc": {
+        "paraId": "5A9D6374"
+      },
+      "skip": null,
+      "span": [
+        1405,
+        1421
+      ]
+    },
+    {
+      "id": 37,
+      "label": "text",
+      "level": null,
+      "text": "밀레니얼 세대의 85%는 제품과 서비스를 조사할 때 기본적으로 소셜 미디어, 벤더 웹 사이트, 검색 엔진 등을 이용하며, 모바일 환경과 영상 콘텐츠를 선호합니다(Merit).",
+      "loc": {
+        "paraId": "60B79F2B"
+      },
+      "skip": null,
+      "span": [
+        1422,
+        1519
+      ]
+    },
+    {
+      "id": 38,
+      "label": "list_item",
+      "level": null,
+      "text": "약화되는 중간 유통업자의 입지",
+      "loc": {
+        "paraId": "16C9A43E"
+      },
+      "skip": null,
+      "span": [
+        1520,
+        1536
+      ]
+    },
+    {
+      "id": 39,
+      "label": "text",
+      "level": null,
+      "text": "밀레니얼 구매자의 43%는 유통업체가 아닌 제조업체와의 직거래를 선호하고, 20%는 이를 위해 추가 비용을 지불할 의향이 있습니다(Forrester 및 Internet Retailer).",
+      "loc": {
+        "paraId": "724D4C3D"
+      },
+      "skip": null,
+      "span": [
+        1537,
+        1641
+      ]
+    },
+    {
+      "id": 40,
+      "label": "list_item",
+      "level": null,
+      "text": "구매에 영향을 주는 사회 문제 인식",
+      "loc": {
+        "paraId": "4ACA4161"
+      },
+      "skip": null,
+      "span": [
+        1642,
+        1661
+      ]
+    },
+    {
+      "id": 41,
+      "label": "text",
+      "level": null,
+      "text": "구매자의 80%는 사회적 문제에 대한 자신의 생각과 일치하는 기업의 가치를 더 인정하며, 이를 최종 구매 결정에 반영합니다(Merit).",
+      "loc": {
+        "paraId": "763D89E0"
+      },
+      "skip": null,
+      "span": [
+        1662,
+        1738
+      ]
+    },
+    {
+      "id": 42,
+      "label": "section_header",
+      "level": 4,
+      "text": "모든 구매 연령층의 디지털 전환",
+      "loc": {
+        "paraId": "6E3C8548"
+      },
+      "skip": null,
+      "span": [
+        1739,
+        1756
+      ]
+    },
+    {
+      "id": 43,
+      "label": "text",
+      "level": null,
+      "text": "구매자의 변화는 밀레니얼 세대에만 국한되지 않습니다. 모든 연령 집단의 구매자가 디지털 채널이 제공하는 속도와 편의를 좋아합니다. 디지털에 투자하지 않고 대규모 영업 팀에만 의존하는 조직은 미래 지향적 사고로 무장한 경쟁업체에 밀려날 것입니다.",
+      "loc": {
+        "paraId": "774847F6"
+      },
+      "skip": null,
+      "span": [
+        1757,
+        1893
+      ]
+    },
+    {
+      "id": 44,
+      "label": "list_item",
+      "level": null,
+      "text": "B2B 구매자의 90%는 구매를 결정하기 전에 온라인 검색 수행",
+      "loc": {
+        "paraId": "747C6563"
+      },
+      "skip": null,
+      "span": [
+        1894,
+        1929
+      ]
+    },
+    {
+      "id": 45,
+      "label": "text",
+      "level": null,
+      "text": "(McKinsey & Company)",
+      "loc": {
+        "paraId": "4237E5A3"
+      },
+      "skip": null,
+      "span": [
+        1930,
+        1950
+      ]
+    },
+    {
+      "id": 46,
+      "label": "list_item",
+      "level": null,
+      "text": "74%는 영업 담당자를 통한 구매보다 웹 사이트를 통한 구매를 더 편하게 생각 (Forrester)",
+      "loc": {
+        "paraId": "590C1957"
+      },
+      "skip": null,
+      "span": [
+        1951,
+        2006
+      ]
+    },
+    {
+      "id": 47,
+      "label": "list_item",
+      "level": null,
+      "text": "84%는 온라인 채널을 통한 반복 구매 선호 (McKinsey & Company)",
+      "loc": {
+        "paraId": "71A5E78D"
+      },
+      "skip": null,
+      "span": [
+        2007,
+        2052
+      ]
+    },
+    {
+      "id": 48,
+      "label": "section_header",
+      "level": 6,
+      "text": "Watsco, 디지털 전환으로 기록적인 성장 견인",
+      "loc": {
+        "paraId": "5F8F5518"
+      },
+      "skip": null,
+      "span": [
+        2053,
+        2080
+      ]
+    },
+    {
+      "id": 49,
+      "label": "text",
+      "level": null,
+      "text": "전통적인 비즈니스 조직인 Watsco는 디지털 경험 트랜스포메이션을 통해 폭발적인 성장을 이끌었습니다. 30년 역사를 지닌 HVAC 유통업체인 Watsco는 2014년, Adobe Commerce로 업그레이드한 이후 다양한 영역에서 급격한 변화를 경험하고 있습니다.",
+      "loc": {
+        "paraId": "22927254"
+      },
+      "skip": null,
+      "span": [
+        2081,
+        2229
+      ]
+    },
+    {
+      "id": 50,
+      "label": "list_item",
+      "level": null,
+      "text": "2017년 온라인 매출, 전년 대비 50% 성장",
+      "loc": {
+        "paraId": "360F790A"
+      },
+      "skip": null,
+      "span": [
+        2230,
+        2256
+      ]
+    },
+    {
+      "id": 51,
+      "label": "list_item",
+      "level": null,
+      "text": "2018년 온라인 매출, 전년 대비 33% 성장($12억)",
+      "loc": {
+        "paraId": "6FC8D8F3"
+      },
+      "skip": null,
+      "span": [
+        2257,
+        2289
+      ]
+    },
+    {
+      "id": 52,
+      "label": "list_item",
+      "level": null,
+      "text": "온라인 주문당 품목 수, 오프라인보다 37% 증가",
+      "loc": {
+        "paraId": "5B4A1E6A"
+      },
+      "skip": null,
+      "span": [
+        2290,
+        2317
+      ]
+    },
+    {
+      "id": 53,
+      "label": "list_item",
+      "level": null,
+      "text": "2018년 총 매출액, $45억 4,700만 달성",
+      "loc": {
+        "paraId": "3B8486CA"
+      },
+      "skip": null,
+      "span": [
+        2318,
+        2345
+      ]
+    },
+    {
+      "id": 54,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        2346,
+        2346
+      ]
+    },
+    {
+      "id": 55,
+      "label": "text",
+      "level": null,
+      "text": "6",
+      "loc": {
+        "paraId": "53925316"
+      },
+      "skip": null,
+      "span": [
+        2347,
+        2348
+      ]
+    },
+    {
+      "id": 56,
+      "label": "section_header",
+      "level": 4,
+      "text": "Amazon과 디지털 리더들의 위협",
+      "loc": {
+        "paraId": "49AD6A24"
+      },
+      "skip": null,
+      "span": [
+        2349,
+        2368
+      ]
+    },
+    {
+      "id": 57,
+      "label": "text",
+      "level": null,
+      "text": "막강한 디지털 플레이어가 아직 귀사의 업계에 진출하지 않았다고 안심해선 안 됩니다. 이는 단지 시간 문제일 뿐입니다. 이들의 시장 진출이 가시화되면, 휴대폰과 이메일 주문에만 매달려 있는 조직은 더는 고객의 충성도를 기대할 수 없을 것입니다. 실제로도 Amazon Business를 비롯한 디지털 플레이어들은 수많은 B2B 시장을 겨냥하고 있습니다.",
+      "loc": {
+        "paraId": "3A230F1E"
+      },
+      "skip": null,
+      "span": [
+        2369,
+        2564
+      ]
+    },
+    {
+      "id": 58,
+      "label": "text",
+      "level": null,
+      "text": "CNBC의 보도에 따르면 Amazon은 2021년까지 미국 B2B 시장의 10%, 전 세계 시장의 5%를 점유할 것이며, 2023년까지 매출액 $337억 달성을 목표로 삼고 있습니다. Amazon과 같은 플랫폼 기업은 B2B 서비스를 간소화하기 위해 집중적인 투자를 단행하고 있으며, 비즈니스 구매자에게 다음과 같은 편의와 다양한 기능을 폭넓게 제공합니다.",
+      "loc": {
+        "paraId": "2F1E2370"
+      },
+      "skip": null,
+      "span": [
+        2565,
+        2764
+      ]
+    },
+    {
+      "id": 59,
+      "label": "list_item",
+      "level": null,
+      "text": "다양한 선택권을 누릴 수 있는 풍부한 제품 카탈로그",
+      "loc": {
+        "paraId": "13665AC0"
+      },
+      "skip": null,
+      "span": [
+        2765,
+        2793
+      ]
+    },
+    {
+      "id": 60,
+      "label": "list_item",
+      "level": null,
+      "text": "경쟁력 있는 ‘비즈니스 전용’ 가격",
+      "loc": {
+        "paraId": "464A9B07"
+      },
+      "skip": null,
+      "span": [
+        2794,
+        2813
+      ]
+    },
+    {
+      "id": 61,
+      "label": "list_item",
+      "level": null,
+      "text": "온라인 조달 시스템 통합",
+      "loc": {
+        "paraId": "2D6E997B"
+      },
+      "skip": null,
+      "span": [
+        2814,
+        2827
+      ]
+    },
+    {
+      "id": 62,
+      "label": "list_item",
+      "level": null,
+      "text": "구매 카드, 신용한도, 세금 면제 등 각종 혜택 지원",
+      "loc": {
+        "paraId": "71346FBB"
+      },
+      "skip": null,
+      "span": [
+        2828,
+        2857
+      ]
+    },
+    {
+      "id": 63,
+      "label": "section_header",
+      "level": 6,
+      "text": "최종 승자는 디지털 리더",
+      "loc": {
+        "paraId": "3A8B264A"
+      },
+      "skip": null,
+      "span": [
+        2858,
+        2871
+      ]
+    },
+    {
+      "id": 64,
+      "label": "text",
+      "level": null,
+      "text": "조직이 변화를 수용하고 디지털 리더십에 대한 투자를 아끼지 않는다면, 기업은 수치로 나타나는 실질적인 결과를 얻게 됩니다. McKinsey는 B2B 디지털 리더가 다른 B2B보다 5배나 더 높은 매출 증가를 기록하고 있다고 보고합니다. 또한, Forrester Consulting의 데이터에 따르면 경험 트랜스포메이션에 대한 투자 가치는 전년 대비 주문액 1.6배 증가, 고객 충성도 지표 2배 상승 등의 수치로 나타나고 있습니다.",
+      "loc": {
+        "paraId": "274AA47C"
+      },
+      "skip": null,
+      "span": [
+        2872,
+        3113
+      ]
+    },
+    {
+      "id": 65,
+      "label": "text",
+      "level": null,
+      "text": "7",
+      "loc": {
+        "paraId": "2C7AB210"
+      },
+      "skip": null,
+      "span": [
+        3114,
+        3115
+      ]
+    },
+    {
+      "id": 66,
+      "label": "text",
+      "level": null,
+      "text": "B2B e커머스 장점",
+      "loc": {
+        "paraId": "512B7FDA"
+      },
+      "skip": null,
+      "span": [
+        3116,
+        3127
+      ]
+    },
+    {
+      "id": 67,
+      "label": "section_header",
+      "level": 2,
+      "text": "2 비용 절감",
+      "loc": {
+        "paraId": "62C912FF"
+      },
+      "skip": null,
+      "span": [
+        3128,
+        3135
+      ]
+    },
+    {
+      "id": 68,
+      "label": "section_header",
+      "level": 5,
+      "text": "e커머스 통합으로 리소스를 효율적으로 활용할 수 있습니다.",
+      "loc": {
+        "paraId": "3619918E"
+      },
+      "skip": null,
+      "span": [
+        3136,
+        3168
+      ]
+    },
+    {
+      "id": 69,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        3169,
+        3169
+      ]
+    },
+    {
+      "id": 70,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        3170,
+        3170
+      ]
+    },
+    {
+      "id": 71,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        3171,
+        3171
+      ]
+    },
+    {
+      "id": 72,
+      "label": "text",
+      "level": null,
+      "text": "비용을 절감하는 가장 좋은 방법은 처음부터 비용이 나가지 않도록 하는 것입니다. 시간이 지나면서 주문 처리, 수동 입력 오류, 고객 지원 등과 관련된 비용이 기업의 수익을 앗아갑니다. 다행히도 e커머스 기술은 내부 워크플로우를 자동화하고, 셀프서비스 고객 경험을 제공하며, 더욱 생산적인 비즈니스 목표에 리소스를 활용하도록 지원할 수 있습니다.",
+      "loc": {
+        "paraId": "071C0609"
+      },
+      "skip": null,
+      "span": [
+        3172,
+        3364
+      ]
+    },
+    {
+      "id": 73,
+      "label": "text",
+      "level": null,
+      "text": "8",
+      "loc": {
+        "paraId": "269F9741"
+      },
+      "skip": null,
+      "span": [
+        3365,
+        3366
+      ]
+    },
+    {
+      "id": 74,
+      "label": "section_header",
+      "level": 4,
+      "text": "주문 처리 비용을 낮추는 e커머스",
+      "loc": {
+        "paraId": "7B9B7684"
+      },
+      "skip": null,
+      "span": [
+        3367,
+        3385
+      ]
+    },
+    {
+      "id": 75,
+      "label": "text",
+      "level": null,
+      "text": "고객 충성도를 높이는 한 가지 방법은 빠르고 매끄러운 구매 경험을 제공하는 것입니다. 디지털 커머스 플랫폼은 셀프서비스 기반의 주문 방식, 간편한 견적 관리, 더 쉬운 판매 지원 등을 통해 주문 처리 비용을 현저히 낮출 수 있습니다.",
+      "loc": {
+        "paraId": "09BC0A99"
+      },
+      "skip": null,
+      "span": [
+        3386,
+        3516
+      ]
+    },
+    {
+      "id": 76,
+      "label": "list_item",
+      "level": null,
+      "text": "셀프서비스 기반의 주문",
+      "loc": {
+        "paraId": "5D998923"
+      },
+      "skip": null,
+      "span": [
+        3517,
+        3529
+      ]
+    },
+    {
+      "id": 77,
+      "label": "text",
+      "level": null,
+      "text": "세일즈 및 콜센터 팀은 수동적인 주문 입력 작업을 없앨 수 있습니다. 이는 특히, 규모가 작고 수익성이 낮은 고객과 거래할 때 유용합니다.",
+      "loc": {
+        "paraId": "4C335884"
+      },
+      "skip": null,
+      "span": [
+        3530,
+        3607
+      ]
+    },
+    {
+      "id": 78,
+      "label": "list_item",
+      "level": null,
+      "text": "간소화된 견적 관리",
+      "loc": {
+        "paraId": "341238D5"
+      },
+      "skip": null,
+      "span": [
+        3608,
+        3618
+      ]
+    },
+    {
+      "id": 79,
+      "label": "text",
+      "level": null,
+      "text": "고객 견적 협상은 모든 연관 요소를 추적할 수 있는 간소화되고 문서화된 프로세스를 통해 관리되며, 구매자가 계약을 체결한 다음에는 온라인으로 확인할 수 있습니다.",
+      "loc": {
+        "paraId": "1A8EA343"
+      },
+      "skip": null,
+      "span": [
+        3619,
+        3709
+      ]
+    },
+    {
+      "id": 80,
+      "label": "list_item",
+      "level": null,
+      "text": "더 쉬운 판매 지원",
+      "loc": {
+        "paraId": "64280BBB"
+      },
+      "skip": null,
+      "span": [
+        3710,
+        3720
+      ]
+    },
+    {
+      "id": 81,
+      "label": "text",
+      "level": null,
+      "text": "세일즈 담당자는 중앙 관리 시스템에 접근하여 클라이언트의 주문을 작성하고, 문제를 해결하며, 최근 구매 데이터를 활용하여 제품을 추천할 수 있습니다.",
+      "loc": {
+        "paraId": "449C07E9"
+      },
+      "skip": null,
+      "span": [
+        3721,
+        3804
+      ]
+    },
+    {
+      "id": 82,
+      "label": "text",
+      "level": null,
+      "text": "온라인 주문으로 전환했을 때의 비용 절감 효과를 간단하게 파악하는 방법은 전화 주문 처리 비용에 셀프서비스로 전환하려는 주문 수량을 곱하는 것입니다.",
+      "loc": {
+        "paraId": "16DE8140"
+      },
+      "skip": null,
+      "span": [
+        3805,
+        3888
+      ]
+    },
+    {
+      "id": 83,
+      "label": "text",
+      "level": null,
+      "text": "온라인 주문으로 전환할 수 있는 비율은 업계, 전략 등 다양한 요인에 따라 다릅니다. 그러나 많은 Adobe Commerce 고객은 1년 후, 전체 주문 규모의 10% 이상을 온라인 주문으로 전환하였습니다.",
+      "loc": {
+        "paraId": "51AB2C2B"
+      },
+      "skip": null,
+      "span": [
+        3889,
+        4004
+      ]
+    },
+    {
+      "id": 84,
+      "label": "text",
+      "level": null,
+      "text": "9",
+      "loc": {
+        "paraId": "2D6FA640"
+      },
+      "skip": null,
+      "span": [
+        4005,
+        4006
+      ]
+    },
+    {
+      "id": 85,
+      "label": "text",
+      "level": null,
+      "text": "디지털 방식은 증가하는 B2B 고객의 문의 전화를",
+      "loc": {
+        "paraId": "199D80A1"
+      },
+      "skip": null,
+      "span": [
+        4007,
+        4034
+      ]
+    },
+    {
+      "id": 86,
+      "label": "text",
+      "level": null,
+      "text": "해결하고 주문 비용과 전반적인 고객 서비스 비용을 크게 줄여줍니다.”",
+      "loc": {
+        "paraId": "34B45E1A"
+      },
+      "skip": null,
+      "span": [
+        4035,
+        4073
+      ]
+    },
+    {
+      "id": 87,
+      "label": "text",
+      "level": null,
+      "text": "Forrester",
+      "loc": {
+        "paraId": "6552093E"
+      },
+      "skip": null,
+      "span": [
+        4074,
+        4083
+      ]
+    },
+    {
+      "id": 88,
+      "label": "list_item",
+      "level": null,
+      "text": "Coca-Cola는 고객 상호 작용 1건당 85% 비용 절감 효과를 경험했습니다.",
+      "loc": {
+        "paraId": "128C62FA"
+      },
+      "skip": null,
+      "span": [
+        4084,
+        4129
+      ]
+    },
+    {
+      "id": 89,
+      "label": "list_item",
+      "level": null,
+      "text": "Suez는 평균 재주문 처리 시간을 20분 단축했습니다.",
+      "loc": {
+        "paraId": "17202277"
+      },
+      "skip": null,
+      "span": [
+        4130,
+        4161
+      ]
+    },
+    {
+      "id": 90,
+      "label": "text",
+      "level": null,
+      "text": "10",
+      "loc": {
+        "paraId": "008DFC1D"
+      },
+      "skip": null,
+      "span": [
+        4162,
+        4164
+      ]
+    },
+    {
+      "id": 91,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        4165,
+        4165
+      ]
+    },
+    {
+      "id": 92,
+      "label": "section_header",
+      "level": 4,
+      "text": "수동 주문 오류를 줄여 수익을 개선하는 온라인 주문",
+      "loc": {
+        "paraId": "625D612E"
+      },
+      "skip": null,
+      "span": [
+        4166,
+        4194
+      ]
+    },
+    {
+      "id": 93,
+      "label": "text",
+      "level": null,
+      "text": "수동적인 주문 처리 과정에서는 오류가 자주 발생합니다. 이는 시간과 리소스를 소모할 뿐만 아니라, 원활한 배송에도 문제를 일으켜 고객 만족도와 신뢰도에 상당한 타격을 줍니다. 디지털 셀프서비스 구매 모델로 전환하면 비용이 발생하는 거래 오류 횟수를 줄이고, 불편함이 없는 온전한 고객 경험을 전달할 수 있습니다.",
+      "loc": {
+        "paraId": "50D53E77"
+      },
+      "skip": null,
+      "span": [
+        4195,
+        4369
+      ]
+    },
+    {
+      "id": 94,
+      "label": "list_item",
+      "level": null,
+      "text": "고객별 카탈로그 및 가격 책정",
+      "loc": {
+        "paraId": "7E3A93A0"
+      },
+      "skip": null,
+      "span": [
+        4370,
+        4386
+      ]
+    },
+    {
+      "id": 95,
+      "label": "text",
+      "level": null,
+      "text": "고객별 카탈로그와 가격을 마련하면 잘못된 가격으로 엉뚱한 제품을 주문할 실수를 방지할 수 있습니다.",
+      "loc": {
+        "paraId": "5BA83F7B"
+      },
+      "skip": null,
+      "span": [
+        4387,
+        4442
+      ]
+    },
+    {
+      "id": 96,
+      "label": "list_item",
+      "level": null,
+      "text": "자동화된 SKU 확인",
+      "loc": {
+        "paraId": "5BA0159C"
+      },
+      "skip": null,
+      "span": [
+        4443,
+        4454
+      ]
+    },
+    {
+      "id": 97,
+      "label": "text",
+      "level": null,
+      "text": "주문을 제출하기 전에 각 SKU의 유효성과 재고 여부를 확인할 수 있으므로 오류를 방지하고 반품 관리 시간을 줄일 수 있습니다.",
+      "loc": {
+        "paraId": "7C0B5B24"
+      },
+      "skip": null,
+      "span": [
+        4455,
+        4526
+      ]
+    },
+    {
+      "id": 98,
+      "label": "list_item",
+      "level": null,
+      "text": "고객 셀프서비스 주문",
+      "loc": {
+        "paraId": "68AAF5DA"
+      },
+      "skip": null,
+      "span": [
+        4527,
+        4538
+      ]
+    },
+    {
+      "id": 99,
+      "label": "text",
+      "level": null,
+      "text": "셀프서비스 주문은 고객이 직접 입력하고 검토한 다음 최종 주문을 하게 되므로, 제3자가 옮겨 적을 때 발생하는 기록 오류, 세일즈 담당자의 의사소통 오류, 잘못된 주소 입력 등을 최소화할 수 있습니다.",
+      "loc": {
+        "paraId": "4C056E01"
+      },
+      "skip": null,
+      "span": [
+        4539,
+        4651
+      ]
+    },
+    {
+      "id": 100,
+      "label": "section_header",
+      "level": 4,
+      "text": "고객 지원 비용을 낮추는 온라인 고객 포털",
+      "loc": {
+        "paraId": "2F77FA63"
+      },
+      "skip": null,
+      "span": [
+        4652,
+        4675
+      ]
+    },
+    {
+      "id": 101,
+      "label": "text",
+      "level": null,
+      "text": "e커머스 투자는 거래 처리 비용 외에, 다른 비용 절감 효과도 제공합니다. 가장 일반적인 업무를 고객 스스로 관리할 수 있는 중앙 서비스 허브를 제공하면 해당 분야의 인바운드 문의 건수를 크게 줄일 수 있습니다. 고객 지원에 대한 수요가 줄면 운영 비용이 자연스럽게 감소하므로 비즈니스 확장이라는 기업 목표에 더 많은 리소스를 집중할 수 있습니다.",
+      "loc": {
+        "paraId": "15A63DD5"
+      },
+      "skip": null,
+      "span": [
+        4676,
+        4870
+      ]
+    },
+    {
+      "id": 102,
+      "label": "text",
+      "level": null,
+      "text": "셀프서비스 포털 도입으로 고객은 다음과 같은 이점을 얻게 됩니다.",
+      "loc": {
+        "paraId": "2C9DEA83"
+      },
+      "skip": null,
+      "span": [
+        4871,
+        4907
+      ]
+    },
+    {
+      "id": 103,
+      "label": "list_item",
+      "level": null,
+      "text": "송장 및 반품 제품 확인",
+      "loc": {
+        "paraId": "223BD6D0"
+      },
+      "skip": null,
+      "span": [
+        4908,
+        4921
+      ]
+    },
+    {
+      "id": 104,
+      "label": "list_item",
+      "level": null,
+      "text": "재고 위치별 재고율 확인",
+      "loc": {
+        "paraId": "05516BA2"
+      },
+      "skip": null,
+      "span": [
+        4922,
+        4935
+      ]
+    },
+    {
+      "id": 105,
+      "label": "list_item",
+      "level": null,
+      "text": "주문 상태 및 배송 정보 확인",
+      "loc": {
+        "paraId": "4EDBA60E"
+      },
+      "skip": null,
+      "span": [
+        4936,
+        4952
+      ]
+    },
+    {
+      "id": 106,
+      "label": "list_item",
+      "level": null,
+      "text": "회사 지출 보고서 및 데이터 열람",
+      "loc": {
+        "paraId": "065D16DE"
+      },
+      "skip": null,
+      "span": [
+        4953,
+        4971
+      ]
+    },
+    {
+      "id": 107,
+      "label": "section_header",
+      "level": 6,
+      "text": "셀프서비스 포털 배포로 효과를 거둔 대표적인 기업들",
+      "loc": {
+        "paraId": "7AF4F1D5"
+      },
+      "skip": null,
+      "span": [
+        4972,
+        5000
+      ]
+    },
+    {
+      "id": 108,
+      "label": "list_item",
+      "level": null,
+      "text": "Riese & Muller",
+      "loc": {
+        "paraId": "015B12A5"
+      },
+      "skip": null,
+      "span": [
+        5001,
+        5015
+      ]
+    },
+    {
+      "id": 109,
+      "label": "text",
+      "level": null,
+      "text": "전기 자전거 제조업체인 이 회사는 고객 셀프서비스 리소스 제공 후 지원 문의 전화가 20% 감소했습니다.",
+      "loc": {
+        "paraId": "617F9209"
+      },
+      "skip": null,
+      "span": [
+        5016,
+        5074
+      ]
+    },
+    {
+      "id": 110,
+      "label": "list_item",
+      "level": null,
+      "text": "Bauhaus Sweden",
+      "loc": {
+        "paraId": "1BECB320"
+      },
+      "skip": null,
+      "span": [
+        5075,
+        5089
+      ]
+    },
+    {
+      "id": 111,
+      "label": "text",
+      "level": null,
+      "text": "주택 개량에 필요한 제품과 서비스를 판매하는 이 회사는 2017년 B2B 사이트를 다시 개설한 이후 수동 프로세스가 80% 이상 줄었습니다.",
+      "loc": {
+        "paraId": "307D8516"
+      },
+      "skip": null,
+      "span": [
+        5090,
+        5168
+      ]
+    },
+    {
+      "id": 112,
+      "label": "list_item",
+      "level": null,
+      "text": "Juzo",
+      "loc": {
+        "paraId": "56493F26"
+      },
+      "skip": null,
+      "span": [
+        5169,
+        5173
+      ]
+    },
+    {
+      "id": 113,
+      "label": "text",
+      "level": null,
+      "text": "고탄력 소재의 의료용 압박복을 생산하는 이 회사는 고객 셀프서비스 포털로 오류 발생률을 85% 줄였고 (0.1%), 주문 처리 시간을 95% 단축했습니다.",
+      "loc": {
+        "paraId": "36E97CF6"
+      },
+      "skip": null,
+      "span": [
+        5174,
+        5260
+      ]
+    },
+    {
+      "id": 114,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        5261,
+        5261
+      ]
+    },
+    {
+      "id": 115,
+      "label": "text",
+      "level": null,
+      "text": "11",
+      "loc": {
+        "paraId": "02B2A89B"
+      },
+      "skip": null,
+      "span": [
+        5262,
+        5264
+      ]
+    },
+    {
+      "id": 116,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        5265,
+        5265
+      ]
+    },
+    {
+      "id": 117,
+      "label": "section_header",
+      "level": 4,
+      "text": "종이 카탈로그가 필요 없는 e커머스",
+      "loc": {
+        "paraId": "51588F25"
+      },
+      "skip": null,
+      "span": [
+        5266,
+        5285
+      ]
+    },
+    {
+      "id": 118,
+      "label": "text",
+      "level": null,
+      "text": "인쇄 매체가 여전히 존재하고 사용되는 한, 종이 카탈로그를 디자인하고 인쇄, 유통하는 데 비용이 발생할 수밖에 없습니다. 온라인으로 전환하면 고객은 간편한 디지털 형식으로 최신 제품 정보를 즉시 받아볼 수 있으며, 이 외에도 다음과 같은 이점이 있습니다.",
+      "loc": {
+        "paraId": "6A8432ED"
+      },
+      "skip": null,
+      "span": [
+        5286,
+        5428
+      ]
+    },
+    {
+      "id": 119,
+      "label": "list_item",
+      "level": null,
+      "text": "인쇄비, 우편 배송비, 업데이트 정보를 부록으로 추가 발송하는 데 드는 비용 절감",
+      "loc": {
+        "paraId": "514FD663"
+      },
+      "skip": null,
+      "span": [
+        5429,
+        5474
+      ]
+    },
+    {
+      "id": 120,
+      "label": "list_item",
+      "level": null,
+      "text": "업데이트된 카탈로그가 인쇄될 때까지 제품 출시를 조정할 필요가 없으며, 출시와 동시에 신제품 정보 전달",
+      "loc": {
+        "paraId": "15E66074"
+      },
+      "skip": null,
+      "span": [
+        5475,
+        5532
+      ]
+    },
+    {
+      "id": 121,
+      "label": "list_item",
+      "level": null,
+      "text": "품절이거나 단종 제품의 경우 제품 비교 페이지를 제시하여 대체 제품으로 간단하게 상황 대처",
+      "loc": {
+        "paraId": "3EF510C7"
+      },
+      "skip": null,
+      "span": [
+        5533,
+        5583
+      ]
+    },
+    {
+      "id": 122,
+      "label": "text",
+      "level": null,
+      "text": "Pon Holdings의 고객 포털 성공 사례",
+      "loc": {
+        "paraId": "70EBF79B"
+      },
+      "skip": null,
+      "span": [
+        5584,
+        5609
+      ]
+    },
+    {
+      "id": 123,
+      "label": "text",
+      "level": null,
+      "text": "여러 자전거디브지랜털드를은제증조 가및 하판매는하는B2이B네고덜객란드문기의업은전전화용를고객 포털을 사용하여 더막나아은내서고비스주를문전달비하용고 과전화전문반의 적건수인를 고줄이객고 서있습비니스다. 자전거 딜러는 대리비점용에 을연락크하지게않줄고도여이주서는비역스 포할털을을 통합해니다다음.과 같은 거의 모든",
+      "loc": {
+        "paraId": "6718797F"
+      },
+      "skip": null,
+      "span": [
+        5610,
+        5777
+      ]
+    },
+    {
+      "id": 124,
+      "label": "text",
+      "level": null,
+      "text": "일상 업무를Fo관r리re할s수te있r습니다.",
+      "loc": {
+        "paraId": "69BF81DB"
+      },
+      "skip": null,
+      "span": [
+        5778,
+        5802
+      ]
+    },
+    {
+      "id": 125,
+      "label": "list_item",
+      "level": null,
+      "text": "적합한 교체 부품 검색",
+      "loc": {
+        "paraId": "3B060CC0"
+      },
+      "skip": null,
+      "span": [
+        5803,
+        5815
+      ]
+    },
+    {
+      "id": 126,
+      "label": "list_item",
+      "level": null,
+      "text": "모든 주문, 송장, 반품 요청 확인",
+      "loc": {
+        "paraId": "0400F62F"
+      },
+      "skip": null,
+      "span": [
+        5816,
+        5835
+      ]
+    },
+    {
+      "id": 127,
+      "label": "list_item",
+      "level": null,
+      "text": "기간 연장 보증 요청 처리",
+      "loc": {
+        "paraId": "03099EBD"
+      },
+      "skip": null,
+      "span": [
+        5836,
+        5850
+      ]
+    },
+    {
+      "id": 128,
+      "label": "list_item",
+      "level": null,
+      "text": "제품 판매를 위한 마케팅 리소스 활용",
+      "loc": {
+        "paraId": "4206EDD7"
+      },
+      "skip": null,
+      "span": [
+        5851,
+        5871
+      ]
+    },
+    {
+      "id": 129,
+      "label": "text",
+      "level": null,
+      "text": "12",
+      "loc": {
+        "paraId": "312095EC"
+      },
+      "skip": null,
+      "span": [
+        5872,
+        5874
+      ]
+    },
+    {
+      "id": 130,
+      "label": "text",
+      "level": null,
+      "text": "B2B e커머스 장점",
+      "loc": {
+        "paraId": "704F637E"
+      },
+      "skip": null,
+      "span": [
+        5875,
+        5886
+      ]
+    },
+    {
+      "id": 131,
+      "label": "section_header",
+      "level": 2,
+      "text": "3 매출 증가",
+      "loc": {
+        "paraId": "0B32E701"
+      },
+      "skip": null,
+      "span": [
+        5887,
+        5894
+      ]
+    },
+    {
+      "id": 132,
+      "label": "section_header",
+      "level": 5,
+      "text": "e커머스 통합으로 브랜드 성장을 이끌 수 있습니다.",
+      "loc": {
+        "paraId": "19FBA111"
+      },
+      "skip": null,
+      "span": [
+        5895,
+        5923
+      ]
+    },
+    {
+      "id": 133,
+      "label": "text",
+      "level": null,
+      "text": "온라인 판매 방식은 수익 향상에 도움이 됩니다. 구매자의 관점에서 볼 때, 디지털 커머스의 속도와 편의성은 높은 만족도로 이어지고 더 많은 구매 동기를 유발합니다. 기업의 입장에서는 세일즈 팀이 더욱 효율적으로 업무를 수행하고 매출 증가에 더 많은 노력을 집중하도록 지원할 수 있습니다.",
+      "loc": {
+        "paraId": "4C2F9982"
+      },
+      "skip": null,
+      "span": [
+        5924,
+        6084
+      ]
+    },
+    {
+      "id": 134,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        6085,
+        6085
+      ]
+    },
+    {
+      "id": 135,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        6086,
+        6086
+      ]
+    },
+    {
+      "id": 136,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        6087,
+        6087
+      ]
+    },
+    {
+      "id": 137,
+      "label": "text",
+      "level": null,
+      "text": "13",
+      "loc": {
+        "paraId": "3E302A99"
+      },
+      "skip": null,
+      "span": [
+        6088,
+        6090
+      ]
+    },
+    {
+      "id": 138,
+      "label": "section_header",
+      "level": 4,
+      "text": "e커머스 추가로 고객 만족도 및 유지율 향상",
+      "loc": {
+        "paraId": "4EA6271E"
+      },
+      "skip": null,
+      "span": [
+        6091,
+        6115
+      ]
+    },
+    {
+      "id": 139,
+      "label": "text",
+      "level": null,
+      "text": "매출 증가를 위한 노력에는 고객의 불만이 표출되기 전에 고객이 겪는 고충을 파악하고, 이를 선제적으로 바로잡는 일도 포함됩니다. 디지털 커머스는 처리 속도가 느린 구매 절차와 대응 속도, 제한적인 계정 관리 등 비효율적인 B2B 프로세스를 해결하고 바로잡습니다. 이러한 요소를 간소화하면 고객 만족도를 높이고, 고객 유지율과 수익에 긍정적인 영향을 미칠 수 있습니다.",
+      "loc": {
+        "paraId": "77465E2C"
+      },
+      "skip": null,
+      "span": [
+        6116,
+        6321
+      ]
+    },
+    {
+      "id": 140,
+      "label": "list_item",
+      "level": null,
+      "text": "B2B 구매자의 40%는‘느린 응답 시간’을 가장 중대한 서비스 문제로 지목했습니다 (McKinsey).",
+      "loc": {
+        "paraId": "5E0BDF8B"
+      },
+      "skip": null,
+      "span": [
+        6322,
+        6380
+      ]
+    },
+    {
+      "id": 141,
+      "label": "text",
+      "level": null,
+      "text": "고객 유지율이5%오르면, 수익률은",
+      "loc": {
+        "paraId": "2C2670E3"
+      },
+      "skip": null,
+      "span": [
+        6381,
+        6399
+      ]
+    },
+    {
+      "id": 142,
+      "label": "text",
+      "level": null,
+      "text": "25%에서95%로 증가합니다.",
+      "loc": {
+        "paraId": "3FA521CB"
+      },
+      "skip": null,
+      "span": [
+        6400,
+        6416
+      ]
+    },
+    {
+      "id": 143,
+      "label": "text",
+      "level": null,
+      "text": "출처:Harvard Business Review",
+      "loc": {
+        "paraId": "230C4018"
+      },
+      "skip": null,
+      "span": [
+        6417,
+        6443
+      ]
+    },
+    {
+      "id": 144,
+      "label": "list_item",
+      "level": null,
+      "text": "IT 인프라 구매자를 대상으로 실시한 조사에서‘대응 속도’가 구매자의 충성도를 높이는세 가지 요인 중 하나로 나타났습니다(Harvard Business Review).",
+      "loc": {
+        "paraId": "0897BFFC"
+      },
+      "skip": null,
+      "span": [
+        6444,
+        6537
+      ]
+    },
+    {
+      "id": 145,
+      "label": "section_header",
+      "level": 7,
+      "text": "Forrester가 실시한 일련의 기업 인터뷰에 따르면 디지털 커머스의 간편함과 편의성이 구매자의 지출 증가에 긍정적인 영향을 줍니다.",
+      "loc": {
+        "paraId": "1AD04FCB"
+      },
+      "skip": null,
+      "span": [
+        6538,
+        6613
+      ]
+    },
+    {
+      "id": 146,
+      "label": "list_item",
+      "level": null,
+      "text": "US Foods",
+      "loc": {
+        "paraId": "6037BCDD"
+      },
+      "skip": null,
+      "span": [
+        6614,
+        6622
+      ]
+    },
+    {
+      "id": 147,
+      "label": "text",
+      "level": null,
+      "text": "온라인 고객은 오프라인에서 쇼핑할 때보다 5%를 더 지출합니다.",
+      "loc": {
+        "paraId": "219AE4EE"
+      },
+      "skip": null,
+      "span": [
+        6623,
+        6658
+      ]
+    },
+    {
+      "id": 148,
+      "label": "list_item",
+      "level": null,
+      "text": "Coca-Cola",
+      "loc": {
+        "paraId": "621922E2"
+      },
+      "skip": null,
+      "span": [
+        6659,
+        6668
+      ]
+    },
+    {
+      "id": 149,
+      "label": "text",
+      "level": null,
+      "text": "B2B 고객을 온라인으로 전환한 후 평균 주문액이 15% 상승했습니다.",
+      "loc": {
+        "paraId": "120C7276"
+      },
+      "skip": null,
+      "span": [
+        6669,
+        6708
+      ]
+    },
+    {
+      "id": 150,
+      "label": "list_item",
+      "level": null,
+      "text": "Levi’s",
+      "loc": {
+        "paraId": "2A786FE6"
+      },
+      "skip": null,
+      "span": [
+        6709,
+        6715
+      ]
+    },
+    {
+      "id": 151,
+      "label": "text",
+      "level": null,
+      "text": "B2B 고객에게 셀프서비스 포털을 제공하자 매출이 10% 증가했습니다.",
+      "loc": {
+        "paraId": "202C0158"
+      },
+      "skip": null,
+      "span": [
+        6716,
+        6755
+      ]
+    },
+    {
+      "id": 152,
+      "label": "text",
+      "level": null,
+      "text": "14",
+      "loc": {
+        "paraId": "477FF7B2"
+      },
+      "skip": null,
+      "span": [
+        6756,
+        6758
+      ]
+    },
+    {
+      "id": 153,
+      "label": "section_header",
+      "level": 4,
+      "text": "고객의 지출 규모를 늘리는 옴니채널 커머스",
+      "loc": {
+        "paraId": "53FB9BA8"
+      },
+      "skip": null,
+      "span": [
+        6759,
+        6782
+      ]
+    },
+    {
+      "id": 154,
+      "label": "text",
+      "level": null,
+      "text": "옴니채널은 고객이 브랜드와 소통하고 필요한 제품을 구매할 수 있는 채널을 더 많이 제공합니다. 실제로, Forrester는 고객이 여러 개의 채널을 사용할 때 대체로 더 많이 지출한다는 조사 결과를 내놨습니다. 디지털 커머스 채널을 구축하면 다음 기능을 통해 고객 지출을 장려할 수 있습니다.",
+      "loc": {
+        "paraId": "0D567D70"
+      },
+      "skip": null,
+      "span": [
+        6783,
+        6946
+      ]
+    },
+    {
+      "id": 155,
+      "label": "list_item",
+      "level": null,
+      "text": "연중무휴 24시간 구매, 간편한 구매 목록 설정, 대기 시간 없이 판매 담당자와 즉시 연결 등 많은 편의 제공",
+      "loc": {
+        "paraId": "7CE7B3C5"
+      },
+      "skip": null,
+      "span": [
+        6947,
+        7008
+      ]
+    },
+    {
+      "id": 156,
+      "label": "list_item",
+      "level": null,
+      "text": "신속한 견적 요청, 재고 수량을 시각적으로 바로 확인, 실시간 주문 상태 업데이트",
+      "loc": {
+        "paraId": "57502818"
+      },
+      "skip": null,
+      "span": [
+        7009,
+        7054
+      ]
+    },
+    {
+      "id": 157,
+      "label": "list_item",
+      "level": null,
+      "text": "손쉬운 제품 탐색(스프레드시트 또는 종이 카탈로그가 아닌, 열람 및 검색 중심의 사이트 디자인)",
+      "loc": {
+        "paraId": "4D502C14"
+      },
+      "skip": null,
+      "span": [
+        7055,
+        7108
+      ]
+    },
+    {
+      "id": 158,
+      "label": "list_item",
+      "level": null,
+      "text": "추가 구매를 능동적으로 추천할 수 있는 크로스셀링 및 업셀링 기능",
+      "loc": {
+        "paraId": "5906D459"
+      },
+      "skip": null,
+      "span": [
+        7109,
+        7145
+      ]
+    },
+    {
+      "id": 159,
+      "label": "list_item",
+      "level": null,
+      "text": "대용량 주문을 장려하기 위한 무료 배송 및 인센티브 등 타겟팅된 제안",
+      "loc": {
+        "paraId": "04C92875"
+      },
+      "skip": null,
+      "span": [
+        7146,
+        7184
+      ]
+    },
+    {
+      "id": 160,
+      "label": "section_header",
+      "level": 4,
+      "text": "B2B 회사의 고객 기반을 넓혀주는 e커머스",
+      "loc": {
+        "paraId": "34D99F9C"
+      },
+      "skip": null,
+      "span": [
+        7185,
+        7209
+      ]
+    },
+    {
+      "id": 161,
+      "label": "text",
+      "level": null,
+      "text": "최첨단 비즈니스는 지역 시장뿐만 아니라 글로벌 시장을 염두에 둡니다. 최신 e커머스 플랫폼은 지역의 제약을 넘어 전 세계 B2B 시장에 진출할 기회를 제공합니다. e커머스 전용 솔루션을 사용하면 이전에는 접근이 어렵거나 수익성이 없다고 판단한 고객과 업종에도 서비스를 제공하여 공략 가능한 잠재 고객층을 크게 확장할 수 있습니다.",
+      "loc": {
+        "paraId": "2830A9E5"
+      },
+      "skip": null,
+      "span": [
+        7210,
+        7394
+      ]
+    },
+    {
+      "id": 162,
+      "label": "text",
+      "level": null,
+      "text": "15",
+      "loc": {
+        "paraId": "331FFF2E"
+      },
+      "skip": null,
+      "span": [
+        7395,
+        7397
+      ]
+    },
+    {
+      "id": 163,
+      "label": "list_item",
+      "level": null,
+      "text": "국경을 뛰어넘은 커머스",
+      "loc": {
+        "paraId": "1F0DF9E6"
+      },
+      "skip": null,
+      "span": [
+        7398,
+        7410
+      ]
+    },
+    {
+      "id": 164,
+      "label": "text",
+      "level": null,
+      "text": "e커머스는 다국어, 통화, 결제 시스템, 세금 정책 등을 기본으로 지원하므로 국경을 초월하여 전 세계 모든 시장을 대상으로 판매할 수 있습니다.",
+      "loc": {
+        "paraId": "2A6C4896"
+      },
+      "skip": null,
+      "span": [
+        7411,
+        7491
+      ]
+    },
+    {
+      "id": 165,
+      "label": "list_item",
+      "level": null,
+      "text": "신규 고객 세그먼트 생성",
+      "loc": {
+        "paraId": "1FA044EB"
+      },
+      "skip": null,
+      "span": [
+        7492,
+        7505
+      ]
+    },
+    {
+      "id": 166,
+      "label": "text",
+      "level": null,
+      "text": "B2C 또는 D2C 판매로 확대하거나 맞춤형 콘텐츠와 제품 제안으로 새로운 수직 시장을 공략할 수 있습니다.",
+      "loc": {
+        "paraId": "70CF5E6E"
+      },
+      "skip": null,
+      "span": [
+        7506,
+        7566
+      ]
+    },
+    {
+      "id": 167,
+      "label": "list_item",
+      "level": null,
+      "text": "주문 규모가 적은 고객도 공략",
+      "loc": {
+        "paraId": "5F4EDFFA"
+      },
+      "skip": null,
+      "span": [
+        7567,
+        7583
+      ]
+    },
+    {
+      "id": 168,
+      "label": "text",
+      "level": null,
+      "text": "온라인 전용 구매와 지원을 통해 소량으로 주문하는 고객이나 자주 구매하지 않은 고객의 주문도 처리하여 수익성을 높일 수 있습니다.",
+      "loc": {
+        "paraId": "27D38C31"
+      },
+      "skip": null,
+      "span": [
+        7584,
+        7656
+      ]
+    },
+    {
+      "id": 169,
+      "label": "list_item",
+      "level": null,
+      "text": "비활동적인 고객의 재참여 유도",
+      "loc": {
+        "paraId": "44789772"
+      },
+      "skip": null,
+      "span": [
+        7657,
+        7673
+      ]
+    },
+    {
+      "id": 170,
+      "label": "text",
+      "level": null,
+      "text": "사용이 간편한 온라인 구매를 제공한다는 사실이 알려지면, 많은 고객이 다시 귀사를 찾게 될 것입니다.",
+      "loc": {
+        "paraId": "4F5F4171"
+      },
+      "skip": null,
+      "span": [
+        7674,
+        7730
+      ]
+    },
+    {
+      "id": 171,
+      "label": "section_header",
+      "level": 4,
+      "text": "디지털 기능으로 세일즈 팀의 업무 생산성 향상",
+      "loc": {
+        "paraId": "3E84B6C0"
+      },
+      "skip": null,
+      "span": [
+        7731,
+        7756
+      ]
+    },
+    {
+      "id": 172,
+      "label": "text",
+      "level": null,
+      "text": "최첨단 플랫폼 솔루션을 사용하면 세일즈 팀 스스로 중요한 정보에 간편하게 접근하고, 더 많은 고객에게 다가가 더 많은 거래를 신속하게 체결할 수 있습니다.",
+      "loc": {
+        "paraId": "0D234C14"
+      },
+      "skip": null,
+      "span": [
+        7757,
+        7843
+      ]
+    },
+    {
+      "id": 173,
+      "label": "list_item",
+      "level": null,
+      "text": "세일즈 담당자가 온라인 또는 모바일 디바이스를 통해 세부적인 제품 정보와 영상, 판매 리소스를 신속하게 활용할 수 있습니다.",
+      "loc": {
+        "paraId": "0AE4743C"
+      },
+      "skip": null,
+      "span": [
+        7844,
+        7913
+      ]
+    },
+    {
+      "id": 174,
+      "label": "list_item",
+      "level": null,
+      "text": "전화 또는 팩스 주문을 수동으로 입력하는 데 걸리는 시간이 줄어, 세일즈 담당자는 대규모의 복잡한 기회나 신규 비즈니스 상담에 더 많은 시간을 할애할 수 있습니다.",
+      "loc": {
+        "paraId": "67E68545"
+      },
+      "skip": null,
+      "span": [
+        7914,
+        8005
+      ]
+    },
+    {
+      "id": 175,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        8006,
+        8006
+      ]
+    },
+    {
+      "id": 176,
+      "label": "text",
+      "level": null,
+      "text": "16",
+      "loc": {
+        "paraId": "2EE1A700"
+      },
+      "skip": null,
+      "span": [
+        8007,
+        8009
+      ]
+    },
+    {
+      "id": 177,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        8010,
+        8010
+      ]
+    },
+    {
+      "id": 178,
+      "label": "section_header",
+      "level": 2,
+      "text": "결론",
+      "loc": {
+        "paraId": "37A24E8D"
+      },
+      "skip": null,
+      "span": [
+        8011,
+        8013
+      ]
+    },
+    {
+      "id": 179,
+      "label": "text",
+      "level": null,
+      "text": "많은 B2B 커머스 프로젝트가 변화 관리 관점에서 접근합니다. 귀하가 제시한 전략이 경영진의 승인을 받은 것에 만족해서는 안 됩니다. 사내 모든 조직을 상대로 디지털 통합의 장점을 끊임없이 홍보해야 합니다. 그리고 디지털 채널 운영에 필요한 지속적인 투자의 발판을 마련해야 합니다.",
+      "loc": {
+        "paraId": "5C536FDD"
+      },
+      "skip": null,
+      "span": [
+        8014,
+        8171
+      ]
+    },
+    {
+      "id": 180,
+      "label": "text",
+      "level": null,
+      "text": "디지털 전환 전략은 완료 일자를 정하고 추진하는 프로젝트가 아닙니다. 지속적인 개선을 통해 완성해가는 프로젝트의 개념으로 접근해야 합니다. e커머스에 투자해야 하는 이유를 설명하고, e커머스가 귀사의 비즈니스와 고객에게 어떤 이점을 제공하는지, 이를 통해 내부 프로세스가 어떻게 향상될지를 끊임없이 설명하십시오. 가장 이상적인 접근 방식은 작은 규모로 시도하여 성공을 경험하고, 빠른 성과를 통해 개선된 결과를 입증하는 것입니다. 그리고 이를 디지털 전환에 대한 내부 조직의 모멘텀을 마련하는 계기로 활용하는 것입니다.",
+      "loc": {
+        "paraId": "4739DB21"
+      },
+      "skip": null,
+      "span": [
+        8172,
+        8462
+      ]
+    },
+    {
+      "id": 181,
+      "label": "text",
+      "level": null,
+      "text": "변화에 대한 소극적인 태도는 너무나 자연스러운 인간의 본성입니다. 변화의 비전을 지속해서 알리고, 변화의 가치를 전파하는 데 도움을 줄 수 있고 생각이 같은 사람들과 연대함으로써 변화를 리스크로 인지하는 사람들의 불안감을 덜어줄 수 있습니다. 무엇보다도 디지털 전환을 고려하는 구상 단계에서 모든 논의의 핵심에 ‘고객 경험’을 두어야 합니다. 기대를 넘어서는 고객 경험을 제공하는 최고의 방법에 집중하면 귀하가 설득하는 e커머스 전략의 가치가 빛을 발할 것입니다.",
+      "loc": {
+        "paraId": "608E98FF"
+      },
+      "skip": null,
+      "span": [
+        8463,
+        8722
+      ]
+    },
+    {
+      "id": 182,
+      "label": "text",
+      "level": null,
+      "text": "17",
+      "loc": {
+        "paraId": "43564BF0"
+      },
+      "skip": null,
+      "span": [
+        8723,
+        8725
+      ]
+    },
+    {
+      "id": 183,
+      "label": "section_header",
+      "level": 2,
+      "text": "B2B e커머스의 가치",
+      "loc": {
+        "paraId": "7FEE5039"
+      },
+      "skip": null,
+      "span": [
+        8726,
+        8738
+      ]
+    },
+    {
+      "id": 184,
+      "label": "text",
+      "level": null,
+      "text": "지금까지 e커머스로 전환해야 하는 이유를 3가지 측면에서 살펴보았으며, 이를 요약하면 다음과 같습니다. 의사결정자나 이해관계자를 설득할 때 체크리스트로 활용해 보십시오.",
+      "loc": {
+        "paraId": "27F10347"
+      },
+      "skip": null,
+      "span": [
+        8739,
+        8833
+      ]
+    },
+    {
+      "id": 185,
+      "label": "table",
+      "level": null,
+      "text": "|  | 새로운 e커머스 비즈니스 |\n| --- | --- |\n| 미래 전략 | 인구통계 데이터의 변화 고객 선호도의 변화 Amazon과의 경쟁 구도 최종 승자는 디지털 리더 |\n| 비용 절감 | 주문 처리 비용 절감 주문 오류 감소 인쇄 비용 절감 지원 문의 전화 감소 |\n| 매출 증가 | 고객 유지율 향상 고객 지출 장려 고객층 확대 세일즈 팀 생산성 향상 |",
+      "loc": null,
+      "skip": null,
+      "table_id": 0,
+      "caption_ids": [],
+      "n_rows": 4,
+      "n_cols": 2,
+      "cells": [
+        {
+          "cell_id": 0,
+          "row": 0,
+          "col": 0,
+          "row_span": 1,
+          "col_span": 1,
+          "header": true,
+          "text": "",
+          "span_in_table": [
+            0,
+            0
+          ],
+          "loc": {
+            "paraIds": [
+              "2D126904"
+            ]
+          },
+          "skip": "num_only",
+          "span_abs": [
+            8834,
+            8834
+          ]
+        },
+        {
+          "cell_id": 1,
+          "row": 0,
+          "col": 1,
+          "row_span": 1,
+          "col_span": 1,
+          "header": true,
+          "text": "새로운 e커머스 비즈니스",
+          "span_in_table": [
+            5,
+            18
+          ],
+          "loc": {
+            "paraIds": [
+              "770461D3"
+            ]
+          },
+          "span_abs": [
+            8839,
+            8852
+          ]
+        },
+        {
+          "cell_id": 2,
+          "row": 1,
+          "col": 0,
+          "row_span": 1,
+          "col_span": 1,
+          "header": false,
+          "text": "미래 전략",
+          "span_in_table": [
+            37,
+            42
+          ],
+          "loc": {
+            "paraIds": [
+              "7E089FA2"
+            ]
+          },
+          "span_abs": [
+            8871,
+            8876
+          ]
+        },
+        {
+          "cell_id": 3,
+          "row": 1,
+          "col": 1,
+          "row_span": 1,
+          "col_span": 1,
+          "header": false,
+          "text": "인구통계 데이터의 변화 고객 선호도의 변화 Amazon과의 경쟁 구도 최종 승자는 디지털 리더",
+          "span_in_table": [
+            45,
+            97
+          ],
+          "loc": {
+            "paraIds": [
+              "6D25B46A"
+            ]
+          },
+          "span_abs": [
+            8879,
+            8931
+          ]
+        },
+        {
+          "cell_id": 4,
+          "row": 2,
+          "col": 0,
+          "row_span": 1,
+          "col_span": 1,
+          "header": false,
+          "text": "비용 절감",
+          "span_in_table": [
+            102,
+            107
+          ],
+          "loc": {
+            "paraIds": [
+              "66C34A0F"
+            ]
+          },
+          "span_abs": [
+            8936,
+            8941
+          ]
+        },
+        {
+          "cell_id": 5,
+          "row": 2,
+          "col": 1,
+          "row_span": 1,
+          "col_span": 1,
+          "header": false,
+          "text": "주문 처리 비용 절감 주문 오류 감소 인쇄 비용 절감 지원 문의 전화 감소",
+          "span_in_table": [
+            110,
+            151
+          ],
+          "loc": {
+            "paraIds": [
+              "43EC109E"
+            ]
+          },
+          "span_abs": [
+            8944,
+            8985
+          ]
+        },
+        {
+          "cell_id": 6,
+          "row": 3,
+          "col": 0,
+          "row_span": 1,
+          "col_span": 1,
+          "header": false,
+          "text": "매출 증가",
+          "span_in_table": [
+            156,
+            161
+          ],
+          "loc": {
+            "paraIds": [
+              "675EF96F"
+            ]
+          },
+          "span_abs": [
+            8990,
+            8995
+          ]
+        },
+        {
+          "cell_id": 7,
+          "row": 3,
+          "col": 1,
+          "row_span": 1,
+          "col_span": 1,
+          "header": false,
+          "text": "고객 유지율 향상 고객 지출 장려 고객층 확대\n세일즈 팀 생산성 향상",
+          "span_in_table": [
+            164,
+            202
+          ],
+          "loc": {
+            "paraIds": [
+              "455FBD92",
+              "74459F12"
+            ]
+          },
+          "span_abs": [
+            8998,
+            9036
+          ]
+        }
+      ],
+      "span": [
+        8834,
+        9038
+      ]
+    },
+    {
+      "id": 186,
+      "label": "text",
+      "level": null,
+      "text": "새로운 e커머스 비즈니스",
+      "loc": {
+        "paraId": "770461D3"
+      },
+      "skip": null,
+      "span": [
+        9039,
+        9052
+      ]
+    },
+    {
+      "id": 187,
+      "label": "text",
+      "level": null,
+      "text": "미래 전략",
+      "loc": {
+        "paraId": "7E089FA2"
+      },
+      "skip": null,
+      "span": [
+        9053,
+        9058
+      ]
+    },
+    {
+      "id": 188,
+      "label": "text",
+      "level": null,
+      "text": "비용 절감",
+      "loc": {
+        "paraId": "66C34A0F"
+      },
+      "skip": null,
+      "span": [
+        9059,
+        9064
+      ]
+    },
+    {
+      "id": 189,
+      "label": "text",
+      "level": null,
+      "text": "매출 증가",
+      "loc": {
+        "paraId": "675EF96F"
+      },
+      "skip": null,
+      "span": [
+        9065,
+        9070
+      ]
+    },
+    {
+      "id": 190,
+      "label": "text",
+      "level": null,
+      "text": "고객 유지율 향상 고객 지출 장려 고객층 확대",
+      "loc": {
+        "paraId": "455FBD92"
+      },
+      "skip": null,
+      "span": [
+        9071,
+        9096
+      ]
+    },
+    {
+      "id": 191,
+      "label": "text",
+      "level": null,
+      "text": "세일즈 팀 생산성 향상",
+      "loc": {
+        "paraId": "74459F12"
+      },
+      "skip": null,
+      "span": [
+        9097,
+        9109
+      ]
+    },
+    {
+      "id": 192,
+      "label": "text",
+      "level": null,
+      "text": "Adobe가 디지털 시대의 B2B 비즈니스를 어떻게 지원하는지 살펴보십시오.",
+      "loc": {
+        "paraId": "4794370B"
+      },
+      "skip": null,
+      "span": [
+        9110,
+        9152
+      ]
+    },
+    {
+      "id": 193,
+      "label": "text",
+      "level": null,
+      "text": "Adobe Commerce 알아보기",
+      "loc": {
+        "paraId": "1384B352"
+      },
+      "skip": null,
+      "span": [
+        9153,
+        9172
+      ]
+    },
+    {
+      "id": 194,
+      "label": "text",
+      "level": null,
+      "text": "18",
+      "loc": {
+        "paraId": "3BE983E7"
+      },
+      "skip": null,
+      "span": [
+        9173,
+        9175
+      ]
+    },
+    {
+      "id": 195,
+      "label": "section_header",
+      "level": 3,
+      "text": "출처",
+      "loc": {
+        "paraId": "59FC40AE"
+      },
+      "skip": null,
+      "span": [
+        9176,
+        9178
+      ]
+    },
+    {
+      "id": 196,
+      "label": "text",
+      "level": null,
+      "text": "Adam Vasquez & Heather Wadlinger, Ph.D “B2B 보고서 | 밀레니얼 세대”, Merit, 2017년 Alex Abdelnour et al. “유통업계의 지각 변동”, McKinsey & Company, 2019년 5월 3일",
+      "loc": {
+        "paraId": "2178484F"
+      },
+      "skip": null,
+      "span": [
+        9179,
+        9320
+      ]
+    },
+    {
+      "id": 197,
+      "label": "text",
+      "level": null,
+      "text": "Allen Bonde, John Bruno, Charlie Ruhl, Rachel Birrell “디지털, B2B 판매 전문가의 영역으로확대”, Forrester Research, 2019년 2월 13일",
+      "loc": {
+        "paraId": "0745B318"
+      },
+      "skip": null,
+      "span": [
+        9321,
+        9434
+      ]
+    },
+    {
+      "id": 198,
+      "label": "text",
+      "level": null,
+      "text": "Amy Gallo “충성도 높은 고객을 유지해야 하는 이유”, Harvard Business Review, 2014년 10월 29일",
+      "loc": {
+        "paraId": "0A1740CF"
+      },
+      "skip": null,
+      "span": [
+        9435,
+        9508
+      ]
+    },
+    {
+      "id": 199,
+      "label": "text",
+      "level": null,
+      "text": "“경험 투자의 비즈니스 영향력: 제조업부문”, Forrester Consulting, Adobe의 의뢰로 작성된 보고서, 2018년 6월",
+      "loc": {
+        "paraId": "395C4D94"
+      },
+      "skip": null,
+      "span": [
+        9509,
+        9585
+      ]
+    },
+    {
+      "id": 200,
+      "label": "text",
+      "level": null,
+      "text": "Christopher Angevine, Candace Lun Plotkin, Jennifer Stanley “B2B 구매자가 디지털을선택할 때와 선택하지 않을 때”, McKinsey & Company, 2017년 8월 25일",
+      "loc": {
+        "paraId": "0DD94DDB"
+      },
+      "skip": null,
+      "span": [
+        9586,
+        9711
+      ]
+    },
+    {
+      "id": 201,
+      "label": "text",
+      "level": null,
+      "text": "Don Davis “B2B 커머스 판매 규모 $1조 돌파, 향후 성장세 지속할 전망”, Digital Commerce 360, 2019년 3월 22일",
+      "loc": {
+        "paraId": "092B1E86"
+      },
+      "skip": null,
+      "span": [
+        9712,
+        9795
+      ]
+    },
+    {
+      "id": 202,
+      "label": "text",
+      "level": null,
+      "text": "Eric Almquist, Jamie Cleghorn, Lori Sherer “구매를 결정하는 중요한 B2B 요소”,",
+      "loc": {
+        "paraId": "23FC35D0"
+      },
+      "skip": null,
+      "span": [
+        9796,
+        9861
+      ]
+    },
+    {
+      "id": 203,
+      "label": "text",
+      "level": null,
+      "text": "Harvard Business Review, 2018년 3-4월",
+      "loc": {
+        "paraId": "21A895D4"
+      },
+      "skip": null,
+      "span": [
+        9862,
+        9897
+      ]
+    },
+    {
+      "id": 204,
+      "label": "text",
+      "level": null,
+      "text": "“Forrester/Internet Retailer B2B 구매자 채널 선호도 설문조사”, Forrester, 2015년 1분기",
+      "loc": {
+        "paraId": "48343C1D"
+      },
+      "skip": null,
+      "span": [
+        9898,
+        9969
+      ]
+    },
+    {
+      "id": 205,
+      "label": "text",
+      "level": null,
+      "text": "Michael Sheetz “Amazon에서 리테일 또는 클라우드보다 더 큰 규모로 성장할 비즈니스”, CNBC, Yahoo News 게시, 2019년 3월 19일",
+      "loc": {
+        "paraId": "5949DDCC"
+      },
+      "skip": null,
+      "span": [
+        9970,
+        10061
+      ]
+    },
+    {
+      "id": 206,
+      "label": "text",
+      "level": null,
+      "text": "Tanguy Catlin, Liz Harrison, Candace Lun Plotkin, Jennifer Stanley “B2B 디지털 리더가다른 B2B 기업보다 5배 더 높은 성장을 이룬 비결”, McKinsey & Company, 2016년 10월 10일",
+      "loc": {
+        "paraId": "2AFB9199"
+      },
+      "skip": null,
+      "span": [
+        10062,
+        10206
+      ]
+    },
+    {
+      "id": 207,
+      "label": "text",
+      "level": null,
+      "text": "Adobe, the Adobe logo, and Adobe Commerce are either registered trademarks or trademarks of",
+      "loc": {
+        "paraId": "28EE08C4"
+      },
+      "skip": null,
+      "span": [
+        10207,
+        10298
+      ]
+    },
+    {
+      "id": 208,
+      "label": "text",
+      "level": null,
+      "text": "Adobe in the United States and/or other countries.",
+      "loc": {
+        "paraId": "62D5561A"
+      },
+      "skip": null,
+      "span": [
+        10299,
+        10349
+      ]
+    },
+    {
+      "id": 209,
+      "label": "picture",
+      "level": null,
+      "text": "",
+      "loc": null,
+      "skip": "picture",
+      "span": [
+        10350,
+        10350
+      ]
+    },
+    {
+      "id": 210,
+      "label": "text",
+      "level": null,
+      "text": "Copyright © 2022 Adobe. All rights reserved.",
+      "loc": {
+        "paraId": "0440D62A"
+      },
+      "skip": null,
+      "span": [
+        10351,
+        10395
+      ]
+    }
+  ]
+}
