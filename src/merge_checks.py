@@ -9,6 +9,7 @@ from docx.oxml.ns import qn
 from docx.text.paragraph import Paragraph
 
 sys.path.append(str(Path(__file__).resolve().parent))
+from docobj import checks_output_path
 from docx_track.parse import add_para_ids, parse_docx
 from docx_track.writer import build_paraid_index, write_element_text
 
@@ -39,31 +40,31 @@ def _mark_targets(doc, loc):
     return []
 
 
-def run_mark_test(src_path):
+def run_mark_test(src_path, elements=None):
     """번역 가능한 모든 요소·셀에 ⟦원문⟧을 써서 저장한 뒤 다시 열어, 텍스트는 있는데
-    ⟦가 없는 w:p를 찾는다. skip 사유로 설명되는 건 정상, 안 되는 건 "unwritten"으로 분류.
-    write_element_text가 기본으로 mc:AlternateContent의 Fallback 쪽 대응 문단에도 같은
-    텍스트를 쓰므로(docx_track/writer.py의 fallback_sibling, ★ 실측 확인된 버그의 해결책),
-    Fallback 문단은 정상적으로 마킹돼 있어야 한다."""
+    ⟦가 없는 w:p를 찾는다. skip/merge_skip 사유로 설명되는 건 정상, 안 되는 건
+    "unwritten"으로 분류(둘 다 "쓰지 않을 이유" - 3절/5절 참고). write_element_text가
+    기본으로 mc:AlternateContent의 Fallback 쪽 대응 문단에도 같은 텍스트를 쓰므로
+    (docx_track/writer.py의 fallback_sibling, ★ 실측 확인된 버그의 해결책), Fallback
+    문단은 정상적으로 마킹돼 있어야 한다."""
     src_path = Path(src_path)
-    anchored_path = src_path.with_suffix(".anchored.docx")
-    if not anchored_path.exists():
-        anchored_path = add_para_ids(src_path)
-    elements = parse_docx(src_path)
+    anchored_path = add_para_ids(src_path)  # 이미 있으면 재사용(멱등)
+    if elements is None:  # 3단계 전체 스캔처럼 이미 파싱한 elements가 있으면 재파싱 안 함
+        elements = parse_docx(src_path)
 
     doc = DocxDocument(str(anchored_path))
     paraid_to_p = build_paraid_index(doc)
 
-    paraid_reason = {}  # paraId -> skip 사유(설명 가능한 것들) 또는 "picture"
+    paraid_reason = {}  # paraId -> skip/merge_skip 사유(설명 가능한 것들) 또는 "picture"
     marked = 0
 
-    def handle(loc, text, skip_reason, auto_num=None):
+    def handle(loc, text, reason, auto_num=None):
         nonlocal marked
         pids = _mark_targets(doc, loc)
         for pid in pids:
             if pid:
-                paraid_reason[pid] = skip_reason
-        if skip_reason:
+                paraid_reason[pid] = reason
+        if reason:
             return
         result = write_element_text(doc, paraid_to_p, loc, f"{MARK_OPEN}{text}{MARK_CLOSE}", auto_num=auto_num)
         if result == "ok":
@@ -72,12 +73,13 @@ def run_mark_test(src_path):
     for e in elements:
         if e["label"] == "table":
             for c in e["cells"]:
-                handle(c.get("loc"), c["text"], c.get("skip") or e.get("skip"))
+                reason = c.get("skip") or c.get("merge_skip") or e.get("skip") or e.get("merge_skip")
+                handle(c.get("loc"), c["text"], reason)
             continue
-        reason = "picture" if e["label"] == "picture" else e.get("skip")
+        reason = "picture" if e["label"] == "picture" else (e.get("skip") or e.get("merge_skip"))
         handle(e.get("loc"), e["text"], reason, e.get("auto_num"))
 
-    out_path = src_path.with_name(src_path.stem + ".marktest.docx")
+    out_path = checks_output_path(src_path, ".marktest.docx")  # 원본 데이터 폴더에는 안 씀
     doc.save(str(out_path))
 
     doc2 = DocxDocument(str(out_path))
@@ -144,9 +146,11 @@ def count_mixed_formatting_paragraphs(elements, anchored_path):
 
 
 if __name__ == "__main__":
+    from docobj import anchored_path_for
+
     for f in sys.argv[1:]:
         result = run_mark_test(f)
-        anchored = Path(f).with_suffix(".anchored.docx")
+        anchored = anchored_path_for(f)
         elements = parse_docx(f)
         metric = count_mixed_formatting_paragraphs(elements, anchored)
         print(f"  서식 섞인 문단 수(알려진 한계 - 번역 후 서식이 첫 run 쪽으로 쏠림): "

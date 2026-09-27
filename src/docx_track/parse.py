@@ -26,7 +26,7 @@ from docling.datamodel.base_models import InputFormat
 from docling.datamodel.document import InputDocument
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from docobj import NUM_ONLY, build_table_markdown
+from docobj import NUM_ONLY, anchored_path_for, build_table_markdown
 
 FURNITURE_LABELS = {"page_header", "page_footer"}
 
@@ -50,29 +50,47 @@ class AnchoredWordBackend(MsWordDocumentBackend):
         return result
 
 
+def _new_paraid(seen):
+    new_id = "%08X" % random.randint(1, 0x7FFFFFFF)
+    while new_id in seen:
+        new_id = "%08X" % random.randint(1, 0x7FFFFFFF)
+    return new_id
+
+
 def add_para_ids(src_path):
-    """모든 <w:p>에 w14:paraId가 없으면 부여하고 *.anchored.docx로 저장(3절 순서 1번).
+    """모든 <w:p>에 w14:paraId가 없으면 부여하고, **원본에 이미 있던 값이라도 중복이면
+    새로 부여**해서(paraId는 문서 안에서 유일해야 우리 위치 조회가 안 깨짐) `data/processed/
+    anchored/*.anchored.docx`로 저장(3절 순서 1번, 원본 데이터 폴더에는 아무것도 안 씀).
     python-docx의 nsmap에 w14가 이미 등록돼 있어 별도 네임스페이스 등록 불필요(실측 확인).
     ★ 실측 확인(2026-09-26, 항등 테스트에서 발견) - 이미 anchored 파일이 있으면 그대로
     재사용한다(멱등성 필수) - 매번 새로 만들면 실행할 때마다 다른 무작위 paraId가 부여돼서,
     캐싱된 elements JSON의 paraId가 최신 anchored 파일과 어긋나는 버그가 실제로 발생했다
     (parse → identity_test처럼 add_para_ids가 두 번 이상 호출되는 경로에서 특히 치명적 -
     §0 원칙 4번 "문서 하나당 파싱은 1번만, JSON 캐싱"과도 직결됨)."""
-    src_path = Path(src_path)
-    anchored_path = src_path.with_suffix(".anchored.docx")
+    anchored_path = anchored_path_for(src_path)
     if anchored_path.exists():
         return anchored_path
+    anchored_path.parent.mkdir(parents=True, exist_ok=True)
     doc = DocxDocument(str(src_path))
-    seen = {p.get(qn("w14:paraId")) for p in doc.element.body.iter(qn("w:p")) if p.get(qn("w14:paraId"))}
+    seen = set()
+    n_added = n_deduped = 0
     for p in doc.element.body.iter(qn("w:p")):
-        if p.get(qn("w14:paraId")):
-            continue
-        new_id = "%08X" % random.randint(1, 0x7FFFFFFF)
-        while new_id in seen:
-            new_id = "%08X" % random.randint(1, 0x7FFFFFFF)
-        p.set(qn("w14:paraId"), new_id)
-        seen.add(new_id)
+        pid = p.get(qn("w14:paraId"))
+        if pid is None:
+            new_id = _new_paraid(seen)
+            p.set(qn("w14:paraId"), new_id)
+            seen.add(new_id)
+            n_added += 1
+        elif pid in seen:  # 원본에 이미 있던 중복 paraId - 재부여(첫 등장한 쪽은 유지)
+            new_id = _new_paraid(seen)
+            p.set(qn("w14:paraId"), new_id)
+            seen.add(new_id)
+            n_deduped += 1
+        else:
+            seen.add(pid)
     doc.save(str(anchored_path))
+    print(f"[add_para_ids] {Path(src_path).name}: 새로 부여 {n_added}개, "
+          f"원본에 중복이라 재부여 {n_deduped}개", flush=True)
     return anchored_path
 
 
@@ -104,6 +122,14 @@ def _detect_auto_num(docling_text, raw_xml_elem, docx_obj):
     if raw_text and docling_text != raw_text and docling_text.endswith(raw_text):
         return docling_text[:len(docling_text) - len(raw_text)]
     return None
+
+
+def _is_direct_cell_paragraph(p):
+    """표 조상이 있고 도형(txbxContent/textbox) 조상은 없는 문단 = 진짜 표 셀 직속 문단
+    (표 셀 안에 떠 있는 도형/텍스트박스는 여기 해당 안 함 - 3절 실측 확인). parse_docx의
+    table_paraids와 _add_supplement_elements가 공유하는 기준."""
+    names = {a.tag.rsplit("}", 1)[-1] for a in p.iterancestors()}
+    return "tbl" in names and "txbxContent" not in names and "textbox" not in names
 
 
 def _build_table_element(item, eid, docx_tables, table_index):
@@ -140,16 +166,22 @@ def _build_table_element(item, eid, docx_tables, table_index):
             "row_span": c.row_span, "col_span": c.col_span,
             "header": bool(c.column_header or c.row_header),
             "text": text, "span_in_table": span_map[(r, col)], "loc": loc,
+            # skip(번역·채점 제외)과 merge_skip(쓰기만 제외, 위치를 못 믿는 경우)은 별개다 -
+            # table_mismatch는 위치 신뢰도 문제일 뿐 텍스트 자체는 정확해서 번역·채점은 해도 된다.
+            "skip": None, "merge_skip": "table_mismatch" if mismatch else None,
         }
         if NUM_ONLY.fullmatch(text):
             cell["skip"] = "num_only"
         cells.append(cell)
 
+    # item.captions로 연결(_caption_crefs는 parse_docx()가 self_ref_to_id로 해석한 뒤 지움)
+    caption_crefs = [ref.cref for ref in getattr(item, "captions", [])]
+
     return {
         "id": eid, "label": "table", "level": None, "text": md, "loc": None,
-        "skip": "table_mismatch" if mismatch else None,
-        "table_id": table_index, "caption_ids": [], "n_rows": n_rows, "n_cols": n_cols,
-        "cells": cells,
+        "skip": None, "merge_skip": "table_mismatch" if mismatch else None,
+        "table_id": table_index, "caption_ids": [], "_caption_crefs": caption_crefs,
+        "n_rows": n_rows, "n_cols": n_cols, "cells": cells,
     }
 
 
@@ -171,8 +203,18 @@ def parse_docx(src_path):
     # 6개 셀 문단이 표 요소와 별개로 "text" 아이템으로도 다시 나와서, 같은 paraId를 가진
     # 요소가 2개(표 셀 + 일반 text) 생기고 병합 시 나중 것이 먼저 것을 덮어씀. 그래서 표
     # 셀 문단의 paraId 집합을 미리 만들어두고, 일반 텍스트 루프에서 명시적으로 제외한다.
-    table_paraids = {pid for pid, p in paraid_to_xmlelem.items()
-                     if any(a.tag == qn("w:tbl") for a in p.iterancestors())}
+    #
+    # ★ 실측 확인(2026-09-26, 3단계 전체 스캔 후 진단) - 위 필터가 "표 조상이 있으면 무조건
+    # 제외"라 너무 넓었다: 표 셀 안에 떠 있는 도형/텍스트박스(인포그래픽형 표에 흔함 -
+    # "2019"/"올리브영" 같은 라벨이 셀 안 도형 텍스트박스로 들어있는 경우)까지 같이
+    # 제외돼버려서, 그 텍스트가 표 cell.text에도 없고(Docling 표 추출은 셀의 직접 텍스트만
+    # 가져옴) 일반 text 요소로도 안 만들어지는 진짜 콘텐츠 손실이 됨(실측: MezzoMedia
+    # 문서에서 unwritten 419건 전부 tbl+txbxContent 조상을 동시에 가진 표-안-도형 라벨).
+    # doc.texts에는 이 텍스트가 정상적으로 있었음(Docling이 못 만든 게 아니라 우리가
+    # 걸러낸 것) - 그래서 "표 조상 있음 AND 도형(txbxContent/textbox) 조상 없음"(=진짜
+    # 셀 직속 문단)일 때만 제외하도록 좁힌다(_is_direct_cell_paragraph, 모듈 레벨 - 아래
+    # _add_supplement_elements도 같은 기준을 씀).
+    table_paraids = {pid for pid, p in paraid_to_xmlelem.items() if _is_direct_cell_paragraph(p)}
 
     docx_tables = backend.docx_obj.tables  # Docling이 내부적으로 연 python-docx 문서 재사용(같은 파일 두 번 안 엶)
 
@@ -180,6 +222,7 @@ def parse_docx(src_path):
     eid = 0
     table_index = 0
     pending = None  # 인라인 그룹(서식 섞인 한 문단이 여러 조각으로 쪼개진 경우) 누적용(3절 순서 4번)
+    self_ref_to_id = {}  # item.captions(RefItem.cref) -> 우리 element id 역인덱스(캡션 연결용)
 
     def flush():
         nonlocal pending, eid
@@ -191,10 +234,14 @@ def parse_docx(src_path):
             raw_xml_elem = paraid_to_xmlelem.get(para_id)
             skip = "formula" if pending["label"] == "formula" else _skip_reason_for_paragraph(raw_xml_elem)
             auto_num = _detect_auto_num(text, raw_xml_elem, backend.docx_obj)
+            loc = {"paraId": para_id} if para_id else None
             elements.append({
                 "id": eid, "label": pending["label"], "level": pending["level"], "text": text,
-                "loc": {"paraId": para_id} if para_id else None, "skip": skip, "auto_num": auto_num,
+                "loc": loc, "skip": skip, "merge_skip": "no_loc" if loc is None else None,
+                "auto_num": auto_num,
             })
+            if pending["first_self_ref"]:
+                self_ref_to_id[pending["first_self_ref"]] = eid
             eid += 1
         pending = None
 
@@ -211,7 +258,7 @@ def parse_docx(src_path):
         if label == "picture":
             flush()
             elements.append({"id": eid, "label": "picture", "level": None, "text": "",
-                              "loc": None, "skip": "picture", "auto_num": None})
+                              "loc": None, "skip": "picture", "merge_skip": None, "auto_num": None})
             eid += 1
             continue
 
@@ -228,21 +275,89 @@ def parse_docx(src_path):
             continue
         flush()
         pending = {"group_key": group_key, "label": label, "level": item_level,
-                   "para_id": para_id, "text_parts": [text] if text else []}
+                   "para_id": para_id, "text_parts": [text] if text else [],
+                   "first_self_ref": item.self_ref}
     flush()
 
-    # 표 앞뒤 caption 연결(간단한 인접 검사, 6절 caption_ids)
+    # 표 캡션 연결 - Docling item.captions(RefItem) 기준(6절 caption_ids). ★ 실측 확인:
+    # MsWordDocumentBackend는 캡션-표 연결 코드 자체가 없어서(소스 확인) captions가 항상
+    # 빈 리스트 - docx는 item.captions만으로는 caption_ids가 항상 []가 된다(pdf는 실제로
+    # 채워짐 - pdf_track/parse.py 참고). 그래서 docx만 "표 바로 앞뒤 요소가 caption
+    # 라벨이면 연결"하는 인접 검사를 폴백으로 되살린다(item.captions가 비었을 때만).
     for i, e in enumerate(elements):
         if e["label"] != "table":
             continue
-        for j in (i - 1, i + 1):
-            if 0 <= j < len(elements) and elements[j]["label"] == "caption":
-                e["caption_ids"].append(elements[j]["id"])
+        e["caption_ids"] = [self_ref_to_id[cref] for cref in e.pop("_caption_crefs") if cref in self_ref_to_id]
+        if not e["caption_ids"]:
+            for j in (i - 1, i + 1):
+                if 0 <= j < len(elements) and elements[j]["label"] == "caption":
+                    e["caption_ids"].append(elements[j]["id"])
 
-    loc_none = sum(1 for e in elements if e["label"] != "table" and e["loc"] is None)
+    elements, n_supplement = _add_supplement_elements(elements, backend)
+    if n_supplement:
+        print(f"[docx parse] {Path(src_path).name}: 보충 요소(source=supplement) {n_supplement}개 추가", flush=True)
+
+    no_loc = sum(1 for e in elements if e.get("merge_skip") == "no_loc")
     print(f"[docx parse] {Path(src_path).name}: 요소 {len(elements)}개, "
-          f"loc=None(병합 위치 못 찾음, 청킹/검색/번역엔 영향 없음) {loc_none}개", flush=True)
+          f"merge_skip=no_loc(병합 위치 못 찾음, 청킹/검색/번역엔 영향 없음) {no_loc}개", flush=True)
     return elements
+
+
+def _add_supplement_elements(elements, backend):
+    """★ 실측 확인(2026-09-26) - table_paraids를 좁혀도 못 잡는 orphan 문단(예: Docling
+    자체의 텍스트 중복 제거 - _handle_textbox_content()가 AlternateContent 안에서 같은
+    텍스트를 가진 문단을 통째로 건너뛰는 경우, msword_backend.py 확인)에 대비한 안전망.
+    파싱 끝에 anchored 문서의 모든 <w:p> 중 텍스트가 있고, Fallback 안이 아니고, 표 셀
+    직속 문단이 아니고, 어떤 요소·셀에도 paraId가 없는 문단을 text 요소(source="supplement")
+    로 추가한다. 위치는 그 문단을 품은 본문 최상위 문단(앵커) 요소 바로 뒤 - 문서 순서
+    유지. 원인과 무관하게 "elements에 빠진 문서 텍스트가 없게" 하는 목적이라 표 셀 직속
+    문단만 제외하고(중복 방지, 위 table_paraids와 같은 기준) 나머지는 전부 후보로 본다."""
+    used_paraids = set()
+    for e in elements:
+        if e["label"] == "table":
+            for c in e["cells"]:
+                used_paraids.update((c.get("loc") or {}).get("paraIds", []))
+        else:
+            loc = e.get("loc") or {}
+            if "paraId" in loc:
+                used_paraids.add(loc["paraId"])
+
+    paraid_to_idx = {e["loc"]["paraId"]: i for i, e in enumerate(elements)
+                      if e["label"] != "table" and e.get("loc") and "paraId" in e["loc"]}
+
+    def is_fallback(p):
+        return any(a.tag.rsplit("}", 1)[-1] == "Fallback" for a in p.iterancestors())
+
+    by_anchor = {}  # anchor_idx(None 포함) -> [supplement dict, ...], 문서 순서대로 채움
+    for p in backend.docx_obj.element.body.iter(qn("w:p")):
+        pid = p.get(qn("w14:paraId"))
+        if pid in used_paraids or is_fallback(p) or _is_direct_cell_paragraph(p):
+            continue
+        text = Paragraph(p, backend.docx_obj).text.strip()
+        if not text:
+            continue
+        outer_ps = list(p.iterancestors(qn("w:p")))
+        anchor_pid = outer_ps[-1].get(qn("w14:paraId")) if outer_ps else pid
+        anchor_idx = paraid_to_idx.get(anchor_pid)
+        by_anchor.setdefault(anchor_idx, []).append({
+            "label": "text", "level": None, "text": text, "loc": {"paraId": pid},
+            "skip": None, "merge_skip": None, "auto_num": None, "source": "supplement",
+        })
+        used_paraids.add(pid)  # 같은 paraId가 두 번 보충되는 것 방지
+
+    if not by_anchor:
+        return elements, 0
+
+    new_elements = []
+    for i, e in enumerate(elements):
+        new_elements.append(e)
+        new_elements.extend(by_anchor.get(i, []))
+    new_elements.extend(by_anchor.get(None, []))  # 앵커를 못 찾은 것(드묾) - 맨 끝에
+
+    n_supplement = sum(len(v) for v in by_anchor.values())
+    for i, e in enumerate(new_elements):  # id를 리스트 위치와 다시 맞춤(get_target이 인덱싱에 씀)
+        e["id"] = i
+    return new_elements, n_supplement
 
 
 if __name__ == "__main__":
@@ -255,9 +370,15 @@ if __name__ == "__main__":
         flat_text = add_spans(elements)
         counts = Counter(e["label"] for e in elements)
         skip_counts = Counter(e.get("skip") for e in elements if e.get("skip"))
+        merge_skip_counts = Counter(e.get("merge_skip") for e in elements if e.get("merge_skip"))
+        for e in elements:
+            if e["label"] == "table":
+                skip_counts.update(c.get("skip") for c in e["cells"] if c.get("skip"))
+                merge_skip_counts.update(c.get("merge_skip") for c in e["cells"] if c.get("merge_skip"))
         print(f"\n=== {Path(f).name} ({len(elements)}개 요소, flat_text {len(flat_text)}자) ===")
         print("label별 개수:", dict(counts))
-        print("skip 사유별 개수:", dict(skip_counts))
+        print("skip 사유별 개수(번역·채점 제외):", dict(skip_counts))
+        print("merge_skip 사유별 개수(쓰기만 제외):", dict(merge_skip_counts))
         for e in elements[:10]:
             preview = e["text"][:40].replace("\n", "\\n")
             print(" ", e["id"], e["label"], e["level"], "|", e["loc"], "| skip=", e.get("skip"),

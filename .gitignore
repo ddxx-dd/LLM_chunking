@@ -11,9 +11,12 @@ data/vectara_ragbench/*
 !data/vectara_ragbench/.gitkeep
 venv/
 results/*.json
+results/checks/
+results/pipeline/
 .venv311/
 .venv-eval/
 data/processed/
+src/data/processed/
 *.log
 .env
 .pytest_cache/

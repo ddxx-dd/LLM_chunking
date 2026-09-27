@@ -280,6 +280,28 @@ def merge_split_tables(elements):
 
 ## 5. 청킹 (`smart_chunker.py`)
 
+### ★ "smart"라는 이름이 트랙마다 다른 구현을 가리킨다 (2026-09-27 명시)
+
+`smart_chunker.py` 안에 **서로 다른 두 "smart" 청커**가 공존한다 - 이름은 같지만
+데이터 모델과 알고리즘이 다르다. 혼동하기 쉬워서 여기 명확히 적어둔다:
+
+- **docx/pdf의 smart = `group_elements()`(elements 기반, 이 절 아래 "smart —
+  `group_elements()`" 참고)**. 파서가 이미 만들어둔 elements(문단/표 셀 단위,
+  `label`이 `section_header`/`table`/... 로 정해져 있음)를 구조 우선(섹션 헤더 경계,
+  표는 캡션과 함께 통째로) + 의미 분할(너무 큰 섹션만 요소 경계에서 임베딩 유사도
+  최저점 분할) + 크기 조절(작은 그룹은 이웃과 병합)로 그룹핑한다. 반환 단위는
+  owner 키(`("el", id)`/`("cell", table_id, cell_id)`) - 병합(7절)에 그대로 씀.
+- **srt의 smart = 구식 `SmartChunker` 클래스(정규식 블록 탐지 기반, 이 파일 상단)**.
+  elements 모델이 없는 트랙이라(자막은 큐 하나가 파싱 결과의 최소 단위, 문단/표
+  같은 구조가 없음) 정규식(`detect_blocks`)으로 헤더/표/문단 블록을 찾고 문장
+  단위로 재귀 분할한다. `SmartTextSplitter`로 감싸서 LangChain `TextSplitter`
+  인터페이스에 꽂는다(`srt/subtitle_pipeline.py`의 `default_subtitle_chunkers`).
+  **이 클래스는 legacy로 옮기지 않았다** - srt 트랙엔 여전히 유효한 유일한 구현.
+
+두 구현이 "구조 우선 → 의미 분할 → 크기 조절"이라는 같은 3단계 아이디어를 공유하긴
+하지만, 코드·데이터 모델은 독립적이다 - docx/pdf 쪽을 고쳐도 srt는 영향 없고 반대도
+마찬가지. 이후 절의 "smart"는 문맥상 docx/pdf(`group_elements`)를 가리킨다.
+
 ### semantic은 검색·요약·번역 전부 LangChain `SemanticChunker`로 통일
 
 표준 구현을 쓰는 게 논문 비교에 유리해서 LangChain `SemanticChunker`(langchain_experimental)로
@@ -516,29 +538,48 @@ doc.save(f"results/docx/{name}_translated.docx")
 ### pdf — 페이지마다 정해진 순서로 처리(bbox 겹침 시 방금 쓴 걸 지우는 사고 방지)
 
 ```python
-CSS = "@font-face {font-family: NotoSansKR; src: url(NotoSansKR-Regular.ttf);} " \
-      "body {font-family: NotoSansKR;}"   # 실제 쓰기와 test_fit이 반드시 같은 CSS를 씀
+# ★ 실측 확인(2026-09-26, 항등 테스트에서 발견, 11절) - Google Fonts NotoSansKR-Regular.ttf(v39)는
+# 숫자+알파벳이 공백 없이 붙는 특정 패턴에서 숫자가 무작위 한자로 깨지는 폰트 결함이 있어
+# NanumGothic으로 교체함(기본 내장 폰트·NanumGothic은 정상 렌더링을 실측 확인).
+CSS = "@font-face {font-family: NanumGothic; src: url(NanumGothic.ttf);} " \
+      "body {font-family: NanumGothic;}"   # 실제 쓰기와 test_fit이 반드시 같은 CSS를 씀
 
 def flatten_targets(elements, translations):
-    """표는 셀 단위로 펼쳐서, 일반 요소와 셀을 같은 모양의 (owner, bbox, safe_text) 리스트로 만든다
-    - 페이지별로 묶으려면 표 요소 자체가 아니라 그 안의 셀 하나하나가 각자 bbox/page를 갖고
-    있어야 하므로."""
+    """표는 셀 단위로 펼쳐서, 일반 요소와 셀을 같은 모양의 (owner, bbox, text, safe_text)
+    리스트로 만든다 - 페이지별로 묶으려면 표 요소 자체가 아니라 그 안의 셀 하나하나가 각자
+    bbox/page를 갖고 있어야 하므로. text(이스케이프 전 원문)는 넣기 판정 커버리지 계산에 씀."""
     out = []
     for owner, translated_text in translations.items():
         target = get_target(elements, owner)
         bbox = target["loc"]["prov"][0]["bbox"]      # 1차 규칙: 여러 칸 걸치면 첫 칸만(7절 하단 참고)
         page_no = target["loc"]["prov"][0]["page"]
-        out.append({"owner": owner, "page_no": page_no, "bbox": bbox,
+        out.append({"owner": owner, "page_no": page_no, "bbox": bbox, "text": translated_text,
                     "safe_text": html.escape(translated_text)})   # ★ escape는 여기서 한 번만
     return out
 
 targets = flatten_targets(elements, translations)
 for page_no, page_targets in group_by_page(targets):   # page_no 기준 그룹핑(셀도 이미 펼쳐져 있음)
     page = pdf[page_no - 1]   # page_no는 1부터 시작
-    scratch_page = ...   # 빈 임시 페이지(항상 재사용)
-    # (a) 먼저 넣어보고 들어가는지 확인 - ★ test_fit도 실제 쓰기와 똑같은 CSS·이스케이프된 텍스트 사용
-    fits = [t for t in page_targets
-            if test_fit(scratch_page, t["bbox"], t["safe_text"], css=CSS)[0] >= 0]
+    fits = []
+    for t in page_targets:
+        # ★ 실측 확인(2026-09-26, 항등 테스트에서 발견, 11절) - 스크래치 페이지를 페이지당
+        # 한 번만 비우고 여러 대상을 연달아 시험하면 앞 대상이 넘친 내용이 다음 판정을
+        # 오염시킨다(격리 상태에선 정확히 실패 판정되던 문단이 공유 상태에선 성공으로
+        # 오판되고 실제로는 내용 70%가 소실됨) - 대상마다 새로 만든다.
+        scratch_page = ...   # 빈 임시 페이지(대상마다 새로 만듦)
+        # (a) 먼저 넣어보고 들어가는지 확인 - ★ test_fit도 실제 쓰기와 똑같은 CSS·이스케이프된 텍스트 사용
+        spare, _scale = test_fit(scratch_page, t["bbox"], t["safe_text"], css=CSS)
+        ok = spare >= 0
+        if ok:
+            # ★ 실측 확인 - spare는 삽입 높이 여유만 봐서, 가로로 넘치는 긴 토큰이 통째로
+            # 잘려도 "들어감"으로 나올 수 있다. 실제로 추출해서 원문 글자(정규화 비교,
+            # normalize_text)의 95% 이상이 들어갔는지까지 확인한다.
+            extracted = scratch_page.get_text(clip=t["bbox"])
+            ok = coverage_ratio(normalize_text(t["text"]), normalize_text(extracted)) >= 0.95
+        if ok:
+            fits.append(t)
+        else:
+            log_failed(t["owner"])   # 원문 유지
     # (b) 들어가는 것만 전부 redact 표시
     for t in fits:
         b = t["bbox"]
@@ -584,9 +625,15 @@ CometKiwi는 `.venv311`(번역 실행) → 결과 파일 저장 → 프로세스
 
 ### 항등 테스트 기준 (구체화)
 
-- **pdf**: (a) 요소 bbox 안쪽을 `page.get_text(clip=bbox)`로 재추출한 텍스트가 원문과 일치,
-  (b) 그림·선(도형) 개수가 redaction 전후로 동일(`apply_redactions`가 불필요한 걸 지우지
-  않았는지), (c) 모든 요소 bbox **바깥** 영역은 전후 픽셀이 그대로인지(스크린샷 비교 등)
+- **pdf**(★ 2026-09-26 갱신, 실측 반영): (a) **쓴** 요소 bbox 안쪽을 `page.get_text(clip=bbox)`
+  로 재추출한 텍스트가 원문과 일치 — `normalize_text`(NFKC + 대시류 통일 + 폰트 lookalike
+  통일)로 정규화해서 비교(렌더링 과정에서 문자 코드만 바뀐 건 실패로 안 봄, 11절 참고).
+  (b) 그림·선(도형) 개수가 redaction 전후로 동일. (c) **안 쓴 요소**(skip/merge_skip이거나
+  넣기 실패)의 텍스트가 결과 파일에서 원문 그대로 남아있는지(pass/fail) — redaction이
+  실수로 이웃 콘텐츠를 지우지 않았는지 확인. **픽셀 비교는 참고 지표로 격하**: bbox를
+  3px 넓힌 마스크 바깥 영역의 변화율(%)을 페이지별로 기록만 함(pass/fail 아님) — redaction이
+  경계에 걸친 이웃 글자를 통째로 지우는 게 알려진 특성이라 순수 픽셀 일치를 기준으로
+  삼기 어려움.
 - **docx**: (a) 텍스트가 원본과 완전히 일치(auto_num 뗀 기준, 위 참고), (b) **저장 전후
   `w:p`/`w:drawing`/`w:pict` 개수가 정확히 같아야 통과**(★ 실측 확인 — 그룹 도형이 통째로
   사라지는 버그를 이 기준으로 잡아냄, w:t 직접 수정 방식으로 해결 후 3개 다 전/후 동일
@@ -651,6 +698,13 @@ LLM_chunking/
 | marker-pdf: 환경 자체에서 실행 실패 | GPU모드 Docker 필요, CPU모드 내부 서버 500 | 후보 제외 |
 | python-docx 단독으로 docx 읽으면 텍스트 깨짐 | 겹친 텍스트박스+본문이 섞여 읽힘(실측) | Docling 유지 + paraId 앵커링 |
 | pdf 표가 페이지 경계를 넘음(우려) | Docling 표 구조 모델이 페이지 단위 독립 처리(소스 확인) | 처음엔 2개 문서를 "실제 사례"로 오판했었음(부록의 별개 표 시리즈를 페이지 넘는 표로 착각 — 각 표의 고유 캡션을 못 봐서) — **캡션 유무까지 확인하는 엄격한 조건으로 재검증한 결과 실제 사례 0건**(4절). 방어 로직은 구현해두되 우선순위 낮음 |
+| pdf 병합 시 NotoSansKR로 렌더링한 숫자가 무작위 한자로 깨짐(예: "(3.1)is" → "(埼.基)is") | Google Fonts에서 받은 `NotoSansKR-Regular.ttf`(v39) 파일 자체의 글리프/GSUB 결함(실측: 기본 내장 폰트·NanumGothic은 같은 텍스트를 정상 렌더링, 그 폰트 파일만 깨짐) | 7절 pdf writer 폰트를 NanumGothic으로 교체(`fonts/NanumGothic.ttf`) |
+| pdf 병합 시 test_fit(넣기 판정)이 오염돼 긴 문단이 잘려도 "성공"으로 기록됨 | 스크래치 페이지를 페이지당 1번만 비우고 같은 페이지의 여러 대상을 연달아 시험 삽입 — 앞 대상이 넘친 내용이 다음 대상의 판정에 섞임(실측: 격리 상태에선 정확히 spare=-1로 판정되던 문단이 공유 상태에선 spare≥0으로 오판되고 실제로는 내용 70% 소실) | 대상마다 스크래치 페이지를 새로 만듦 + spare(높이)만이 아니라 추출 텍스트 커버리지 95% 기준을 추가(7절) |
+| docx: 도형이 많은 문서에서 unwritten 문단이 대량 발생(Fallback 쌍으로 정확히 절반씩) | `table_paraids` 필터가 "표 조상 있으면 무조건 제외"라 너무 넓었음 — 표 셀 안에 떠 있는 도형/텍스트박스(인포그래픽형 표에 흔함, 예: "2019"/"올리브영" 라벨)까지 같이 제외돼서 Docling doc.texts엔 있는데 우리 요소로는 안 만들어짐(실측: MezzoMedia 문서 unwritten 419건 전부 tbl+txbxContent 조상 동시 보유) | "표 조상 O AND 도형 조상 X"(진짜 셀 직속 문단)일 때만 제외하도록 좁힘 + Docling 자체 텍스트 중복 제거(`_handle_textbox_content`의 processed_paragraphs, 소스 확인)로 인한 잔여 orphan은 보충 요소(source="supplement")로 안전망 추가 |
+| pdf 병합: 좁은 표 셀에서 한 줄도 안 들어감(넣기 실패율 38%) | insert_htmlbox 영역을 redact와 똑같이 1pt 안쪽으로 줄였었음 + CSS 글자 크기가 원문보다 큼 + word-break 미지원으로 긴 토큰이 안 잘림 | insert는 원래 bbox 그대로 사용(redact만 1pt 축소), CSS font-size를 원문 span 중앙값으로 지정, 20자 넘는 공백 없는 토큰에 몇 글자마다 U+200B 삽입(실측: spare -1→성공) — 표 셀 넣기 성공률 100%로 개선(샘플 기준) |
+| pdf 항등 테스트 (a)/(c)가 서로 다른 요소의 텍스트를 섞어서 추출 | Docling이 매긴 두 요소의 bbox가 실제로 몇 pt씩 겹치는 경우가 있음(실측: 인접 요소 bbox가 7.3pt 겹침) — get_text(clip=bbox)뿐 아니라 word-center 방식도 겹침이 크면 완전히는 못 피함 | 검증 쿼리 rect는 1pt 축소 + get_text("words")에서 단어 중심점이 bbox 안에 있는 것만 채택(조밀한 표의 이웃 셀 섞임은 해결됨, 겹침이 큰 소수 사례는 남은 한계로 기록) |
+| pdf 원문 보존율이 낮게 나옴(평균 73.5%) | (c) 실패 요소마다 "원본 pdf"에서도 같은 방식으로 재추출해서 비교해보니, 31건 중 30건이 원본에서도 이미 어긋남(측정 오류) — 우리 writer가 지운 게 아니라 Docling bbox 부정확 자체의 문제(실제 손상은 31건 중 1건뿐) | writer는 안 고침(실제 손상이 미미해서) - 낮은 원문 보존율 수치는 "검증 방법의 한계"로 해석, 별도 대응 안 함 |
+| docx 잔여 소규모 텍스트 손실(문서당 수십 자, 실패 20개) | 세로 병합 셀(vMerge)의 연속 행처럼 문단은 있지만 run이 하나도 없는 빈 문단이 writer의 "번역문 받을 자리"(paraIds[0])로 뽑히면, 거기엔 쓸 w:t가 없어서 조용히 실패하는데 같은 요소의 "나머지" 문단(진짜 텍스트가 있던 paraIds[1:])은 그대로 비워버려서 - 아무 데도 안 써진 채 원본 텍스트만 사라짐(실측: 3문단 중 1번째가 빈 문단, 3번째에 실제 텍스트) | w:t가 없는 문단엔 새 w:r/w:t를 만들어서 씀(`_append_text_run`) - 재검증 결과 실패 문서 5개 전부 완전 일치로 해결, 전체 재스캔 45/45 통과 |
 
 ---
 

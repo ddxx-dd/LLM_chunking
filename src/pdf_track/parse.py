@@ -94,14 +94,22 @@ def _build_table_element(item, eid, pymupdf_doc):
             "row_span": c.row_span, "col_span": c.col_span,
             "header": bool(c.column_header or c.row_header),
             "text": text, "span_in_table": span_map[(r, col)], "loc": loc,
+            # skip(번역·채점 제외)과 merge_skip(쓰기만 제외)은 별개(docx와 동일 원칙, 3절).
+            "skip": None, "merge_skip": "no_loc" if loc is None else None,
         }
         if NUM_ONLY.fullmatch(text):
             cell["skip"] = "num_only"
         cells.append(cell)
 
+    # item.captions로 연결(_caption_crefs는 parse_pdf()가 self_ref_to_id로 해석한 뒤 지움) -
+    # 캡션이 표보다 나중에 나올 수도 있어서(문서 순회 중엔 아직 id가 없을 수 있음) 2단계로 해석.
+    caption_crefs = [ref.cref for ref in getattr(item, "captions", [])]
+
     return {
-        "id": eid, "label": "table", "level": None, "text": md, "loc": None, "skip": None,
-        "table_id": eid, "caption_ids": [], "n_rows": n_rows, "n_cols": n_cols, "cells": cells,
+        "id": eid, "label": "table", "level": None, "text": md, "loc": None,
+        "skip": None, "merge_skip": None,
+        "table_id": eid, "caption_ids": [], "_caption_crefs": caption_crefs,
+        "n_rows": n_rows, "n_cols": n_cols, "cells": cells,
     }
 
 
@@ -112,6 +120,7 @@ def parse_pdf(filepath):
 
     elements = []
     eid = 0
+    self_ref_to_id = {}  # item.captions(RefItem.cref) -> 우리 element id 역인덱스(캡션 연결용)
     for item, _level in doc.iterate_items():
         label = str(item.label)
         if label in FURNITURE_LABELS:
@@ -122,7 +131,7 @@ def parse_pdf(filepath):
             continue
         if label == "picture":
             elements.append({"id": eid, "label": "picture", "level": None, "text": "",
-                              "loc": None, "skip": "picture"})
+                              "loc": None, "skip": "picture", "merge_skip": None})
             eid += 1
             continue
 
@@ -139,18 +148,20 @@ def parse_pdf(filepath):
                 skip = "math_font"
 
         elements.append({"id": eid, "label": label, "level": item_level, "text": text,
-                          "loc": {"prov": provs}, "skip": skip})
+                          "loc": {"prov": provs}, "skip": skip, "merge_skip": None})
+        self_ref_to_id[item.self_ref] = eid
         eid += 1
 
     pymupdf_doc.close()
 
-    # 표 앞뒤 caption 연결(간단한 인접 검사, 6절 caption_ids)
-    for i, e in enumerate(elements):
+    # 표 캡션 연결 - Docling item.captions(RefItem) 기준(6절 caption_ids). ★ 실측 확인:
+    # pdf는 Docling 자체 레이아웃 모델이 캡션-표를 실제로 연결해준다(인접 요소 휴리스틱
+    # 없이도 "Table 3 Excess MSPE..." 같은 진짜 캡션이 정확히 잡힘 - docx의 MsWordDocumentBackend는
+    # 이 필드를 아예 채우지 않는 것과 대조적, docx_track/parse.py 참고).
+    for e in elements:
         if e["label"] != "table":
             continue
-        for j in (i - 1, i + 1):
-            if 0 <= j < len(elements) and elements[j]["label"] == "caption":
-                e["caption_ids"].append(elements[j]["id"])
+        e["caption_ids"] = [self_ref_to_id[cref] for cref in e.pop("_caption_crefs") if cref in self_ref_to_id]
 
     print(f"[pdf parse] {Path(filepath).name}: 요소 {len(elements)}개", flush=True)
     return elements
@@ -169,9 +180,16 @@ if __name__ == "__main__":
         flat_text = add_spans(elements)
         counts = Counter(e["label"] for e in elements)
         skip_counts = Counter(e.get("skip") for e in elements if e.get("skip"))
+        merge_skip_counts = Counter(e.get("merge_skip") for e in elements if e.get("merge_skip"))
+        for e in elements:
+            if e["label"] == "table":
+                skip_counts.update(c.get("skip") for c in e["cells"] if c.get("skip"))
+                merge_skip_counts.update(c.get("merge_skip") for c in e["cells"] if c.get("merge_skip"))
         print(f"\n=== {Path(f).name} ({len(elements)}개 요소, flat_text {len(flat_text)}자) ===")
         print("label별 개수:", dict(counts))
-        print("skip 사유별 개수:", dict(skip_counts))
+        print("skip 사유별 개수(번역·채점 제외):", dict(skip_counts))
+        print("merge_skip 사유별 개수(쓰기만 제외):", dict(merge_skip_counts))
+        print("caption_ids가 채워진 표 수:", sum(1 for e in elements if e["label"] == "table" and e["caption_ids"]))
         for e in elements[:10]:
             preview = e["text"][:40].replace("\n", "\\n")
             print(" ", e["id"], e["label"], e["level"], "|", e["loc"], "| skip=", e.get("skip"),

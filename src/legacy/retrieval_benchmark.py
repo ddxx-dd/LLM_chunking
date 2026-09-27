@@ -1,4 +1,11 @@
-"""allganize 검색 품질 벤치마크: docx 로드 -> fixed/semantic 청킹 -> 검색 -> QA 채점.
+"""★ legacy(2026-09-27) - pipeline.py(--dataset docx --task retrieval)로 대체됨.
+docx_track.loader.load_docx(Docling 마크다운 로더)와 구식 SmartChunker(정규식 블록
+탐지 기반)를 쓰는 경로라 elements/owners 기반 새 설계와 입력이 다름(공정 비교
+불가). 그리드서치 자체(FIXED_CHUNK_SIZES/SEMANTIC_BREAKPOINT_AMOUNTS 반복)는
+5단계("이후")에서 pipeline.py의 build_chunks 기반으로 다시 만들 것 - 이 파일은
+그 전까지 참고용으로만 보관.
+
+allganize 검색 품질 벤치마크: docx 로드 -> fixed/semantic 청킹 -> 검색 -> QA 채점.
 LLM 생성 없음(순수 검색 단계만) - doc_name + target_answer 내용겹침으로 직접 채점,
 LLM-judge는 안 씀(project 정책). *** 초안 - 아직 실행/검증 안 됨 ***"""
 import csv

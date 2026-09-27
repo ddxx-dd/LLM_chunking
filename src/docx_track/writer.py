@@ -2,11 +2,29 @@
 (그룹 도형을 run.text 대입으로 파괴하던 버그의 해결책, identity_test.py에서 실측 확인).
 identity_test.py(자기 텍스트 되돌려쓰기)와 merge_checks.py(마킹 테스트)가 이 모듈을
 공유한다."""
+from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
 
 def _local(tag):
     return tag.rsplit("}", 1)[-1]
+
+
+def _append_text_run(para_xml, text):
+    """para_xml에 w:r/w:t가 하나도 없을 때 새로 만들어서 붙인다 - ★ 실측 확인(2026-09-26,
+    docx 3단계 재스캔에서 발견한 진짜 콘텐츠 손실 원인): 세로 병합 셀(vMerge)의 연속 행은
+    OOXML 스펙상 문단은 있지만 run이 하나도 없는 빈 문단인 경우가 흔하다. 이런 문단이
+    paraIds[0](번역문을 받을 자리)로 뽑히면, 기존 코드는 "쓸 w:t가 없다"며 그냥 넘어가고
+    반환값도 실패였는데, 같은 셀의 "나머지" 문단(진짜 텍스트가 있던 paraIds[1:])은 그대로
+    비워버려서 - 결과적으로 아무 데도 안 써진 채 원본 텍스트만 사라지는 실제 데이터 손실이
+    있었다(실측: 병합 셀 3문단 중 1번째만 비어있고 3번째에 실제 텍스트가 있던 사례)."""
+    r = OxmlElement("w:r")
+    t = OxmlElement("w:t")
+    t.text = text
+    t.set(qn("xml:space"), "preserve")
+    r.append(t)
+    para_xml.append(r)
+    return t
 
 
 def direct_text_nodes(para_xml):
@@ -70,6 +88,9 @@ def write_paragraph_text(para_xml, text, mirror_fallback=True):
     for p in targets:
         t_nodes = direct_text_nodes(p)
         if not t_nodes:
+            if text:  # 쓸 내용이 있는데 w:t가 없으면 새로 만듦(위 _append_text_run 참고)
+                _append_text_run(p, text)
+                wrote_any = True
             continue
         t_nodes[0].text = text
         t_nodes[0].set(qn("xml:space"), "preserve")

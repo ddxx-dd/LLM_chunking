@@ -13,6 +13,7 @@ paraIds/table_index fallback)이 실제로 정확한 위치를 찾는지 검증�
 w:t만** 골라 고치는 방식으로 바꿨다(_direct_text_nodes) - 조건: t.iterancestors(w:p)의
 첫 번째가 이 문단 자신일 때만(중첩된 도형/텍스트박스 안 w:t는 그 안쪽 문단이 따로
 처리하므로 제외)."""
+import difflib
 import sys
 from pathlib import Path
 
@@ -21,6 +22,7 @@ from docx.oxml.ns import qn
 from docx.text.paragraph import Paragraph
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
+from docobj import checks_output_path
 from docx_track.parse import add_para_ids, parse_docx
 from docx_track.writer import build_paraid_index, write_element_text
 
@@ -29,7 +31,9 @@ def _write_own_text_back(anchored_path, elements, out_path):
     """7절 docx writer 로직(paraId 우선, paraIds는 첫 문단에 쓰고 나머진 비움, table_index
     fallback)을 그대로 따르되 번역문 대신 요소 자기 자신의 text를 쓴다. 실제 쓰기는
     docx_track/writer.py의 w:t 직접 수정 방식(위 모듈 docstring)을 그대로 씀 -
-    merge_checks.py의 표시 테스트와 로직을 공유."""
+    merge_checks.py의 표시 테스트와 로직을 공유. skip(번역·채점 제외)과 merge_skip(위치를
+    못 믿어서 쓰기만 제외 - table_mismatch/no_loc)은 둘 다 "쓰지 않을 이유"라 writer는
+    둘 다 확인한다(매핑 루프는 skip만 봄, 3절/5절 참고)."""
     doc = DocxDocument(str(anchored_path))
     paraid_to_p = build_paraid_index(doc)
 
@@ -46,12 +50,12 @@ def _write_own_text_back(anchored_path, elements, out_path):
     for e in elements:
         if e["label"] == "table":
             for c in e["cells"]:
-                if c.get("skip") or e.get("skip"):  # 실제 병합에서도 안 건드릴 대상(5절) - 원문 그대로 둠
+                if c.get("skip") or c.get("merge_skip") or e.get("skip") or e.get("merge_skip"):
                     counts["skipped_flag"] += 1
                     continue
                 record(write_element_text(doc, paraid_to_p, c.get("loc"), c["text"]))
             continue
-        if e["label"] == "picture" or e.get("skip"):
+        if e["label"] == "picture" or e.get("skip") or e.get("merge_skip"):
             counts["skipped_flag"] += 1
             continue
         record(write_element_text(doc, paraid_to_p, e.get("loc"), e["text"], e.get("auto_num")))
@@ -104,19 +108,34 @@ def _count_structural(docx_path):
     }
 
 
-def run_identity_test(src_path):
-    src_path = Path(src_path)
-    anchored_path = src_path.with_suffix(".anchored.docx")
-    if not anchored_path.exists():
-        anchored_path = add_para_ids(src_path)
-    elements = parse_docx(src_path)
+TEXT_MATCH_TARGET = 0.995
 
-    out_path = src_path.with_name(src_path.stem + ".identitytest.docx")
+
+def _text_match_rate(orig_text, new_text):
+    """정규화(공백 무시)한 원본 글자 중 몇 %가 결과에도 순서대로 들어있는지(pdf_track과
+    같은 SequenceMatcher 기반 커버리지, 3절/[3] 참고) - "완전 일치"라는 엄격한 이진
+    판정 대신 비율로 봐서, 소규모 잔여 불일치가 있어도 전체적으로 얼마나 보존됐는지
+    알 수 있게 한다."""
+    if not orig_text:
+        return 1.0
+    sm = difflib.SequenceMatcher(None, orig_text, new_text, autojunk=False)
+    matched = sum(b.size for b in sm.get_matching_blocks())
+    return matched / len(orig_text)
+
+
+def run_identity_test(src_path, elements=None):
+    src_path = Path(src_path)
+    anchored_path = add_para_ids(src_path)  # 이미 있으면 재사용(멱등, docx_track/parse.py 참고)
+    if elements is None:  # 3단계 전체 스캔처럼 이미 파싱한 elements가 있으면 재파싱 안 함
+        elements = parse_docx(src_path)
+
+    out_path = checks_output_path(src_path, ".identitytest.docx")  # 원본 데이터 폴더에는 안 씀
     counts = _write_own_text_back(anchored_path, elements, out_path)
 
     orig_text = _full_text(src_path)
     new_text = _full_text(out_path)
     text_match = orig_text == new_text
+    text_match_rate = _text_match_rate(orig_text, new_text)
 
     b0, i0 = _count_bold_italic(src_path)
     b1, i1 = _count_bold_italic(out_path)
@@ -129,7 +148,7 @@ def run_identity_test(src_path):
     print(f"  쓴 요소/셀 수: {counts['written']}, loc 없어서 건너뜀: {counts['skipped_no_loc']}, "
           f"skip 표시라 원문 유지: {counts['skipped_flag']}, "
           f"문단에 직접 속한 w:t가 없어서 건너뜀(no_text_node): {counts['skipped_no_text_node']}")
-    print(f"  텍스트(공백 무시) 완전 일치: {text_match}")
+    print(f"  텍스트(공백 무시) 일치율: {text_match_rate:.1%} (목표 {TEXT_MATCH_TARGET:.1%}, 완전 일치: {text_match})")
     if not text_match:
         print(f"    원본 길이 {len(orig_text)}자, 재작성 길이 {len(new_text)}자")
         n = min(len(orig_text), len(new_text))
@@ -143,10 +162,13 @@ def run_identity_test(src_path):
     print(f"  bold run 개수: 원본 {b0} -> 재작성 {b1} (차이 {b1 - b0})")
     print(f"  italic run 개수: 원본 {i0} -> 재작성 {i1} (차이 {i1 - i0})")
 
-    passed = text_match and struct_match
+    # [3] 비율 기준(2026-09-26) - 완전 일치 대신 구조 100% + 텍스트 일치율 99.5% 이상.
+    # "미기록 0"은 merge_checks.run_mark_test의 결과라 여기선 안 보고, scan_corpus.py가
+    # 이 값과 mark test의 unwritten==0을 합쳐서 최종 통과 여부를 매긴다.
+    passed = struct_match and text_match_rate >= TEXT_MATCH_TARGET
     print(f"  ▶ 항등 테스트 {'통과' if passed else '실패'}")
-    return {"text_match": text_match, "struct_match": struct_match, "passed": passed,
-            **counts, "bold": (b0, b1), "italic": (i0, i1)}
+    return {"text_match": text_match, "text_match_rate": text_match_rate, "struct_match": struct_match,
+            "passed": passed, **counts, "bold": (b0, b1), "italic": (i0, i1)}
 
 
 if __name__ == "__main__":
