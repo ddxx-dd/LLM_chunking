@@ -1,5 +1,9 @@
 from pathlib import Path
 
+import torch
+torch.backends.cudnn.enabled = False  # ★ 실측 확인 - 이 서버의 cuDNN/드라이버 버전 불일치로
+# pdf 레이아웃 모델이 CUDNN_STATUS_NOT_INITIALIZED로 바로 죽는다(끌 수밖에 없는 필수 우회).
+
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode

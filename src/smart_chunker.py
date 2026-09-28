@@ -98,7 +98,14 @@ class SmartChunker:
                 secs.append(cur)
                 cur = []
             if kind == "para":
-                cur += [(a, b, "sent") for a, b in split_sentences(text, s, e)]
+                # ★ 2026-09-28 변경 - 문단은 통째로 한 조각(문단 중간을 함부로 안 자름).
+                # max_tokens를 넘는 문단만 문장으로 쪼개서 ②(경계점수 분할)가 그 안에서
+                # 자를 수 있게 한다 - 이전엔 문단을 항상 문장으로 쪼개서, 짧은 문단끼리도
+                # 문장 단위로 잘게 나뉘어 ②가 문단 중간에서 자르는 경우가 있었음.
+                if self.count(text[s:e]) > self.max_t:
+                    cur += [(a, b, "sent") for a, b in split_sentences(text, s, e)]
+                else:
+                    cur.append((s, e, "para"))
             else:
                 cur.append((s, e, kind))  # 헤더·표는 쪼개지 않는 한 조각
         if cur:
@@ -175,3 +182,91 @@ class SmartTextSplitter(TextSplitter):
 
     def split_text(self, text):
         return [text[s:e] for s, e in self._chunker.chunk_spans(text)]
+
+
+# ---------------------------------------------------------------------------
+# semantic(docx/pdf) - LangChain SemanticChunker + 설정 보정 + max_tokens 후처리
+# ---------------------------------------------------------------------------
+# ★ 실측 확인(2026-09-28) - 기본 sentence_split_regex(마침표류 뒤 공백만 문장 경계)는
+# 마크다운 제목·표 행·목록처럼 줄바꿈으로만 구분되는 텍스트를 전부 "한 문장"으로
+# 뭉쳐버려서 비정상적으로 큰 청크가 나온다 - 줄바꿈도 경계 후보로 추가.
+SEMANTIC_SENTENCE_SPLIT_REGEX = r"(?<=[.?!。])\s+|\n+"
+# bge-m3 토크나이저로 코퍼스 표본 실측한 글자/토큰 비율 - smart의 min_tokens(글자
+# 수가 아니라 토큰 수)에 대응하는 min_chunk_size(글자 수)를 여기서 환산한다.
+CHARS_PER_TOKEN = 2.448
+
+
+def recover_spans(flat, chunks):
+    """공백 무시하고 청크 텍스트를 flat_text에서 순서대로 찾아 (start, end) 복원 -
+    SemanticChunker가 " ".join()으로 문장을 재조합해서(개행이 공백으로 바뀜)
+    start_index가 실제 위치와 어긋나는 오프셋 오류를 우회한다(실측 확인된 문제)."""
+    pos = [i for i, ch in enumerate(flat) if not ch.isspace()]
+    squeezed = "".join(flat[i] for i in pos)
+    spans, cur = [], 0
+    for c in chunks:
+        key = "".join(c.split())
+        k = squeezed.find(key, cur)
+        if k < 0 or not key:
+            spans.append(None)  # 못 찾으면 None - 호출하는 쪽에서 개수로 집계
+            continue
+        spans.append((pos[k], pos[k + len(key) - 1] + 1))
+        cur = k + len(key)
+    return spans
+
+
+def _sentence_spans(text, base):
+    spans, cur = [], base
+    for m in re.finditer(SEMANTIC_SENTENCE_SPLIT_REGEX, text):
+        end = base + m.start()
+        if end > cur:
+            spans.append((cur, end))
+        cur = base + m.end()
+    if cur < base + len(text):
+        spans.append((cur, base + len(text)))
+    return spans or [(base, base + len(text))]
+
+
+def _split_oversized(flat_text, span, embed_model, count_tokens, max_tokens):
+    """max_tokens를 넘는 semantic 청크를 그 안의 인접 문장 사이 거리(=유사도 반대)가
+    가장 큰 지점에서 반복 분할한다 - 문장 중간은 안 자름(문장이 하나뿐이면 그대로 둠)."""
+    s, e = span
+    if count_tokens(flat_text[s:e]) <= max_tokens:
+        return [span]
+    sents = _sentence_spans(flat_text[s:e], s)
+    if len(sents) == 1:
+        return [span]
+    vecs = np.asarray(embed_model.encode([flat_text[a:b] for a, b in sents], normalize_embeddings=True))
+    cut, best_dist = 0, -1.0
+    for i in range(len(sents) - 1):
+        dist = 1 - float(vecs[i] @ vecs[i + 1])
+        if dist > best_dist:
+            best_dist, cut = dist, i
+    left, right = (sents[0][0], sents[cut][1]), (sents[cut + 1][0], sents[-1][1])
+    return (_split_oversized(flat_text, left, embed_model, count_tokens, max_tokens) +
+            _split_oversized(flat_text, right, embed_model, count_tokens, max_tokens))
+
+
+class SemanticMaxSplitter(TextSplitter):
+    """SemanticChunker(경계 보정) + max_tokens 후처리 + recover_spans 위치복원을
+    하나로 묶는다 - max_tokens=None이면 후처리 없이 그대로(어블레이션 옵션)."""
+
+    def __init__(self, embeddings, count_tokens, percentile=90, min_tokens=100, max_tokens=400, **kwargs):
+        from langchain_experimental.text_splitter import SemanticChunker
+        kwargs.setdefault("chunk_overlap", 0)
+        kwargs.setdefault("add_start_index", True)
+        super().__init__(**kwargs)
+        self.embeddings, self.count, self.max_t = embeddings, count_tokens, max_tokens
+        self._inner = SemanticChunker(embeddings, breakpoint_threshold_type="percentile",
+                                       breakpoint_threshold_amount=percentile,
+                                       sentence_split_regex=SEMANTIC_SENTENCE_SPLIT_REGEX,
+                                       min_chunk_size=round(min_tokens * CHARS_PER_TOKEN))
+
+    def split_text(self, text):
+        texts = self._inner.split_text(text)
+        spans = [sp for sp in recover_spans(text, texts) if sp is not None]
+        if self.max_t is None:
+            return [text[s:e] for s, e in spans]
+        final = []
+        for sp in spans:
+            final += _split_oversized(text, sp, self.embeddings._client, self.count, self.max_t)
+        return [text[s:e] for s, e in final]

@@ -60,6 +60,45 @@ def generate_batch(tokenizer, model, device, list_of_messages, max_new_tokens=51
     return [raw.strip() for raw in raw_texts]
 
 
+# 24GB에서 OOM 없이 도는 배치 크기(실측) - 입력 토큰 수 구간별로 다르게, 긴 입력은
+# 1~2개씩만 묶는다.
+BATCH_SIZE_BY_LEN = [(1000, 2), (600, 4), (300, 8), (0, 16)]
+
+
+def _batch_size_for(n_tokens):
+    for threshold, size in BATCH_SIZE_BY_LEN:
+        if n_tokens >= threshold:
+            return size
+    return 1
+
+
+def translate_batch(tokenizer, model, device, prompts):
+    """여러 프롬프트를 길이가 비슷한 것끼리 묶어서 처리한다 - max_new_tokens는
+    호출마다 입력 토큰 수 × 2 + 100(고정값으로는 긴 청크 번역이 중간에 잘림).
+    반환: (responses(입력 순서 그대로), truncated_count) - truncated_count는 출력이
+    max_new_tokens에 도달한(=끊겼을 수 있는) 호출 수."""
+    if not prompts:
+        return [], 0
+    lens = [len(tokenizer.encode(p, add_special_tokens=False)) for p in prompts]
+    order = sorted(range(len(prompts)), key=lambda i: lens[i])
+    responses = [None] * len(prompts)
+    truncated = 0
+    i = 0
+    while i < len(order):
+        bsz = _batch_size_for(lens[order[i]])
+        idxs = order[i:i + bsz]
+        batch_prompts = [prompts[j] for j in idxs]
+        max_new = max(lens[j] for j in idxs) * 2 + 100
+        msgs = [[{"role": "user", "content": p}] for p in batch_prompts]
+        outs = generate_batch(tokenizer, model, device, msgs, max_new_tokens=max_new)
+        for j, out in zip(idxs, outs):
+            responses[j] = out
+            if len(tokenizer.encode(out, add_special_tokens=False)) >= max_new:
+                truncated += 1
+        i += bsz
+    return responses, truncated
+
+
 def to_lc_pipeline(tokenizer, model, max_new_tokens=1400):
     """HuggingFacePipeline로 감싸서 LCEL 체인(prompt | llm | parser)에 꽂는다 - docx
     트랙 전용(검색+생성이라 체인 모양이 자연스러움). 자막 트랙은 RAG 구조가 아니라서
