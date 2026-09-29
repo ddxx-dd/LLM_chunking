@@ -1,18 +1,17 @@
-"""스마트 청커 (구조 우선 + 의미 분할 + 토큰 크기 제어)
+"""공통 청커 부품 - fixed/semantic/smart 구현을 여기 하나씩만 둔다. 데이터셋마다
+다른 값(청크 크기, min/max 토큰, mode 등)은 전부 함수 인자로 받는다 - 실제 값은
+각 트랙 pipeline.py의 CHUNKERS 정의에서 넘긴다.
 
-아이디어는 3단계뿐이다.
-  1) 구조로 먼저 자른다   : 헤더(#, 논문 섹션 번호, "Passage N:")마다 새 섹션.
-                             표는 통째로 한 조각, 자막은 큐 하나가 한 조각.
-  2) 너무 큰 섹션만 의미로 자른다 : 조각 사이 유사도(좌우 창 평균)가 가장 낮은 곳에서
-                             반으로 자르기를 max_tokens 이하가 될 때까지 반복.
-  3) 너무 작은 청크는 이웃과 합친다 : min_tokens 미만이면 다음 청크와 합침.
-
-반환하는 청크는 항상 원문의 리터럴 슬라이스(text[start:end])라서, 기존 코드의
-add_start_index / fragments() / merge_to_units()가 그대로 동작한다.
+세 청커 모두 LangChain TextSplitter를 반환해서 기존 파이프라인(split_documents,
+create_documents, add_start_index=True)에 그대로 꽂힌다. 그리고 세 청커 모두
+청크가 항상 원문의 리터럴 슬라이스(text[start:end])라서 add_start_index가 정확한
+위치를 계산해준다 - 이게 srt/mapper.py의 fragments()(오프셋 기반 타임스탬프 매핑)와
+translate.py의 블록 매핑이 그대로 동작하는 전제 조건이다.
 """
 import re
 
 import numpy as np
+from langchain_text_splitters import CharacterTextSplitter
 from langchain_text_splitters.base import TextSplitter
 
 SENT_RE = re.compile(r"(?<=[.!?。])\s+")          # 한국어는 kss.split_sentences로 바꾸면 더 정확
@@ -20,18 +19,26 @@ MD_HEADING_RE = re.compile(r"^#{1,6} ")
 PASSAGE_RE = re.compile(r"^Passage \d+:")                                            # LongBench 다중 문서
 EN_END_RE = re.compile(r"[.!?…\"')\]]$")
 KO_CONT_RE = re.compile(r"(고|며|면서|는데|은데|지만|서|면|니까|다가|도록|를|을|의|,|…|\.\.\.)$")
+SEMANTIC_SENTENCE_SPLIT_REGEX = r"(?<=[.?!。])\s+|\n+"
 
 
 # ---------------------------------------------------------------------------
-# 0. 텍스트 -> 블록 (start, end, kind)   kind: heading / table / para / cue
+# fixed - LangChain CharacterTextSplitter 그대로
+# ---------------------------------------------------------------------------
+def make_fixed(chunk_size, strip_whitespace=True, chunk_overlap=0):
+    return CharacterTextSplitter(separator="", chunk_size=chunk_size, chunk_overlap=chunk_overlap,
+                                  strip_whitespace=strip_whitespace, add_start_index=True)
+
+
+# ---------------------------------------------------------------------------
+# 텍스트 -> 블록 (start, end, kind)   kind: heading / table / para / cue
+# smart의 구조 인식과 translate.py의 번역 단위(unit) 나누기가 같이 쓴다.
 # ---------------------------------------------------------------------------
 def detect_blocks(text, mode):
     if mode == "srt":                     # srt 로더는 큐 하나를 한 줄로 저장한다
         return [(m.start(), m.end(), "cue") for m in re.finditer(r"[^\n]+", text)]
 
-    if mode == "docx":                    # Docling 마크다운: 빈 줄로 구분된 덩어리
-        pattern = r"[^\n]+(?:\n(?!\n)[^\n]+)*"
-    elif mode == "pdf":                   # Docling 마크다운(docx와 동일 형식): 빈 줄로 구분된 덩어리
+    if mode in ("docx", "pdf"):           # Docling 마크다운: 빈 줄로 구분된 덩어리
         pattern = r"[^\n]+(?:\n(?!\n)[^\n]+)*"
     else:                                 # longbench: 한 줄 = 한 문단
         pattern = r"[^\n]+"
@@ -78,7 +85,7 @@ def cue_continues(cur, nxt, lang):
 
 
 # ---------------------------------------------------------------------------
-# 스마트 청커
+# smart - ① 구조로 자르기 ② 너무 큰 섹션만 의미로 자르기 ③ 너무 작은 청크는 합치기
 # ---------------------------------------------------------------------------
 class SmartChunker:
     def __init__(self, embed_model, count_tokens, mode, lang="ko",
@@ -98,10 +105,9 @@ class SmartChunker:
                 secs.append(cur)
                 cur = []
             if kind == "para":
-                # ★ 2026-09-28 변경 - 문단은 통째로 한 조각(문단 중간을 함부로 안 자름).
-                # max_tokens를 넘는 문단만 문장으로 쪼개서 ②(경계점수 분할)가 그 안에서
-                # 자를 수 있게 한다 - 이전엔 문단을 항상 문장으로 쪼개서, 짧은 문단끼리도
-                # 문장 단위로 잘게 나뉘어 ②가 문단 중간에서 자르는 경우가 있었음.
+                # 문단은 통째로 한 조각(문단 중간을 함부로 안 자름). max_tokens를
+                # 넘는 문단만 문장으로 쪼개서 ②(경계점수 분할)가 그 안에서 자를 수
+                # 있게 한다.
                 if self.count(text[s:e]) > self.max_t:
                     cur += [(a, b, "sent") for a, b in split_sentences(text, s, e)]
                 else:
@@ -184,18 +190,15 @@ class SmartTextSplitter(TextSplitter):
         return [text[s:e] for s, e in self._chunker.chunk_spans(text)]
 
 
-# ---------------------------------------------------------------------------
-# semantic(docx/pdf) - LangChain SemanticChunker + 설정 보정 + max_tokens 후처리
-# ---------------------------------------------------------------------------
-# ★ 실측 확인(2026-09-28) - 기본 sentence_split_regex(마침표류 뒤 공백만 문장 경계)는
-# 마크다운 제목·표 행·목록처럼 줄바꿈으로만 구분되는 텍스트를 전부 "한 문장"으로
-# 뭉쳐버려서 비정상적으로 큰 청크가 나온다 - 줄바꿈도 경계 후보로 추가.
-SEMANTIC_SENTENCE_SPLIT_REGEX = r"(?<=[.?!。])\s+|\n+"
-# bge-m3 토크나이저로 코퍼스 표본 실측한 글자/토큰 비율 - smart의 min_tokens(글자
-# 수가 아니라 토큰 수)에 대응하는 min_chunk_size(글자 수)를 여기서 환산한다.
-CHARS_PER_TOKEN = 2.448
+def make_smart(embed_model, count_tokens, mode, lang="ko", min_tokens=100, max_tokens=500, window=2):
+    return SmartTextSplitter(SmartChunker(embed_model, count_tokens, mode=mode, lang=lang,
+                                           min_tokens=min_tokens, max_tokens=max_tokens, window=window))
 
 
+# ---------------------------------------------------------------------------
+# semantic - LangChain SemanticChunker로 경계만 정하고, recover_spans로 원문 위치를
+# 복원한 뒤 min/max_tokens 후처리를 적용한다.
+# ---------------------------------------------------------------------------
 def recover_spans(flat, chunks):
     """공백 무시하고 청크 텍스트를 flat_text에서 순서대로 찾아 (start, end) 복원 -
     SemanticChunker가 " ".join()으로 문장을 재조합해서(개행이 공백으로 바뀜)
@@ -246,27 +249,60 @@ def _split_oversized(flat_text, span, embed_model, count_tokens, max_tokens):
             _split_oversized(flat_text, right, embed_model, count_tokens, max_tokens))
 
 
-class SemanticMaxSplitter(TextSplitter):
-    """SemanticChunker(경계 보정) + max_tokens 후처리 + recover_spans 위치복원을
-    하나로 묶는다 - max_tokens=None이면 후처리 없이 그대로(어블레이션 옵션)."""
+def _merge_small_spans(text, spans, count_tokens, min_tokens, max_tokens):
+    """smart의 merge_small()과 같은 규칙 - min_tokens 미만 청크는 이웃과 합친다
+    (합친 크기가 max_tokens 이하일 때만). 글자/토큰 비율 환산 대신 토큰을 직접
+    세서 판단한다(영어 pdf에서 글자/토큰 비율로 환산한 min_chunk_size가 너무
+    작게 잡히는 문제를 실측으로 확인해서, semantic도 smart와 같은 토큰 기준
+    후처리로 통일)."""
+    out = []
+    for sp in spans:
+        if out:
+            prev_s, prev_e = out[-1]
+            joined_tokens = count_tokens(text[prev_s:sp[1]])
+            if count_tokens(text[prev_s:prev_e]) < min_tokens and joined_tokens <= max_tokens:
+                out[-1] = (prev_s, sp[1])
+                continue
+        out.append(sp)
+    if len(out) >= 2 and count_tokens(text[out[-1][0]:out[-1][1]]) < min_tokens:
+        merged = (out[-2][0], out[-1][1])
+        if count_tokens(text[merged[0]:merged[1]]) <= max_tokens:
+            out[-2] = merged
+            out.pop()
+    return out
 
-    def __init__(self, embeddings, count_tokens, percentile=90, min_tokens=100, max_tokens=400, **kwargs):
-        from langchain_experimental.text_splitter import SemanticChunker
-        kwargs.setdefault("chunk_overlap", 0)
-        kwargs.setdefault("add_start_index", True)
+
+class _SemanticSplitter(TextSplitter):
+    """make_semantic()이 실제로 만드는 클래스 - SemanticChunker(경계 후보) +
+    recover_spans(위치 복원) + min/max_tokens 후처리."""
+
+    def __init__(self, inner, embed_model, count_tokens, min_tokens, max_tokens, **kwargs):
         super().__init__(**kwargs)
-        self.embeddings, self.count, self.max_t = embeddings, count_tokens, max_tokens
-        self._inner = SemanticChunker(embeddings, breakpoint_threshold_type="percentile",
-                                       breakpoint_threshold_amount=percentile,
-                                       sentence_split_regex=SEMANTIC_SENTENCE_SPLIT_REGEX,
-                                       min_chunk_size=round(min_tokens * CHARS_PER_TOKEN))
+        self._inner = inner
+        self._embed_model = embed_model
+        self._count = count_tokens
+        self._min_t, self._max_t = min_tokens, max_tokens
 
     def split_text(self, text):
         texts = self._inner.split_text(text)
         spans = [sp for sp in recover_spans(text, texts) if sp is not None]
-        if self.max_t is None:
-            return [text[s:e] for s, e in spans]
-        final = []
-        for sp in spans:
-            final += _split_oversized(text, sp, self.embeddings._client, self.count, self.max_t)
-        return [text[s:e] for s, e in final]
+        spans = _merge_small_spans(text, spans, self._count, self._min_t, self._max_t)
+        if self._max_t is not None:
+            oversized_fixed = []
+            for sp in spans:
+                oversized_fixed += _split_oversized(text, sp, self._embed_model, self._count, self._max_t)
+            spans = oversized_fixed
+        return [text[s:e] for s, e in spans]
+
+
+def make_semantic(embeddings, count_tokens, percentile=90, min_tokens=100, max_tokens=400, **kwargs):
+    """embeddings: LangChain Embeddings(예: HuggingFaceEmbeddings) - SemanticChunker가
+    요구하는 인터페이스. max_tokens 후처리(_split_oversized)의 문장 임베딩은
+    embeddings._client(내부 SentenceTransformer)로 직접 encode()한다."""
+    from langchain_experimental.text_splitter import SemanticChunker
+    kwargs.setdefault("chunk_overlap", 0)
+    kwargs.setdefault("add_start_index", True)
+    inner = SemanticChunker(embeddings, breakpoint_threshold_type="percentile",
+                             breakpoint_threshold_amount=percentile,
+                             sentence_split_regex=SEMANTIC_SENTENCE_SPLIT_REGEX)
+    return _SemanticSplitter(inner, embeddings._client, count_tokens, min_tokens, max_tokens, **kwargs)

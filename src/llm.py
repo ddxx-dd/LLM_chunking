@@ -3,6 +3,41 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
+def setup_models():
+    """모든 파이프라인이 공유하는 디바이스/임베딩/LLM 로딩 - 여기 하나로 모아서
+    각 파이프라인 스크립트가 "무슨 실험을 하는지"만 남도록 한다."""
+    from sentence_transformers import SentenceTransformer
+
+    from config import EMBED_MODEL, TOKENIZER
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"실행 디바이스: {device.upper()}")
+    embed_model = SentenceTransformer(EMBED_MODEL, device=device)
+    tokenizer, llm_model, device = load_llm(TOKENIZER, device)
+    print("모델 준비 완료")
+    return device, embed_model, tokenizer, llm_model
+
+
+def setup_embeddings_and_llm(fake_llm, need_llm):
+    """docx/pdf 트랙 공용 - LangChain Embeddings(HuggingFaceEmbeddings, InMemoryVectorStore/
+    SemanticChunker가 요구하는 인터페이스) + 토큰 카운터, 필요하면 Gemma도 로드.
+    setup_models()과 다른 이유: srt 트랙은 SentenceTransformer를 직접 쓰지만
+    docx/pdf 트랙은 검색 인덱스(retrieval.py)에 LangChain Embeddings가 필요하다."""
+    from langchain_huggingface import HuggingFaceEmbeddings
+    from transformers import AutoTokenizer
+
+    embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-m3", encode_kwargs={"normalize_embeddings": True})
+    bge_tokenizer = AutoTokenizer.from_pretrained("BAAI/bge-m3")
+    count_tokens = lambda s: len(bge_tokenizer.encode(s, add_special_tokens=False))
+
+    tokenizer = model = device = None
+    if need_llm and not fake_llm:
+        from config import TOKENIZER
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        tokenizer, model, device = load_llm(TOKENIZER, device)
+    return embeddings, count_tokens, tokenizer, model, device
+
+
 def load_llm(model_id, device=None):
     """토크나이저 + 모델 로드. Gemma4 12B 계열은 통합 멀티모달 아키텍처(전용 클래스
     필요) + bf16으로는 24GB를 넘어서 4bit 양자화 필수(QAT 학습된 체크포인트라 4bit로도

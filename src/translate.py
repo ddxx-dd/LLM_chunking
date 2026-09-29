@@ -4,7 +4,7 @@
 (실측 확인 - 단일 괄호는 본문 인용을 다음 조각 번호로 오인해 내용이 잘림)."""
 import re
 
-from smart_chunker import detect_blocks
+from chunkers import detect_blocks
 
 FORMULA_RE = re.compile(r"^<!--\s*formula-not-decoded\s*-->$", re.I)
 NUM_ONLY_RE = re.compile(r"^[\d\s.,%+\-−×/:()$€₩~]*$")
@@ -34,7 +34,7 @@ PROMPT_TEMPLATES = {
 
 
 def build_units(flat_text, fmt):
-    """마크다운을 빈 줄 단위 블록(문단/제목/표)으로 나눈다 - smart_chunker.detect_blocks
+    """마크다운을 빈 줄 단위 블록(문단/제목/표)으로 나눈다 - chunkers.detect_blocks
     재사용(같은 구조 인식 기준 - 표는 여러 줄이어도 한 블록). 수식 주석과 숫자·기호만
     있는 블록은 번역 대상에서 제외."""
     units = []
