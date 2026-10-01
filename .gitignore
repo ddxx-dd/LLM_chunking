@@ -16,3 +16,12 @@ results/*.json
 .env
 .pytest_cache/
 *.egg-info/
+.venv/
+.tools/
+.uv-python/
+.uv-cache/
+.pip-cache/
+.hf-cache/
+.home/
+recovered/
+env.sh
