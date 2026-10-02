@@ -1,0 +1,2749 @@
+{
+ "dataset": "vectara",
+ "source": "https://huggingface.co/datasets/vectara/open_ragbench",
+ "license": "CC-BY-NC-4.0 (비상업 용도)",
+ "created": "2026-10-02",
+ "filter": {
+  "query_source": [
+   "text",
+   "text-table"
+  ],
+  "note": "이미지 근거 질문(text-image, text-table-image)은 제외"
+ },
+ "notes": [
+  "qrels 의 section_id 는 vectara 가 파싱한 코퍼스 JSON(data/raw/vectara_corpus/<doc_id>.json 의 sections) 기준 번호",
+  "PDF 는 pdf_urls.json 의 arXiv 링크에서 받음. 원본 meta 4종은 data/raw/vectara_pdf/_source/ 에 보관"
+ ],
+ "counts": {
+  "questions_all": 3045,
+  "questions_selected": 2062,
+  "documents": 389,
+  "pdfs_present": 389,
+  "corpus_present": 389
+ },
+ "documents": [
+  {
+   "doc_id": "2401.02564v2",
+   "pdf": "raw/vectara_pdf/2401.02564v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.02564v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.02564v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2401.03305v2",
+   "pdf": "raw/vectara_pdf/2401.03305v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.03305v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.03305v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2401.03345v2",
+   "pdf": "raw/vectara_pdf/2401.03345v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.03345v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.03345v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2401.03776v8",
+   "pdf": "raw/vectara_pdf/2401.03776v8.pdf",
+   "corpus": "raw/vectara_corpus/2401.03776v8.json",
+   "source_url": "https://arxiv.org/pdf/2401.03776v8",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2401.05657v5",
+   "pdf": "raw/vectara_pdf/2401.05657v5.pdf",
+   "corpus": "raw/vectara_corpus/2401.05657v5.json",
+   "source_url": "https://arxiv.org/pdf/2401.05657v5",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2401.06326v4",
+   "pdf": "raw/vectara_pdf/2401.06326v4.pdf",
+   "corpus": "raw/vectara_corpus/2401.06326v4.json",
+   "source_url": "https://arxiv.org/pdf/2401.06326v4",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2401.06740v2",
+   "pdf": "raw/vectara_pdf/2401.06740v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.06740v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.06740v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2401.06959v2",
+   "pdf": "raw/vectara_pdf/2401.06959v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.06959v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.06959v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2401.06987v2",
+   "pdf": "raw/vectara_pdf/2401.06987v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.06987v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.06987v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2401.07294v4",
+   "pdf": "raw/vectara_pdf/2401.07294v4.pdf",
+   "corpus": "raw/vectara_corpus/2401.07294v4.json",
+   "source_url": "https://arxiv.org/pdf/2401.07294v4",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2401.07317v2",
+   "pdf": "raw/vectara_pdf/2401.07317v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.07317v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.07317v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2401.11899v3",
+   "pdf": "raw/vectara_pdf/2401.11899v3.pdf",
+   "corpus": "raw/vectara_corpus/2401.11899v3.json",
+   "source_url": "https://arxiv.org/pdf/2401.11899v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2401.12638v7",
+   "pdf": "raw/vectara_pdf/2401.12638v7.pdf",
+   "corpus": "raw/vectara_corpus/2401.12638v7.json",
+   "source_url": "https://arxiv.org/pdf/2401.12638v7",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2401.14085v2",
+   "pdf": "raw/vectara_pdf/2401.14085v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.14085v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.14085v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2401.15478v2",
+   "pdf": "raw/vectara_pdf/2401.15478v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.15478v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.15478v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2401.16412v4",
+   "pdf": "raw/vectara_pdf/2401.16412v4.pdf",
+   "corpus": "raw/vectara_corpus/2401.16412v4.json",
+   "source_url": "https://arxiv.org/pdf/2401.16412v4",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2401.17469v2",
+   "pdf": "raw/vectara_pdf/2401.17469v2.pdf",
+   "corpus": "raw/vectara_corpus/2401.17469v2.json",
+   "source_url": "https://arxiv.org/pdf/2401.17469v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2402.02272v2",
+   "pdf": "raw/vectara_pdf/2402.02272v2.pdf",
+   "corpus": "raw/vectara_corpus/2402.02272v2.json",
+   "source_url": "https://arxiv.org/pdf/2402.02272v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2402.03637v2",
+   "pdf": "raw/vectara_pdf/2402.03637v2.pdf",
+   "corpus": "raw/vectara_corpus/2402.03637v2.json",
+   "source_url": "https://arxiv.org/pdf/2402.03637v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2402.04429v3",
+   "pdf": "raw/vectara_pdf/2402.04429v3.pdf",
+   "corpus": "raw/vectara_corpus/2402.04429v3.json",
+   "source_url": "https://arxiv.org/pdf/2402.04429v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2402.04840v3",
+   "pdf": "raw/vectara_pdf/2402.04840v3.pdf",
+   "corpus": "raw/vectara_corpus/2402.04840v3.json",
+   "source_url": "https://arxiv.org/pdf/2402.04840v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2402.07527v3",
+   "pdf": "raw/vectara_pdf/2402.07527v3.pdf",
+   "corpus": "raw/vectara_corpus/2402.07527v3.json",
+   "source_url": "https://arxiv.org/pdf/2402.07527v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2402.09444v3",
+   "pdf": "raw/vectara_pdf/2402.09444v3.pdf",
+   "corpus": "raw/vectara_corpus/2402.09444v3.json",
+   "source_url": "https://arxiv.org/pdf/2402.09444v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2402.09721v6",
+   "pdf": "raw/vectara_pdf/2402.09721v6.pdf",
+   "corpus": "raw/vectara_corpus/2402.09721v6.json",
+   "source_url": "https://arxiv.org/pdf/2402.09721v6",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2402.12350v3",
+   "pdf": "raw/vectara_pdf/2402.12350v3.pdf",
+   "corpus": "raw/vectara_corpus/2402.12350v3.json",
+   "source_url": "https://arxiv.org/pdf/2402.12350v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2402.13385v2",
+   "pdf": "raw/vectara_pdf/2402.13385v2.pdf",
+   "corpus": "raw/vectara_corpus/2402.13385v2.json",
+   "source_url": "https://arxiv.org/pdf/2402.13385v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2402.15828v4",
+   "pdf": "raw/vectara_pdf/2402.15828v4.pdf",
+   "corpus": "raw/vectara_corpus/2402.15828v4.json",
+   "source_url": "https://arxiv.org/pdf/2402.15828v4",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2403.00422v2",
+   "pdf": "raw/vectara_pdf/2403.00422v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.00422v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.00422v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2403.01012v4",
+   "pdf": "raw/vectara_pdf/2403.01012v4.pdf",
+   "corpus": "raw/vectara_corpus/2403.01012v4.json",
+   "source_url": "https://arxiv.org/pdf/2403.01012v4",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2403.01421v2",
+   "pdf": "raw/vectara_pdf/2403.01421v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.01421v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.01421v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2403.03363v6",
+   "pdf": "raw/vectara_pdf/2403.03363v6.pdf",
+   "corpus": "raw/vectara_corpus/2403.03363v6.json",
+   "source_url": "https://arxiv.org/pdf/2403.03363v6",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2403.03367v4",
+   "pdf": "raw/vectara_pdf/2403.03367v4.pdf",
+   "corpus": "raw/vectara_corpus/2403.03367v4.json",
+   "source_url": "https://arxiv.org/pdf/2403.03367v4",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2403.04433v3",
+   "pdf": "raw/vectara_pdf/2403.04433v3.pdf",
+   "corpus": "raw/vectara_corpus/2403.04433v3.json",
+   "source_url": "https://arxiv.org/pdf/2403.04433v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2403.04635v2",
+   "pdf": "raw/vectara_pdf/2403.04635v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.04635v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.04635v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2403.04768v3",
+   "pdf": "raw/vectara_pdf/2403.04768v3.pdf",
+   "corpus": "raw/vectara_corpus/2403.04768v3.json",
+   "source_url": "https://arxiv.org/pdf/2403.04768v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2403.05373v2",
+   "pdf": "raw/vectara_pdf/2403.05373v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.05373v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.05373v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2403.05412v2",
+   "pdf": "raw/vectara_pdf/2403.05412v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.05412v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.05412v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2403.05821v2",
+   "pdf": "raw/vectara_pdf/2403.05821v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.05821v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.05821v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2403.06613v3",
+   "pdf": "raw/vectara_pdf/2403.06613v3.pdf",
+   "corpus": "raw/vectara_corpus/2403.06613v3.json",
+   "source_url": "https://arxiv.org/pdf/2403.06613v3",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2403.08753v2",
+   "pdf": "raw/vectara_pdf/2403.08753v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.08753v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.08753v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2403.08977v2",
+   "pdf": "raw/vectara_pdf/2403.08977v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.08977v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.08977v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2403.11010v3",
+   "pdf": "raw/vectara_pdf/2403.11010v3.pdf",
+   "corpus": "raw/vectara_corpus/2403.11010v3.json",
+   "source_url": "https://arxiv.org/pdf/2403.11010v3",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2403.11030v3",
+   "pdf": "raw/vectara_pdf/2403.11030v3.pdf",
+   "corpus": "raw/vectara_corpus/2403.11030v3.json",
+   "source_url": "https://arxiv.org/pdf/2403.11030v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2403.12117v2",
+   "pdf": "raw/vectara_pdf/2403.12117v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.12117v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.12117v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2403.13015v2",
+   "pdf": "raw/vectara_pdf/2403.13015v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.13015v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.13015v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2403.18677v2",
+   "pdf": "raw/vectara_pdf/2403.18677v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.18677v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.18677v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2403.20331v2",
+   "pdf": "raw/vectara_pdf/2403.20331v2.pdf",
+   "corpus": "raw/vectara_corpus/2403.20331v2.json",
+   "source_url": "https://arxiv.org/pdf/2403.20331v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2404.00822v2",
+   "pdf": "raw/vectara_pdf/2404.00822v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.00822v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.00822v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2404.03773v2",
+   "pdf": "raw/vectara_pdf/2404.03773v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.03773v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.03773v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2404.03783v3",
+   "pdf": "raw/vectara_pdf/2404.03783v3.pdf",
+   "corpus": "raw/vectara_corpus/2404.03783v3.json",
+   "source_url": "https://arxiv.org/pdf/2404.03783v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2404.05659v3",
+   "pdf": "raw/vectara_pdf/2404.05659v3.pdf",
+   "corpus": "raw/vectara_corpus/2404.05659v3.json",
+   "source_url": "https://arxiv.org/pdf/2404.05659v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2404.07128v3",
+   "pdf": "raw/vectara_pdf/2404.07128v3.pdf",
+   "corpus": "raw/vectara_corpus/2404.07128v3.json",
+   "source_url": "https://arxiv.org/pdf/2404.07128v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2404.08757v2",
+   "pdf": "raw/vectara_pdf/2404.08757v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.08757v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.08757v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2404.09358v3",
+   "pdf": "raw/vectara_pdf/2404.09358v3.pdf",
+   "corpus": "raw/vectara_corpus/2404.09358v3.json",
+   "source_url": "https://arxiv.org/pdf/2404.09358v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2404.09796v2",
+   "pdf": "raw/vectara_pdf/2404.09796v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.09796v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.09796v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2404.11221v4",
+   "pdf": "raw/vectara_pdf/2404.11221v4.pdf",
+   "corpus": "raw/vectara_corpus/2404.11221v4.json",
+   "source_url": "https://arxiv.org/pdf/2404.11221v4",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2404.11929v3",
+   "pdf": "raw/vectara_pdf/2404.11929v3.pdf",
+   "corpus": "raw/vectara_corpus/2404.11929v3.json",
+   "source_url": "https://arxiv.org/pdf/2404.11929v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2404.14041v2",
+   "pdf": "raw/vectara_pdf/2404.14041v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.14041v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.14041v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2404.14603v2",
+   "pdf": "raw/vectara_pdf/2404.14603v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.14603v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.14603v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2404.16880v3",
+   "pdf": "raw/vectara_pdf/2404.16880v3.pdf",
+   "corpus": "raw/vectara_corpus/2404.16880v3.json",
+   "source_url": "https://arxiv.org/pdf/2404.16880v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2404.17509v2",
+   "pdf": "raw/vectara_pdf/2404.17509v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.17509v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.17509v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2404.17994v2",
+   "pdf": "raw/vectara_pdf/2404.17994v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.17994v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.17994v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2404.18137v2",
+   "pdf": "raw/vectara_pdf/2404.18137v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.18137v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.18137v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2404.18501v3",
+   "pdf": "raw/vectara_pdf/2404.18501v3.pdf",
+   "corpus": "raw/vectara_corpus/2404.18501v3.json",
+   "source_url": "https://arxiv.org/pdf/2404.18501v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2404.18869v2",
+   "pdf": "raw/vectara_pdf/2404.18869v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.18869v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.18869v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2404.18884v2",
+   "pdf": "raw/vectara_pdf/2404.18884v2.pdf",
+   "corpus": "raw/vectara_corpus/2404.18884v2.json",
+   "source_url": "https://arxiv.org/pdf/2404.18884v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2404.19707v3",
+   "pdf": "raw/vectara_pdf/2404.19707v3.pdf",
+   "corpus": "raw/vectara_corpus/2404.19707v3.json",
+   "source_url": "https://arxiv.org/pdf/2404.19707v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2404.19707v4",
+   "pdf": "raw/vectara_pdf/2404.19707v4.pdf",
+   "corpus": "raw/vectara_corpus/2404.19707v4.json",
+   "source_url": "https://arxiv.org/pdf/2404.19707v4",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2405.01105v3",
+   "pdf": "raw/vectara_pdf/2405.01105v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.01105v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.01105v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2405.01155v3",
+   "pdf": "raw/vectara_pdf/2405.01155v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.01155v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.01155v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2405.03910v2",
+   "pdf": "raw/vectara_pdf/2405.03910v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.03910v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.03910v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2405.04904v2",
+   "pdf": "raw/vectara_pdf/2405.04904v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.04904v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.04904v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2405.04912v2",
+   "pdf": "raw/vectara_pdf/2405.04912v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.04912v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.04912v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2405.05734v3",
+   "pdf": "raw/vectara_pdf/2405.05734v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.05734v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.05734v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2405.05998v3",
+   "pdf": "raw/vectara_pdf/2405.05998v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.05998v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.05998v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2405.07102v3",
+   "pdf": "raw/vectara_pdf/2405.07102v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.07102v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.07102v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2405.07102v4",
+   "pdf": "raw/vectara_pdf/2405.07102v4.pdf",
+   "corpus": "raw/vectara_corpus/2405.07102v4.json",
+   "source_url": "https://arxiv.org/pdf/2405.07102v4",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2405.07312v3",
+   "pdf": "raw/vectara_pdf/2405.07312v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.07312v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.07312v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2405.08177v5",
+   "pdf": "raw/vectara_pdf/2405.08177v5.pdf",
+   "corpus": "raw/vectara_corpus/2405.08177v5.json",
+   "source_url": "https://arxiv.org/pdf/2405.08177v5",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2405.08806v2",
+   "pdf": "raw/vectara_pdf/2405.08806v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.08806v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.08806v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2405.10089v2",
+   "pdf": "raw/vectara_pdf/2405.10089v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.10089v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.10089v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2405.11284v3",
+   "pdf": "raw/vectara_pdf/2405.11284v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.11284v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.11284v3",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2405.11681v3",
+   "pdf": "raw/vectara_pdf/2405.11681v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.11681v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.11681v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2405.12292v3",
+   "pdf": "raw/vectara_pdf/2405.12292v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.12292v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.12292v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2405.13422v2",
+   "pdf": "raw/vectara_pdf/2405.13422v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.13422v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.13422v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2405.13879v3",
+   "pdf": "raw/vectara_pdf/2405.13879v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.13879v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.13879v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2405.14131v3",
+   "pdf": "raw/vectara_pdf/2405.14131v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.14131v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.14131v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2405.14946v2",
+   "pdf": "raw/vectara_pdf/2405.14946v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.14946v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.14946v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2405.16945v4",
+   "pdf": "raw/vectara_pdf/2405.16945v4.pdf",
+   "corpus": "raw/vectara_corpus/2405.16945v4.json",
+   "source_url": "https://arxiv.org/pdf/2405.16945v4",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2405.17070v2",
+   "pdf": "raw/vectara_pdf/2405.17070v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.17070v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.17070v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2405.18220v2",
+   "pdf": "raw/vectara_pdf/2405.18220v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.18220v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.18220v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2405.18521v2",
+   "pdf": "raw/vectara_pdf/2405.18521v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.18521v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.18521v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2405.19171v3",
+   "pdf": "raw/vectara_pdf/2405.19171v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.19171v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.19171v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2405.20415v3",
+   "pdf": "raw/vectara_pdf/2405.20415v3.pdf",
+   "corpus": "raw/vectara_corpus/2405.20415v3.json",
+   "source_url": "https://arxiv.org/pdf/2405.20415v3",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2405.20769v2",
+   "pdf": "raw/vectara_pdf/2405.20769v2.pdf",
+   "corpus": "raw/vectara_corpus/2405.20769v2.json",
+   "source_url": "https://arxiv.org/pdf/2405.20769v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2405.20936v5",
+   "pdf": "raw/vectara_pdf/2405.20936v5.pdf",
+   "corpus": "raw/vectara_corpus/2405.20936v5.json",
+   "source_url": "https://arxiv.org/pdf/2405.20936v5",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2406.00785v2",
+   "pdf": "raw/vectara_pdf/2406.00785v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.00785v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.00785v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2406.00912v2",
+   "pdf": "raw/vectara_pdf/2406.00912v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.00912v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.00912v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2406.01398v4",
+   "pdf": "raw/vectara_pdf/2406.01398v4.pdf",
+   "corpus": "raw/vectara_corpus/2406.01398v4.json",
+   "source_url": "https://arxiv.org/pdf/2406.01398v4",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2406.01505v2",
+   "pdf": "raw/vectara_pdf/2406.01505v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.01505v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.01505v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2406.02238v6",
+   "pdf": "raw/vectara_pdf/2406.02238v6.pdf",
+   "corpus": "raw/vectara_corpus/2406.02238v6.json",
+   "source_url": "https://arxiv.org/pdf/2406.02238v6",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2406.02319v2",
+   "pdf": "raw/vectara_pdf/2406.02319v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.02319v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.02319v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2406.02969v2",
+   "pdf": "raw/vectara_pdf/2406.02969v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.02969v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.02969v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2406.04928v3",
+   "pdf": "raw/vectara_pdf/2406.04928v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.04928v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.04928v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2406.05714v3",
+   "pdf": "raw/vectara_pdf/2406.05714v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.05714v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.05714v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2406.05923v2",
+   "pdf": "raw/vectara_pdf/2406.05923v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.05923v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.05923v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2406.06650v2",
+   "pdf": "raw/vectara_pdf/2406.06650v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.06650v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.06650v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2406.07366v2",
+   "pdf": "raw/vectara_pdf/2406.07366v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.07366v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.07366v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2406.07641v2",
+   "pdf": "raw/vectara_pdf/2406.07641v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.07641v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.07641v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2406.07726v3",
+   "pdf": "raw/vectara_pdf/2406.07726v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.07726v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.07726v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2406.08366v2",
+   "pdf": "raw/vectara_pdf/2406.08366v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.08366v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.08366v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2406.09983v2",
+   "pdf": "raw/vectara_pdf/2406.09983v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.09983v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.09983v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2406.10343v4",
+   "pdf": "raw/vectara_pdf/2406.10343v4.pdf",
+   "corpus": "raw/vectara_corpus/2406.10343v4.json",
+   "source_url": "https://arxiv.org/pdf/2406.10343v4",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2406.10704v4",
+   "pdf": "raw/vectara_pdf/2406.10704v4.pdf",
+   "corpus": "raw/vectara_corpus/2406.10704v4.json",
+   "source_url": "https://arxiv.org/pdf/2406.10704v4",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2406.11917v2",
+   "pdf": "raw/vectara_pdf/2406.11917v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.11917v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.11917v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2406.13337v3",
+   "pdf": "raw/vectara_pdf/2406.13337v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.13337v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.13337v3",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2406.13839v2",
+   "pdf": "raw/vectara_pdf/2406.13839v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.13839v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.13839v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2406.13839v3",
+   "pdf": "raw/vectara_pdf/2406.13839v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.13839v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.13839v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2406.14174v3",
+   "pdf": "raw/vectara_pdf/2406.14174v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.14174v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.14174v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2406.15341v3",
+   "pdf": "raw/vectara_pdf/2406.15341v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.15341v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.15341v3",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2406.15888v2",
+   "pdf": "raw/vectara_pdf/2406.15888v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.15888v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.15888v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2406.16586v3",
+   "pdf": "raw/vectara_pdf/2406.16586v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.16586v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.16586v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2406.17374v2",
+   "pdf": "raw/vectara_pdf/2406.17374v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.17374v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.17374v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2406.17972v3",
+   "pdf": "raw/vectara_pdf/2406.17972v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.17972v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.17972v3",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2406.18046v2",
+   "pdf": "raw/vectara_pdf/2406.18046v2.pdf",
+   "corpus": "raw/vectara_corpus/2406.18046v2.json",
+   "source_url": "https://arxiv.org/pdf/2406.18046v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2406.18052v3",
+   "pdf": "raw/vectara_pdf/2406.18052v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.18052v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.18052v3",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2406.20063v3",
+   "pdf": "raw/vectara_pdf/2406.20063v3.pdf",
+   "corpus": "raw/vectara_corpus/2406.20063v3.json",
+   "source_url": "https://arxiv.org/pdf/2406.20063v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2407.00037v2",
+   "pdf": "raw/vectara_pdf/2407.00037v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.00037v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.00037v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2407.02507v2",
+   "pdf": "raw/vectara_pdf/2407.02507v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.02507v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.02507v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2407.02511v2",
+   "pdf": "raw/vectara_pdf/2407.02511v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.02511v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.02511v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2407.02591v1",
+   "pdf": "raw/vectara_pdf/2407.02591v1.pdf",
+   "corpus": "raw/vectara_corpus/2407.02591v1.json",
+   "source_url": "https://arxiv.org/pdf/2407.02591v1",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2407.02634v3",
+   "pdf": "raw/vectara_pdf/2407.02634v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.02634v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.02634v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2407.02994v3",
+   "pdf": "raw/vectara_pdf/2407.02994v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.02994v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.02994v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2407.03285v2",
+   "pdf": "raw/vectara_pdf/2407.03285v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.03285v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.03285v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2407.04034v3",
+   "pdf": "raw/vectara_pdf/2407.04034v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.04034v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.04034v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2407.04378v2",
+   "pdf": "raw/vectara_pdf/2407.04378v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.04378v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.04378v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2407.06295v3",
+   "pdf": "raw/vectara_pdf/2407.06295v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.06295v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.06295v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2407.06387v3",
+   "pdf": "raw/vectara_pdf/2407.06387v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.06387v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.06387v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2407.07009v2",
+   "pdf": "raw/vectara_pdf/2407.07009v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.07009v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.07009v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2407.09711v4",
+   "pdf": "raw/vectara_pdf/2407.09711v4.pdf",
+   "corpus": "raw/vectara_corpus/2407.09711v4.json",
+   "source_url": "https://arxiv.org/pdf/2407.09711v4",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2407.11613v2",
+   "pdf": "raw/vectara_pdf/2407.11613v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.11613v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.11613v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2407.11761v3",
+   "pdf": "raw/vectara_pdf/2407.11761v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.11761v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.11761v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2407.11894v2",
+   "pdf": "raw/vectara_pdf/2407.11894v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.11894v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.11894v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2407.13314v3",
+   "pdf": "raw/vectara_pdf/2407.13314v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.13314v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.13314v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2407.14265v2",
+   "pdf": "raw/vectara_pdf/2407.14265v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.14265v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.14265v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2407.14651v3",
+   "pdf": "raw/vectara_pdf/2407.14651v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.14651v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.14651v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2407.14986v2",
+   "pdf": "raw/vectara_pdf/2407.14986v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.14986v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.14986v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2407.16205v5",
+   "pdf": "raw/vectara_pdf/2407.16205v5.pdf",
+   "corpus": "raw/vectara_corpus/2407.16205v5.json",
+   "source_url": "https://arxiv.org/pdf/2407.16205v5",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2407.16566v5",
+   "pdf": "raw/vectara_pdf/2407.16566v5.pdf",
+   "corpus": "raw/vectara_corpus/2407.16566v5.json",
+   "source_url": "https://arxiv.org/pdf/2407.16566v5",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2407.17401v3",
+   "pdf": "raw/vectara_pdf/2407.17401v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.17401v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.17401v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2407.17674v2",
+   "pdf": "raw/vectara_pdf/2407.17674v2.pdf",
+   "corpus": "raw/vectara_corpus/2407.17674v2.json",
+   "source_url": "https://arxiv.org/pdf/2407.17674v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2407.18337v4",
+   "pdf": "raw/vectara_pdf/2407.18337v4.pdf",
+   "corpus": "raw/vectara_corpus/2407.18337v4.json",
+   "source_url": "https://arxiv.org/pdf/2407.18337v4",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2407.18922v3",
+   "pdf": "raw/vectara_pdf/2407.18922v3.pdf",
+   "corpus": "raw/vectara_corpus/2407.18922v3.json",
+   "source_url": "https://arxiv.org/pdf/2407.18922v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2408.00934v2",
+   "pdf": "raw/vectara_pdf/2408.00934v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.00934v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.00934v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2408.01242v3",
+   "pdf": "raw/vectara_pdf/2408.01242v3.pdf",
+   "corpus": "raw/vectara_corpus/2408.01242v3.json",
+   "source_url": "https://arxiv.org/pdf/2408.01242v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2408.02322v2",
+   "pdf": "raw/vectara_pdf/2408.02322v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.02322v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.02322v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2408.03820v2",
+   "pdf": "raw/vectara_pdf/2408.03820v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.03820v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.03820v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2408.04307v3",
+   "pdf": "raw/vectara_pdf/2408.04307v3.pdf",
+   "corpus": "raw/vectara_corpus/2408.04307v3.json",
+   "source_url": "https://arxiv.org/pdf/2408.04307v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2408.04814v3",
+   "pdf": "raw/vectara_pdf/2408.04814v3.pdf",
+   "corpus": "raw/vectara_corpus/2408.04814v3.json",
+   "source_url": "https://arxiv.org/pdf/2408.04814v3",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2408.05109v4",
+   "pdf": "raw/vectara_pdf/2408.05109v4.pdf",
+   "corpus": "raw/vectara_corpus/2408.05109v4.json",
+   "source_url": "https://arxiv.org/pdf/2408.05109v4",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2408.06050v2",
+   "pdf": "raw/vectara_pdf/2408.06050v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.06050v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.06050v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2408.06103v2",
+   "pdf": "raw/vectara_pdf/2408.06103v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.06103v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.06103v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2408.06274v3",
+   "pdf": "raw/vectara_pdf/2408.06274v3.pdf",
+   "corpus": "raw/vectara_corpus/2408.06274v3.json",
+   "source_url": "https://arxiv.org/pdf/2408.06274v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2408.06427v2",
+   "pdf": "raw/vectara_pdf/2408.06427v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.06427v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.06427v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2408.06977v4",
+   "pdf": "raw/vectara_pdf/2408.06977v4.pdf",
+   "corpus": "raw/vectara_corpus/2408.06977v4.json",
+   "source_url": "https://arxiv.org/pdf/2408.06977v4",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2408.06994v2",
+   "pdf": "raw/vectara_pdf/2408.06994v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.06994v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.06994v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2408.07372v2",
+   "pdf": "raw/vectara_pdf/2408.07372v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.07372v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.07372v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2408.07618v3",
+   "pdf": "raw/vectara_pdf/2408.07618v3.pdf",
+   "corpus": "raw/vectara_corpus/2408.07618v3.json",
+   "source_url": "https://arxiv.org/pdf/2408.07618v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2408.08704v2",
+   "pdf": "raw/vectara_pdf/2408.08704v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.08704v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.08704v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2408.09208v2",
+   "pdf": "raw/vectara_pdf/2408.09208v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.09208v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.09208v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2408.09344v2",
+   "pdf": "raw/vectara_pdf/2408.09344v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.09344v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.09344v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2408.09838v2",
+   "pdf": "raw/vectara_pdf/2408.09838v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.09838v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.09838v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2408.09876v2",
+   "pdf": "raw/vectara_pdf/2408.09876v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.09876v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.09876v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2408.10501v2",
+   "pdf": "raw/vectara_pdf/2408.10501v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.10501v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.10501v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2408.10561v3",
+   "pdf": "raw/vectara_pdf/2408.10561v3.pdf",
+   "corpus": "raw/vectara_corpus/2408.10561v3.json",
+   "source_url": "https://arxiv.org/pdf/2408.10561v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2408.11878v2",
+   "pdf": "raw/vectara_pdf/2408.11878v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.11878v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.11878v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2408.11915v2",
+   "pdf": "raw/vectara_pdf/2408.11915v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.11915v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.11915v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2408.13000v2",
+   "pdf": "raw/vectara_pdf/2408.13000v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.13000v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.13000v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2408.13230v2",
+   "pdf": "raw/vectara_pdf/2408.13230v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.13230v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.13230v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2408.13427v2",
+   "pdf": "raw/vectara_pdf/2408.13427v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.13427v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.13427v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2408.13702v3",
+   "pdf": "raw/vectara_pdf/2408.13702v3.pdf",
+   "corpus": "raw/vectara_corpus/2408.13702v3.json",
+   "source_url": "https://arxiv.org/pdf/2408.13702v3",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2408.13919v4",
+   "pdf": "raw/vectara_pdf/2408.13919v4.pdf",
+   "corpus": "raw/vectara_corpus/2408.13919v4.json",
+   "source_url": "https://arxiv.org/pdf/2408.13919v4",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2408.14335v2",
+   "pdf": "raw/vectara_pdf/2408.14335v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.14335v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.14335v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2408.14507v2",
+   "pdf": "raw/vectara_pdf/2408.14507v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.14507v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.14507v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2408.14872v2",
+   "pdf": "raw/vectara_pdf/2408.14872v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.14872v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.14872v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2408.16004v3",
+   "pdf": "raw/vectara_pdf/2408.16004v3.pdf",
+   "corpus": "raw/vectara_corpus/2408.16004v3.json",
+   "source_url": "https://arxiv.org/pdf/2408.16004v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2408.16142v4",
+   "pdf": "raw/vectara_pdf/2408.16142v4.pdf",
+   "corpus": "raw/vectara_corpus/2408.16142v4.json",
+   "source_url": "https://arxiv.org/pdf/2408.16142v4",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2408.16245v3",
+   "pdf": "raw/vectara_pdf/2408.16245v3.pdf",
+   "corpus": "raw/vectara_corpus/2408.16245v3.json",
+   "source_url": "https://arxiv.org/pdf/2408.16245v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2408.16309v2",
+   "pdf": "raw/vectara_pdf/2408.16309v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.16309v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.16309v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2408.17106v2",
+   "pdf": "raw/vectara_pdf/2408.17106v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.17106v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.17106v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2408.17188v2",
+   "pdf": "raw/vectara_pdf/2408.17188v2.pdf",
+   "corpus": "raw/vectara_corpus/2408.17188v2.json",
+   "source_url": "https://arxiv.org/pdf/2408.17188v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2409.01111v2",
+   "pdf": "raw/vectara_pdf/2409.01111v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.01111v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.01111v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2409.01631v3",
+   "pdf": "raw/vectara_pdf/2409.01631v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.01631v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.01631v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2409.02275v2",
+   "pdf": "raw/vectara_pdf/2409.02275v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.02275v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.02275v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2409.02293v3",
+   "pdf": "raw/vectara_pdf/2409.02293v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.02293v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.02293v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2409.02476v2",
+   "pdf": "raw/vectara_pdf/2409.02476v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.02476v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.02476v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2409.02603v3",
+   "pdf": "raw/vectara_pdf/2409.02603v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.02603v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.02603v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2409.02772v2",
+   "pdf": "raw/vectara_pdf/2409.02772v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.02772v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.02772v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2409.04059v3",
+   "pdf": "raw/vectara_pdf/2409.04059v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.04059v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.04059v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2409.04439v3",
+   "pdf": "raw/vectara_pdf/2409.04439v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.04439v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.04439v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2409.04843v2",
+   "pdf": "raw/vectara_pdf/2409.04843v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.04843v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.04843v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2409.06325v3",
+   "pdf": "raw/vectara_pdf/2409.06325v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.06325v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.06325v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2409.06948v2",
+   "pdf": "raw/vectara_pdf/2409.06948v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.06948v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.06948v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2409.06994v3",
+   "pdf": "raw/vectara_pdf/2409.06994v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.06994v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.06994v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2409.07413v5",
+   "pdf": "raw/vectara_pdf/2409.07413v5.pdf",
+   "corpus": "raw/vectara_corpus/2409.07413v5.json",
+   "source_url": "https://arxiv.org/pdf/2409.07413v5",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2409.07486v2",
+   "pdf": "raw/vectara_pdf/2409.07486v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.07486v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.07486v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2409.08951v2",
+   "pdf": "raw/vectara_pdf/2409.08951v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.08951v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.08951v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2409.09862v3",
+   "pdf": "raw/vectara_pdf/2409.09862v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.09862v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.09862v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2409.10938v2",
+   "pdf": "raw/vectara_pdf/2409.10938v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.10938v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.10938v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2409.11339v2",
+   "pdf": "raw/vectara_pdf/2409.11339v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.11339v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.11339v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2409.12237v2",
+   "pdf": "raw/vectara_pdf/2409.12237v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.12237v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.12237v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2409.12776v2",
+   "pdf": "raw/vectara_pdf/2409.12776v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.12776v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.12776v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2409.13333v2",
+   "pdf": "raw/vectara_pdf/2409.13333v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.13333v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.13333v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2409.13415v2",
+   "pdf": "raw/vectara_pdf/2409.13415v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.13415v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.13415v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2409.13674v3",
+   "pdf": "raw/vectara_pdf/2409.13674v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.13674v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.13674v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2409.14246v2",
+   "pdf": "raw/vectara_pdf/2409.14246v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.14246v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.14246v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2409.14494v3",
+   "pdf": "raw/vectara_pdf/2409.14494v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.14494v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.14494v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2409.14616v2",
+   "pdf": "raw/vectara_pdf/2409.14616v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.14616v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.14616v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2409.15009v2",
+   "pdf": "raw/vectara_pdf/2409.15009v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.15009v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.15009v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2409.15621v2",
+   "pdf": "raw/vectara_pdf/2409.15621v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.15621v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.15621v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2409.16171v2",
+   "pdf": "raw/vectara_pdf/2409.16171v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.16171v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.16171v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2409.16507v2",
+   "pdf": "raw/vectara_pdf/2409.16507v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.16507v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.16507v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2409.16644v2",
+   "pdf": "raw/vectara_pdf/2409.16644v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.16644v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.16644v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2409.16681v2",
+   "pdf": "raw/vectara_pdf/2409.16681v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.16681v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.16681v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2409.17550v3",
+   "pdf": "raw/vectara_pdf/2409.17550v3.pdf",
+   "corpus": "raw/vectara_corpus/2409.17550v3.json",
+   "source_url": "https://arxiv.org/pdf/2409.17550v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2409.17635v2",
+   "pdf": "raw/vectara_pdf/2409.17635v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.17635v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.17635v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2409.18495v2",
+   "pdf": "raw/vectara_pdf/2409.18495v2.pdf",
+   "corpus": "raw/vectara_corpus/2409.18495v2.json",
+   "source_url": "https://arxiv.org/pdf/2409.18495v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2409.18681v6",
+   "pdf": "raw/vectara_pdf/2409.18681v6.pdf",
+   "corpus": "raw/vectara_corpus/2409.18681v6.json",
+   "source_url": "https://arxiv.org/pdf/2409.18681v6",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2410.00908v2",
+   "pdf": "raw/vectara_pdf/2410.00908v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.00908v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.00908v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2410.01265v2",
+   "pdf": "raw/vectara_pdf/2410.01265v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.01265v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.01265v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2410.01862v2",
+   "pdf": "raw/vectara_pdf/2410.01862v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.01862v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.01862v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2410.01890v2",
+   "pdf": "raw/vectara_pdf/2410.01890v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.01890v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.01890v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.01999v4",
+   "pdf": "raw/vectara_pdf/2410.01999v4.pdf",
+   "corpus": "raw/vectara_corpus/2410.01999v4.json",
+   "source_url": "https://arxiv.org/pdf/2410.01999v4",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2410.03816v2",
+   "pdf": "raw/vectara_pdf/2410.03816v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.03816v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.03816v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.03969v3",
+   "pdf": "raw/vectara_pdf/2410.03969v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.03969v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.03969v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2410.05184v2",
+   "pdf": "raw/vectara_pdf/2410.05184v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.05184v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.05184v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2410.05454v2",
+   "pdf": "raw/vectara_pdf/2410.05454v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.05454v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.05454v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.05459v2",
+   "pdf": "raw/vectara_pdf/2410.05459v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.05459v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.05459v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.07168v2",
+   "pdf": "raw/vectara_pdf/2410.07168v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.07168v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.07168v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2410.07913v3",
+   "pdf": "raw/vectara_pdf/2410.07913v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.07913v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.07913v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2410.08143v2",
+   "pdf": "raw/vectara_pdf/2410.08143v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.08143v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.08143v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2410.08147v8",
+   "pdf": "raw/vectara_pdf/2410.08147v8.pdf",
+   "corpus": "raw/vectara_corpus/2410.08147v8.json",
+   "source_url": "https://arxiv.org/pdf/2410.08147v8",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.08287v3",
+   "pdf": "raw/vectara_pdf/2410.08287v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.08287v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.08287v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2410.08642v2",
+   "pdf": "raw/vectara_pdf/2410.08642v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.08642v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.08642v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2410.09156v3",
+   "pdf": "raw/vectara_pdf/2410.09156v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.09156v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.09156v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.09555v2",
+   "pdf": "raw/vectara_pdf/2410.09555v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.09555v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.09555v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2410.09697v2",
+   "pdf": "raw/vectara_pdf/2410.09697v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.09697v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.09697v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2410.10516v3",
+   "pdf": "raw/vectara_pdf/2410.10516v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.10516v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.10516v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2410.11034v2",
+   "pdf": "raw/vectara_pdf/2410.11034v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.11034v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.11034v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2410.11074v3",
+   "pdf": "raw/vectara_pdf/2410.11074v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.11074v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.11074v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2410.11095v2",
+   "pdf": "raw/vectara_pdf/2410.11095v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.11095v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.11095v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2410.11399v2",
+   "pdf": "raw/vectara_pdf/2410.11399v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.11399v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.11399v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2410.11712v2",
+   "pdf": "raw/vectara_pdf/2410.11712v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.11712v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.11712v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2410.11774v2",
+   "pdf": "raw/vectara_pdf/2410.11774v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.11774v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.11774v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2410.12036v2",
+   "pdf": "raw/vectara_pdf/2410.12036v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.12036v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.12036v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2410.12710v2",
+   "pdf": "raw/vectara_pdf/2410.12710v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.12710v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.12710v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2410.14077v2",
+   "pdf": "raw/vectara_pdf/2410.14077v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.14077v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.14077v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2410.14317v2",
+   "pdf": "raw/vectara_pdf/2410.14317v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.14317v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.14317v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2410.14997v2",
+   "pdf": "raw/vectara_pdf/2410.14997v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.14997v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.14997v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2410.15316v3",
+   "pdf": "raw/vectara_pdf/2410.15316v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.15316v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.15316v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.15824v2",
+   "pdf": "raw/vectara_pdf/2410.15824v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.15824v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.15824v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2410.16076v3",
+   "pdf": "raw/vectara_pdf/2410.16076v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.16076v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.16076v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2410.16290v4",
+   "pdf": "raw/vectara_pdf/2410.16290v4.pdf",
+   "corpus": "raw/vectara_corpus/2410.16290v4.json",
+   "source_url": "https://arxiv.org/pdf/2410.16290v4",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.16441v2",
+   "pdf": "raw/vectara_pdf/2410.16441v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.16441v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.16441v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2410.17011v3",
+   "pdf": "raw/vectara_pdf/2410.17011v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.17011v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.17011v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2410.17420v2",
+   "pdf": "raw/vectara_pdf/2410.17420v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.17420v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.17420v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.17708v2",
+   "pdf": "raw/vectara_pdf/2410.17708v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.17708v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.17708v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2410.18929v2",
+   "pdf": "raw/vectara_pdf/2410.18929v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.18929v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.18929v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2410.19654v2",
+   "pdf": "raw/vectara_pdf/2410.19654v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.19654v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.19654v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2410.20267v2",
+   "pdf": "raw/vectara_pdf/2410.20267v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.20267v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.20267v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2410.20476v2",
+   "pdf": "raw/vectara_pdf/2410.20476v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.20476v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.20476v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2410.20606v3",
+   "pdf": "raw/vectara_pdf/2410.20606v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.20606v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.20606v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2410.20812v3",
+   "pdf": "raw/vectara_pdf/2410.20812v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.20812v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.20812v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2410.20982v2",
+   "pdf": "raw/vectara_pdf/2410.20982v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.20982v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.20982v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2410.22706v2",
+   "pdf": "raw/vectara_pdf/2410.22706v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.22706v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.22706v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.22824v2",
+   "pdf": "raw/vectara_pdf/2410.22824v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.22824v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.22824v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2410.23209v2",
+   "pdf": "raw/vectara_pdf/2410.23209v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.23209v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.23209v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2410.23473v2",
+   "pdf": "raw/vectara_pdf/2410.23473v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.23473v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.23473v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2410.23587v3",
+   "pdf": "raw/vectara_pdf/2410.23587v3.pdf",
+   "corpus": "raw/vectara_corpus/2410.23587v3.json",
+   "source_url": "https://arxiv.org/pdf/2410.23587v3",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2410.23841v2",
+   "pdf": "raw/vectara_pdf/2410.23841v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.23841v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.23841v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2410.24112v2",
+   "pdf": "raw/vectara_pdf/2410.24112v2.pdf",
+   "corpus": "raw/vectara_corpus/2410.24112v2.json",
+   "source_url": "https://arxiv.org/pdf/2410.24112v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2411.00296v4",
+   "pdf": "raw/vectara_pdf/2411.00296v4.pdf",
+   "corpus": "raw/vectara_corpus/2411.00296v4.json",
+   "source_url": "https://arxiv.org/pdf/2411.00296v4",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2411.00816v2",
+   "pdf": "raw/vectara_pdf/2411.00816v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.00816v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.00816v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2411.02770v3",
+   "pdf": "raw/vectara_pdf/2411.02770v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.02770v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.02770v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2411.02796v2",
+   "pdf": "raw/vectara_pdf/2411.02796v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.02796v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.02796v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2411.02951v2",
+   "pdf": "raw/vectara_pdf/2411.02951v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.02951v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.02951v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2411.03299v2",
+   "pdf": "raw/vectara_pdf/2411.03299v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.03299v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.03299v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2411.03309v2",
+   "pdf": "raw/vectara_pdf/2411.03309v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.03309v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.03309v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2411.03418v4",
+   "pdf": "raw/vectara_pdf/2411.03418v4.pdf",
+   "corpus": "raw/vectara_corpus/2411.03418v4.json",
+   "source_url": "https://arxiv.org/pdf/2411.03418v4",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2411.03676v2",
+   "pdf": "raw/vectara_pdf/2411.03676v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.03676v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.03676v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2411.03988v2",
+   "pdf": "raw/vectara_pdf/2411.03988v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.03988v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.03988v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2411.05391v4",
+   "pdf": "raw/vectara_pdf/2411.05391v4.pdf",
+   "corpus": "raw/vectara_corpus/2411.05391v4.json",
+   "source_url": "https://arxiv.org/pdf/2411.05391v4",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2411.05659v3",
+   "pdf": "raw/vectara_pdf/2411.05659v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.05659v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.05659v3",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2411.05803v4",
+   "pdf": "raw/vectara_pdf/2411.05803v4.pdf",
+   "corpus": "raw/vectara_corpus/2411.05803v4.json",
+   "source_url": "https://arxiv.org/pdf/2411.05803v4",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2411.06484v2",
+   "pdf": "raw/vectara_pdf/2411.06484v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.06484v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.06484v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2411.06875v3",
+   "pdf": "raw/vectara_pdf/2411.06875v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.06875v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.06875v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2411.07216v2",
+   "pdf": "raw/vectara_pdf/2411.07216v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.07216v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.07216v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2411.07483v2",
+   "pdf": "raw/vectara_pdf/2411.07483v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.07483v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.07483v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2411.07751v2",
+   "pdf": "raw/vectara_pdf/2411.07751v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.07751v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.07751v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2411.07984v2",
+   "pdf": "raw/vectara_pdf/2411.07984v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.07984v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.07984v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2411.08777v2",
+   "pdf": "raw/vectara_pdf/2411.08777v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.08777v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.08777v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2411.08909v3",
+   "pdf": "raw/vectara_pdf/2411.08909v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.08909v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.08909v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2411.08932v2",
+   "pdf": "raw/vectara_pdf/2411.08932v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.08932v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.08932v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2411.09216v2",
+   "pdf": "raw/vectara_pdf/2411.09216v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.09216v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.09216v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2411.09666v2",
+   "pdf": "raw/vectara_pdf/2411.09666v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.09666v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.09666v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2411.09721v2",
+   "pdf": "raw/vectara_pdf/2411.09721v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.09721v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.09721v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2411.09808v3",
+   "pdf": "raw/vectara_pdf/2411.09808v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.09808v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.09808v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2411.10511v4",
+   "pdf": "raw/vectara_pdf/2411.10511v4.pdf",
+   "corpus": "raw/vectara_corpus/2411.10511v4.json",
+   "source_url": "https://arxiv.org/pdf/2411.10511v4",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2411.10728v3",
+   "pdf": "raw/vectara_pdf/2411.10728v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.10728v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.10728v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2411.11402v4",
+   "pdf": "raw/vectara_pdf/2411.11402v4.pdf",
+   "corpus": "raw/vectara_corpus/2411.11402v4.json",
+   "source_url": "https://arxiv.org/pdf/2411.11402v4",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2411.11841v3",
+   "pdf": "raw/vectara_pdf/2411.11841v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.11841v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.11841v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2411.11853v3",
+   "pdf": "raw/vectara_pdf/2411.11853v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.11853v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.11853v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2411.12110v2",
+   "pdf": "raw/vectara_pdf/2411.12110v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.12110v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.12110v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2411.12375v3",
+   "pdf": "raw/vectara_pdf/2411.12375v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.12375v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.12375v3",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2411.12860v4",
+   "pdf": "raw/vectara_pdf/2411.12860v4.pdf",
+   "corpus": "raw/vectara_corpus/2411.12860v4.json",
+   "source_url": "https://arxiv.org/pdf/2411.12860v4",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2411.13384v2",
+   "pdf": "raw/vectara_pdf/2411.13384v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.13384v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.13384v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2411.13673v2",
+   "pdf": "raw/vectara_pdf/2411.13673v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.13673v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.13673v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2411.13783v2",
+   "pdf": "raw/vectara_pdf/2411.13783v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.13783v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.13783v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2411.13951v4",
+   "pdf": "raw/vectara_pdf/2411.13951v4.pdf",
+   "corpus": "raw/vectara_corpus/2411.13951v4.json",
+   "source_url": "https://arxiv.org/pdf/2411.13951v4",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2411.14884v3",
+   "pdf": "raw/vectara_pdf/2411.14884v3.pdf",
+   "corpus": "raw/vectara_corpus/2411.14884v3.json",
+   "source_url": "https://arxiv.org/pdf/2411.14884v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2411.15293v2",
+   "pdf": "raw/vectara_pdf/2411.15293v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.15293v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.15293v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2411.16245v2",
+   "pdf": "raw/vectara_pdf/2411.16245v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.16245v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.16245v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2411.17165v2",
+   "pdf": "raw/vectara_pdf/2411.17165v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.17165v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.17165v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2411.17395v2",
+   "pdf": "raw/vectara_pdf/2411.17395v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.17395v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.17395v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2411.18086v2",
+   "pdf": "raw/vectara_pdf/2411.18086v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.18086v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.18086v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2411.18481v2",
+   "pdf": "raw/vectara_pdf/2411.18481v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.18481v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.18481v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2411.18627v2",
+   "pdf": "raw/vectara_pdf/2411.18627v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.18627v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.18627v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2411.19887v2",
+   "pdf": "raw/vectara_pdf/2411.19887v2.pdf",
+   "corpus": "raw/vectara_corpus/2411.19887v2.json",
+   "source_url": "https://arxiv.org/pdf/2411.19887v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2412.00267v2",
+   "pdf": "raw/vectara_pdf/2412.00267v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.00267v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.00267v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2412.00710v2",
+   "pdf": "raw/vectara_pdf/2412.00710v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.00710v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.00710v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2412.00886v2",
+   "pdf": "raw/vectara_pdf/2412.00886v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.00886v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.00886v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2412.00980v2",
+   "pdf": "raw/vectara_pdf/2412.00980v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.00980v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.00980v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.02459v2",
+   "pdf": "raw/vectara_pdf/2412.02459v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.02459v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.02459v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2412.02582v2",
+   "pdf": "raw/vectara_pdf/2412.02582v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.02582v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.02582v2",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2412.03227v2",
+   "pdf": "raw/vectara_pdf/2412.03227v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.03227v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.03227v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2412.03848v3",
+   "pdf": "raw/vectara_pdf/2412.03848v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.03848v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.03848v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2412.04468v2",
+   "pdf": "raw/vectara_pdf/2412.04468v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.04468v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.04468v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.05495v6",
+   "pdf": "raw/vectara_pdf/2412.05495v6.pdf",
+   "corpus": "raw/vectara_corpus/2412.05495v6.json",
+   "source_url": "https://arxiv.org/pdf/2412.05495v6",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2412.06031v2",
+   "pdf": "raw/vectara_pdf/2412.06031v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.06031v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.06031v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2412.06343v3",
+   "pdf": "raw/vectara_pdf/2412.06343v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.06343v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.06343v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2412.06360v4",
+   "pdf": "raw/vectara_pdf/2412.06360v4.pdf",
+   "corpus": "raw/vectara_corpus/2412.06360v4.json",
+   "source_url": "https://arxiv.org/pdf/2412.06360v4",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2412.06611v2",
+   "pdf": "raw/vectara_pdf/2412.06611v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.06611v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.06611v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.06947v3",
+   "pdf": "raw/vectara_pdf/2412.06947v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.06947v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.06947v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2412.07587v6",
+   "pdf": "raw/vectara_pdf/2412.07587v6.pdf",
+   "corpus": "raw/vectara_corpus/2412.07587v6.json",
+   "source_url": "https://arxiv.org/pdf/2412.07587v6",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.08070v2",
+   "pdf": "raw/vectara_pdf/2412.08070v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.08070v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.08070v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2412.08927v2",
+   "pdf": "raw/vectara_pdf/2412.08927v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.08927v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.08927v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2412.09374v3",
+   "pdf": "raw/vectara_pdf/2412.09374v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.09374v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.09374v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2412.10128v2",
+   "pdf": "raw/vectara_pdf/2412.10128v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.10128v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.10128v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.10243v3",
+   "pdf": "raw/vectara_pdf/2412.10243v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.10243v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.10243v3",
+   "n_questions": 1
+  },
+  {
+   "doc_id": "2412.10289v2",
+   "pdf": "raw/vectara_pdf/2412.10289v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.10289v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.10289v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.11130v5",
+   "pdf": "raw/vectara_pdf/2412.11130v5.pdf",
+   "corpus": "raw/vectara_corpus/2412.11130v5.json",
+   "source_url": "https://arxiv.org/pdf/2412.11130v5",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2412.11336v3",
+   "pdf": "raw/vectara_pdf/2412.11336v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.11336v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.11336v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.11338v2",
+   "pdf": "raw/vectara_pdf/2412.11338v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.11338v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.11338v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2412.11355v2",
+   "pdf": "raw/vectara_pdf/2412.11355v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.11355v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.11355v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2412.11692v4",
+   "pdf": "raw/vectara_pdf/2412.11692v4.pdf",
+   "corpus": "raw/vectara_corpus/2412.11692v4.json",
+   "source_url": "https://arxiv.org/pdf/2412.11692v4",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2412.12448v2",
+   "pdf": "raw/vectara_pdf/2412.12448v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.12448v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.12448v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2412.12783v2",
+   "pdf": "raw/vectara_pdf/2412.12783v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.12783v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.12783v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2412.13042v2",
+   "pdf": "raw/vectara_pdf/2412.13042v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.13042v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.13042v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2412.13892v2",
+   "pdf": "raw/vectara_pdf/2412.13892v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.13892v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.13892v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2412.13914v3",
+   "pdf": "raw/vectara_pdf/2412.13914v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.13914v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.13914v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.14369v2",
+   "pdf": "raw/vectara_pdf/2412.14369v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.14369v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.14369v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2412.14566v2",
+   "pdf": "raw/vectara_pdf/2412.14566v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.14566v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.14566v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2412.14624v2",
+   "pdf": "raw/vectara_pdf/2412.14624v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.14624v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.14624v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2412.14918v3",
+   "pdf": "raw/vectara_pdf/2412.14918v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.14918v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.14918v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2412.15239v2",
+   "pdf": "raw/vectara_pdf/2412.15239v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.15239v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.15239v2",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2412.15322v2",
+   "pdf": "raw/vectara_pdf/2412.15322v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.15322v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.15322v2",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2412.15448v2",
+   "pdf": "raw/vectara_pdf/2412.15448v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.15448v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.15448v2",
+   "n_questions": 10
+  },
+  {
+   "doc_id": "2412.15929v3",
+   "pdf": "raw/vectara_pdf/2412.15929v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.15929v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.15929v3",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.16320v3",
+   "pdf": "raw/vectara_pdf/2412.16320v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.16320v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.16320v3",
+   "n_questions": 9
+  },
+  {
+   "doc_id": "2412.16352v2",
+   "pdf": "raw/vectara_pdf/2412.16352v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.16352v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.16352v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2412.16874v3",
+   "pdf": "raw/vectara_pdf/2412.16874v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.16874v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.16874v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2412.16915v2",
+   "pdf": "raw/vectara_pdf/2412.16915v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.16915v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.16915v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2412.17119v3",
+   "pdf": "raw/vectara_pdf/2412.17119v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.17119v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.17119v3",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2412.17354v3",
+   "pdf": "raw/vectara_pdf/2412.17354v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.17354v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.17354v3",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2412.17712v2",
+   "pdf": "raw/vectara_pdf/2412.17712v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.17712v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.17712v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2412.18180v3",
+   "pdf": "raw/vectara_pdf/2412.18180v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.18180v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.18180v3",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2412.18252v2",
+   "pdf": "raw/vectara_pdf/2412.18252v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.18252v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.18252v2",
+   "n_questions": 5
+  },
+  {
+   "doc_id": "2412.18449v2",
+   "pdf": "raw/vectara_pdf/2412.18449v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.18449v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.18449v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2412.18501v3",
+   "pdf": "raw/vectara_pdf/2412.18501v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.18501v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.18501v3",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2412.18817v2",
+   "pdf": "raw/vectara_pdf/2412.18817v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.18817v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.18817v2",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2412.19038v2",
+   "pdf": "raw/vectara_pdf/2412.19038v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.19038v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.19038v2",
+   "n_questions": 7
+  },
+  {
+   "doc_id": "2412.19754v3",
+   "pdf": "raw/vectara_pdf/2412.19754v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.19754v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.19754v3",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2412.20245v4",
+   "pdf": "raw/vectara_pdf/2412.20245v4.pdf",
+   "corpus": "raw/vectara_corpus/2412.20245v4.json",
+   "source_url": "https://arxiv.org/pdf/2412.20245v4",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2412.20317v3",
+   "pdf": "raw/vectara_pdf/2412.20317v3.pdf",
+   "corpus": "raw/vectara_corpus/2412.20317v3.json",
+   "source_url": "https://arxiv.org/pdf/2412.20317v3",
+   "n_questions": 6
+  },
+  {
+   "doc_id": "2412.20570v1",
+   "pdf": "raw/vectara_pdf/2412.20570v1.pdf",
+   "corpus": "raw/vectara_corpus/2412.20570v1.json",
+   "source_url": "https://arxiv.org/pdf/2412.20570v1",
+   "n_questions": 2
+  },
+  {
+   "doc_id": "2412.21038v2",
+   "pdf": "raw/vectara_pdf/2412.21038v2.pdf",
+   "corpus": "raw/vectara_corpus/2412.21038v2.json",
+   "source_url": "https://arxiv.org/pdf/2412.21038v2",
+   "n_questions": 3
+  },
+  {
+   "doc_id": "2501.00225v2",
+   "pdf": "raw/vectara_pdf/2501.00225v2.pdf",
+   "corpus": "raw/vectara_corpus/2501.00225v2.json",
+   "source_url": "https://arxiv.org/pdf/2501.00225v2",
+   "n_questions": 4
+  },
+  {
+   "doc_id": "2501.00398v2",
+   "pdf": "raw/vectara_pdf/2501.00398v2.pdf",
+   "corpus": "raw/vectara_corpus/2501.00398v2.json",
+   "source_url": "https://arxiv.org/pdf/2501.00398v2",
+   "n_questions": 8
+  },
+  {
+   "doc_id": "2501.01454v2",
+   "pdf": "raw/vectara_pdf/2501.01454v2.pdf",
+   "corpus": "raw/vectara_corpus/2501.01454v2.json",
+   "source_url": "https://arxiv.org/pdf/2501.01454v2",
+   "n_questions": 8
+  }
+ ]
+}

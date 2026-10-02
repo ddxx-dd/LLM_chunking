@@ -41,3 +41,7 @@ LLM은 한 번에 받는 토큰 수에 한계가 있다. 흩어진 수십 개 .d
 - 평가용 경량 LLM: Gemma4-12B-QAT-it (24GB에서 로컬 구동)
 - 데이터셋: OpenSubtitles, LongBench/SCROLLS, 자체 .docx 묶음
 - GPU: Tier 1 (RTX 3090 / A5000). 이 프로젝트는 GPU보다 CPU/메모리/코드 설계가 핵심
+
+## 꼭 지켜야 할 것 
+- 무조건 venv가상환경 안에서만 작업할 것.
+- 절대 서버 전체에 영향을 주는 작업을 하지 말 것.

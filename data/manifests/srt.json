@@ -26,6 +26,11 @@
    "title_keyword_hits": {
     "noah": 34,
     "methuselah": 3
+   },
+   "doc_id": "noah",
+   "processed": {
+    "en": "processed/srt_eng/noah.json",
+    "ko": "processed/srt_kor/noah.json"
    }
   },
   {
@@ -48,6 +53,11 @@
    "title_keyword_hits": {
     "deadpool": 13,
     "wade": 44
+   },
+   "doc_id": "deadpool",
+   "processed": {
+    "en": "processed/srt_eng/deadpool.json",
+    "ko": "processed/srt_kor/deadpool.json"
    }
   },
   {
@@ -70,6 +80,11 @@
    "title_keyword_hits": {
     "lambert": 6,
     "elise": 42
+   },
+   "doc_id": "insidious_chapter2",
+   "processed": {
+    "en": "processed/srt_eng/insidious_chapter2.json",
+    "ko": "processed/srt_kor/insidious_chapter2.json"
    }
   },
   {
@@ -92,6 +107,11 @@
    "title_keyword_hits": {
     "kaecilius": 12,
     "ancient one": 13
+   },
+   "doc_id": "doctor_strange",
+   "processed": {
+    "en": "processed/srt_eng/doctor_strange.json",
+    "ko": "processed/srt_kor/doctor_strange.json"
    }
   },
   {
@@ -114,7 +134,15 @@
    "title_keyword_hits": {
     "accords": 10,
     "sokovia": 8
+   },
+   "doc_id": "captain_america_civil_war",
+   "processed": {
+    "en": "processed/srt_eng/captain_america_civil_war.json",
+    "ko": "processed/srt_kor/captain_america_civil_war.json"
    }
   }
+ ],
+ "notes": [
+  "언어별로 나눠 처리: processed/srt_eng/<doc_id>.json, processed/srt_kor/<doc_id>.json (영화당 언어별 JSON 하나씩)"
  ]
 }

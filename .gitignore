@@ -1,14 +1,6 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-data/srt_kor/*
-!data/srt_kor/.gitkeep
-data/srt_eng/*
-!data/srt_eng/.gitkeep
-data/allganize/*
-!data/allganize/.gitkeep
-data/vectara_ragbench/*
-!data/vectara_ragbench/.gitkeep
 venv/
 results/*.json
 .venv311/
@@ -25,3 +17,5 @@ results/*.json
 .home/
 recovered/
 env.sh
+data/raw/
+data/processed/
