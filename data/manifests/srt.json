@@ -1,0 +1,120 @@
+{
+ "opus_version": "v2024",
+ "source": "https://opus.nlpl.eu/OpenSubtitles/",
+ "alignment": "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/xml/en-ko.xml.gz",
+ "raw_en": "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/raw/en.zip",
+ "raw_ko": "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/raw/ko.zip",
+ "created": "2026-10-02",
+ "movies": [
+  {
+   "movie": "Noah",
+   "year": 2014,
+   "imdb_id": 1959490,
+   "score": 0.978021978021978,
+   "n_pairs": 1,
+   "en_doc": "en/2014/1959490/1954691007.xml.gz",
+   "ko_doc": "ko/2014/1959490/1954685713.xml.gz",
+   "en_file": "data/raw/srt_eng/Noah_Eng.srt",
+   "ko_file": "data/raw/srt_kor/노아.srt",
+   "cues_en": 1062,
+   "cues_ko": 1093,
+   "last_cue_en": "02:10:31,482",
+   "last_cue_ko": "02:10:31,482",
+   "overlap_en_in_ko": 0.97,
+   "orphan_lines_en": 0,
+   "orphan_lines_ko": 0,
+   "title_keyword_hits": {
+    "noah": 34,
+    "methuselah": 3
+   }
+  },
+  {
+   "movie": "Deadpool",
+   "year": 2016,
+   "imdb_id": 1431045,
+   "score": 0.964714184897671,
+   "n_pairs": 1,
+   "en_doc": "en/2016/1431045/1955648998.xml.gz",
+   "ko_doc": "ko/2016/1431045/1955186441.xml.gz",
+   "en_file": "data/raw/srt_eng/Deadpool_Eng.srt",
+   "ko_file": "data/raw/srt_kor/데드풀.srt",
+   "cues_en": 1298,
+   "cues_ko": 1423,
+   "last_cue_en": "01:48:43,686",
+   "last_cue_ko": "01:48:41,691",
+   "overlap_en_in_ko": 0.569,
+   "orphan_lines_en": 0,
+   "orphan_lines_ko": 0,
+   "title_keyword_hits": {
+    "deadpool": 13,
+    "wade": 44
+   }
+  },
+  {
+   "movie": "Insidious: Chapter 2",
+   "year": 2013,
+   "imdb_id": 2226417,
+   "score": 0.984171322160149,
+   "n_pairs": 1,
+   "en_doc": "en/2013/2226417/1954573498.xml.gz",
+   "ko_doc": "ko/2013/2226417/1955416503.xml.gz",
+   "en_file": "data/raw/srt_eng/Insidious_Chapter2_Eng.srt",
+   "ko_file": "data/raw/srt_kor/인시디어스2.srt",
+   "cues_en": 849,
+   "cues_ko": 894,
+   "last_cue_en": "01:41:41,638",
+   "last_cue_ko": "01:42:49,000",
+   "overlap_en_in_ko": 0.987,
+   "orphan_lines_en": 0,
+   "orphan_lines_ko": 0,
+   "title_keyword_hits": {
+    "lambert": 6,
+    "elise": 42
+   }
+  },
+  {
+   "movie": "Doctor Strange",
+   "year": 2016,
+   "imdb_id": 1211837,
+   "score": 0.977255496588324,
+   "n_pairs": 1,
+   "en_doc": "en/2016/1211837/1955465609.xml.gz",
+   "ko_doc": "ko/2016/1211837/1955467900.xml.gz",
+   "en_file": "data/raw/srt_eng/Doctor_Strange_Eng.srt",
+   "ko_file": "data/raw/srt_kor/닥터스트레인지.srt",
+   "cues_en": 1271,
+   "cues_ko": 1281,
+   "last_cue_en": "01:54:40,632",
+   "last_cue_ko": "01:54:46,099",
+   "overlap_en_in_ko": 0.986,
+   "orphan_lines_en": 0,
+   "orphan_lines_ko": 0,
+   "title_keyword_hits": {
+    "kaecilius": 12,
+    "ancient one": 13
+   }
+  },
+  {
+   "movie": "Captain America: Civil War",
+   "year": 2016,
+   "imdb_id": 3498820,
+   "score": 0.97766323024055,
+   "n_pairs": 1,
+   "en_doc": "en/2016/3498820/1955201717.xml.gz",
+   "ko_doc": "ko/2016/3498820/1955205503.xml.gz",
+   "en_file": "data/raw/srt_eng/Captain_America_Civil_War_Eng.srt",
+   "ko_file": "data/raw/srt_kor/캡틴아메리카시빌워.srt",
+   "cues_en": 1513,
+   "cues_ko": 1568,
+   "last_cue_en": "02:27:24,552",
+   "last_cue_ko": "02:27:24,752",
+   "overlap_en_in_ko": 0.968,
+   "orphan_lines_en": 0,
+   "orphan_lines_ko": 0,
+   "title_keyword_hits": {
+    "accords": 10,
+    "sokovia": 8
+   }
+  }
+ ]
+}
