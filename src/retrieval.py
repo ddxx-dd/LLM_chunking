@@ -113,12 +113,15 @@ def aggregate(rows):
             "mrr": sum(r["mrr"] for r in rows) / n, "f1": sum(r["f1"] for r in rows) / n}
 
 
-def run(dataset, chunker, splitter, embeddings, limit=None):
+def run(dataset, chunker, splitter, embeddings, limit=None, qas=None, files=None):
     """run.py/트랙 pipeline.py가 부르는 단일 설정 실행 - QA limit개, 문서는 전부
     인덱싱(검색이 여러 문서 중에서 정답을 찾는 문제이려면 코퍼스 전체가 후보
     풀이어야 함). retriever도 같이 반환 - summary.run()이 같은 인덱스를 재사용
-    (청킹을 두 번 안 함). splitter는 트랙 pipeline.py의 CHUNKERS[chunker]."""
-    qas, files = load_qa(dataset)
+    (청킹을 두 번 안 함). splitter는 트랙 pipeline.py의 CHUNKERS[chunker].
+    qas/files: 트랙이 직접 걸러낸 목록을 넘기고 싶을 때 씀(예: docx_track이 제목
+    스타일이 없는 문서를 코퍼스에서 빼는 경우) - 안 넘기면 load_qa(dataset) 그대로."""
+    if qas is None or files is None:
+        qas, files = load_qa(dataset)
     if limit:
         qas = qas[:limit]
     docs = load_docs(dataset, files)

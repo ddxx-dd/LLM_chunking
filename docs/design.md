@@ -14,9 +14,8 @@ LLM에 넣기엔 너무 긴 문서를 어떻게 나눠야 하는가? 단순히 �
 | 트랙 | 데이터셋 | 형식 | 문서 수 |
 |---|---|---|---|
 | docx | Allganize RAG 평가셋 | 한국어 .docx | 45개 문서, QA 211개 |
-| pdf | Vectara open_ragbench | 영어 arxiv 논문 .pdf | 50개 문서 |
+| pdf | Vectara open_ragbench | 영어 arxiv 논문 .pdf | 100개 문서, QA 559개 |
 | srt | 영화 자막 5편(EN/KO 독립 제작) | .srt | 영화 5편 × 양방향 |
-| longbench | LongBench/SCROLLS | 긴 텍스트 | 미구현(자리만) |
 
 docx/pdf는 Docling으로 마크다운(제목 `#`, 표 `|---|`)으로 변환한 뒤 한 문서 = 한
 `Document`로 다룬다. srt는 큐(자막 한 줄)를 유닛으로 관리한다(`srt/loader.py`).
@@ -81,7 +80,7 @@ docx/pdf는 아직 튜닝 전 시작값이다(위 4문서 실측 비교 참고).
   기록).
 - retrieval의 F1은 페이지 번호가 없어서 쓰는 대체 지표(SQuAD word-F1)라 원래
   낮게 나온다(docx 전체 코퍼스 실측 F1=0.037, hit_rate=0.9는 정상 범위).
-- pdf 검색 실측은 아직 5문서 샘플만 돌려봤다(전체 50개는 미실시).
+- pdf 검색 실측은 아직 5문서 샘플만 돌려봤다(전체 100개는 미실시).
 - CometKiwi 채점은 스크립트만 작성됐고 아직 실행해보지 않았다.
 - docx/pdf 청커 설정값은 튜닝 전 시작값이다.
 
@@ -90,5 +89,4 @@ docx/pdf는 아직 튜닝 전 시작값이다(위 4문서 실측 비교 참고).
 - 병합: 번역 결과를 원본 문서 구조(표 셀 병합 포함) 그대로 `.docx`/`.pdf`에
   되돌려 쓰는 기능. `main`/`wip/step-c` 브랜치에 이미 구현된 적 있음(다른 문서
   모델 기반이라 그대로 가져올 수는 없음) - v2에서는 범위 밖으로 명시적으로 뺐다.
-- LongBench/SCROLLS 트랙 실제 구현(`src/longbench/pipeline.py`는 현재 자리만).
 - docx/pdf 청커 설정값 그리드서치.

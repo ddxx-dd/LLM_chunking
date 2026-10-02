@@ -17,3 +17,5 @@ results/*.json
 .env
 .pytest_cache/
 *.egg-info/
+.python/
+.tools/

@@ -52,7 +52,6 @@ src/
   run.py                              CLI 진입점 - 트랙별 pipeline.run() 호출
   docx_track/, pdf_track/             loader.py(Docling→마크다운) + pipeline.py(청커 설정+실행)
   srt/                                자막 로더/청킹/번역/타임스탬프 정렬(완성본)
-  longbench/                          자리만(미구현)
 docs/
   design.md                           설계 문서(이 파일이 가리키는 것)
   history/                            지난 세션의 진행 보고서(참고용, 지금 코드와 안 맞을 수 있음)

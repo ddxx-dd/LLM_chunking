@@ -16,7 +16,6 @@ from langchain_text_splitters.base import TextSplitter
 
 SENT_RE = re.compile(r"(?<=[.!?。])\s+")          # 한국어는 kss.split_sentences로 바꾸면 더 정확
 MD_HEADING_RE = re.compile(r"^#{1,6} ")
-PASSAGE_RE = re.compile(r"^Passage \d+:")                                            # LongBench 다중 문서
 EN_END_RE = re.compile(r"[.!?…\"')\]]$")
 KO_CONT_RE = re.compile(r"(고|며|면서|는데|은데|지만|서|면|니까|다가|도록|를|을|의|,|…|\.\.\.)$")
 SEMANTIC_SENTENCE_SPLIT_REGEX = r"(?<=[.?!。])\s+|\n+"
@@ -38,27 +37,19 @@ def detect_blocks(text, mode):
     if mode == "srt":                     # srt 로더는 큐 하나를 한 줄로 저장한다
         return [(m.start(), m.end(), "cue") for m in re.finditer(r"[^\n]+", text)]
 
-    if mode in ("docx", "pdf"):           # Docling 마크다운: 빈 줄로 구분된 덩어리
-        pattern = r"[^\n]+(?:\n(?!\n)[^\n]+)*"
-    else:                                 # longbench: 한 줄 = 한 문단
-        pattern = r"[^\n]+"
+    # Docling 마크다운(docx/pdf): 빈 줄로 구분된 덩어리
+    pattern = r"[^\n]+(?:\n(?!\n)[^\n]+)*"
 
     blocks = []
     for m in re.finditer(pattern, text):
         body = m.group().strip()
-        if MD_HEADING_RE.match(body) or PASSAGE_RE.match(body):
+        if MD_HEADING_RE.match(body):
             kind = "heading"
         elif body.startswith(("|", "<table")):             # 마크다운 표 / HTML 표
             kind = "table"
         else:
             kind = "para"
-        # 한 줄=한 블록 모드(longbench)에서 표 행이 여러 줄로 쪼개져 들어오면 하나로 묶는다 -
-        # docx/pdf는 이미 멀티라인 패턴이라 표 전체가 한 블록으로 잡히므로 이 병합이 필요 없음
-        # (지금은 실제로 이 분기를 타는 경로가 없음 - longbench에 표가 나오면 대비용으로 남겨둠).
-        if kind == "table" and blocks and blocks[-1][2] == "table" and mode not in ("docx", "pdf"):
-            blocks[-1] = (blocks[-1][0], m.end(), "table")
-        else:
-            blocks.append((m.start(), m.end(), kind))
+        blocks.append((m.start(), m.end(), kind))
     return blocks
 
 

@@ -15,6 +15,15 @@ from llm import translate_batch
 DATASET = "docx"
 DIRECTION = "ko2en"  # 한국어 원문 -> 영어 번역
 
+# 제목 스타일 문단이 아예 없는 문서 - 검색 벤치마크 코퍼스에서 제외(실측 확인,
+# docs/heading_diagnosis_2026-09-29.md 참고). 원본 파일/QA 매핑은 그대로 둔다 -
+# retrieval.load_docx_qa()는 안 건드리므로, 이 문서를 정답으로 삼는 QA는
+# _filtered_docx_qa()에서 같이 걸러진다(별도 목록 관리 안 해도 됨).
+EXCLUDE_DOCX = {
+    "한-호주_퇴직연금_포럼_책자_최종_.docx",
+    "_240411보도자료__재정동향_4월호.docx",
+}
+
 
 def build_chunkers(embeddings, count_tokens):
     return {
@@ -27,13 +36,24 @@ def build_chunkers(embeddings, count_tokens):
 
 
 def _files():
-    return sorted(ALLGANIZE_DIR.glob("docx/**/*.docx"))
+    return [f for f in sorted(ALLGANIZE_DIR.glob("docx/**/*.docx")) if f.name not in EXCLUDE_DOCX]
+
+
+def _filtered_docx_qa():
+    """retrieval.load_docx_qa()에서 EXCLUDE_DOCX를 뺀 목록 - 검색 코퍼스에 안
+    넣을 문서를 정답으로 삼는 QA도 같이 빠진다(정답 문서가 없으니 어차피 못
+    풀 QA)."""
+    qas, files = retrieval.load_docx_qa()
+    files = [f for f in files if f.name not in EXCLUDE_DOCX]
+    qas = [qa for qa in qas if qa["target_file"].name not in EXCLUDE_DOCX]
+    return qas, files
 
 
 def run_retrieval(chunker, embeddings, count_tokens, limit):
     out_path = RESULTS_DIR / f"{DATASET}_retrieval_{chunker}.json"
     splitter = build_chunkers(embeddings, count_tokens)[chunker]
-    result = retrieval.run(DATASET, chunker, splitter, embeddings, limit=limit)
+    qas, files = _filtered_docx_qa()
+    result = retrieval.run(DATASET, chunker, splitter, embeddings, limit=limit, qas=qas, files=files)
     save = {"overall": result["overall"], "table": result["table"],
             "n_chunks": result["n_chunks"], "n_docs": result["n_docs"]}
     out_path.write_text(json.dumps(save, ensure_ascii=False, indent=2), encoding="utf-8")
