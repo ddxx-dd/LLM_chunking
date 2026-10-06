@@ -26,3 +26,12 @@ results/**
 
 # legacy/: 코드는 추적, 백업은 제외
 legacy/backup_removed_*/
+
+# 도구·캐시·입력 (서버를 옮겨도 올라가지 않도록 .git/info/exclude와 별도로 둔다)
+.home/
+.claude/
+.hf-cache/
+_data_in/
+*.zip
+*.bundle
+.DS_Store
