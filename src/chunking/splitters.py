@@ -65,7 +65,8 @@ def chunk_spans(doc, text, pieces, chunker, cfg, models):
         rules = rules_for(chunker, cfg)
         units, forced = build_units(text, pieces, caption_glue(doc, pieces), rules)
         engine = SemanticEngine(models["embed_model"], models["count"], percentile=cfg["percentile"],
-                                min_tokens=cfg["min_tokens"], max_tokens=cfg["max_tokens"], buffer_size=cfg.get("buffer_size", 0))
+                                min_tokens=cfg["min_tokens"], max_tokens=cfg["max_tokens"], buffer_size=cfg.get("buffer_size", 0),
+                                rebalance=cfg.get("rebalance", False))
         spans = engine.chunk_spans(text, units, forced)
         return spans, {f"{chunker}_{k}": v for k, v in engine.stats.items()}, {**cfg, "rules": rules.as_dict(), "lang": doc["lang"]}
     raise KeyError(f"unknown chunker: {chunker!r}")

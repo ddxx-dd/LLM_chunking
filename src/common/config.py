@@ -29,7 +29,7 @@ def _doc_chunkers():
     return dict(
         fixed=dict(target_tokens=400, overlap_ratio=0.0),
         semantic=dict(percentile=90, min_tokens=100, max_tokens=400, buffer_size=0, rules=none),
-        smart=dict(percentile=90, min_tokens=100, max_tokens=400, buffer_size=0, rules=allr),
+        smart=dict(percentile=90, min_tokens=100, max_tokens=400, buffer_size=0, rules=allr, rebalance=True),   # rebalance는 smart만(semantic은 기본 합치기)
     )
 
 

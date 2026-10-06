@@ -57,6 +57,8 @@ class RulesObject(unittest.TestCase):
             self.assertEqual(Rules.from_dict(cfgs["smart"]["rules"]), ALL_RULES)
             for k in ("percentile", "min_tokens", "max_tokens", "buffer_size"):
                 self.assertEqual(cfgs["semantic"][k], cfgs["smart"][k])        # 엔진 파라미터는 둘이 같다
+            self.assertFalse(cfgs["semantic"].get("rebalance", False))       # 재균형은 smart 전용(semantic은 기본 합치기)
+            self.assertTrue(cfgs["smart"]["rebalance"])
 
 
 class BuildUnits(unittest.TestCase):

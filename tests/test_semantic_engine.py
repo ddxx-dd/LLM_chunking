@@ -185,5 +185,62 @@ class SizeRegularization(unittest.TestCase):
         self.assertEqual(eng.chunk_spans("Only one.", [(0, 9)]), [(0, 9)])
 
 
+class Rebalance(unittest.TestCase):
+    """rebalance=True(smart 전용): min 미만 그룹을 forced가 아닌 이웃 중 유사한 쪽과 합치고, max를 넘으면 합친 안에서 다시 자른다."""
+    def engine(self, mn, mx, pct=100, rebalance=True):
+        return SemanticEngine(make_stub(TOPIC_AXES)._client, count_words, percentile=pct, min_tokens=mn, max_tokens=mx, rebalance=rebalance)
+
+    def units(self, parts):
+        text = "\n\n".join(parts)
+        return text, sentence_spans(text)
+
+    def groups_after(self, eng, text, units, groups, forced=()):
+        eng._prepare_sizes(text, units)
+        d = consecutive_distances(eng.embed, [text[s:e] for s, e in units])
+        return eng._rebalance_small(groups, set(forced), d, text, units)
+
+    def test_small_group_that_cannot_merge_is_rebalanced_into_its_neighbour(self):
+        # 8단어 그룹 + 35단어 그룹 = 43 > max 40 -> 기본 합치기는 못 하고(min 미달 보고), 재균형은 경계를 옮겨 둘 다 min 이상으로 만든다
+        parts = [words("alpha", 8), words("beta", 15), words("beta", 10), words("beta", 10)]
+        text, units = self.units(parts)
+        # 의미 컷(순수 거리)만으로 첫 문장을 떼는 임계값
+        eng_off = self.engine(10, 40, pct=60, rebalance=False)
+        eng_on = self.engine(10, 40, pct=60, rebalance=True)
+        off, on = eng_off.chunk_spans(text, units), eng_on.chunk_spans(text, units)
+        self.assertEqual(eng_off.stats["under_min"], 1)
+        self.assertEqual((eng_on.stats["under_min"], eng_on.stats["rebalanced"]), (0, 1))
+        sizes = [count_words(text[s:e]) for s, e in on]
+        self.assertTrue(all(10 <= x <= 40 for x in sizes), sizes)
+        self.assertEqual((on[0][0], on[-1][1]), (units[0][0], units[-1][1]))
+        self.assertTrue(all(a[1] <= b[0] for a, b in zip(on, on[1:])))           # 겹침 없음
+
+    def test_neighbour_is_chosen_by_chunk_similarity(self):
+        text, units = self.units([words("beta", 20), words("alpha", 5), words("alpha", 20)])
+        got, _ = self.groups_after(self.engine(10, 40), text, units, [(0, 1), (1, 2), (2, 3)])
+        self.assertEqual(got, [(0, 1), (1, 3)])                                  # alpha 조각은 alpha 이웃(뒤)과
+        text, units = self.units([words("alpha", 20), words("alpha", 5), words("beta", 20)])
+        got, _ = self.groups_after(self.engine(10, 40), text, units, [(0, 1), (1, 2), (2, 3)])
+        self.assertEqual(got, [(0, 2), (2, 3)])                                  # 이번에는 앞과
+
+    def test_forced_boundaries_are_never_crossed(self):
+        text, units = self.units([words("alpha", 20), words("alpha", 5), words("alpha", 20)])
+        groups = [(0, 1), (1, 2), (2, 3)]
+        got, _ = self.groups_after(self.engine(10, 40), text, units, groups, forced=[1])      # 작은 조각 뒤가 forced -> 앞과
+        self.assertEqual(got, [(0, 2), (2, 3)])
+        got, _ = self.groups_after(self.engine(10, 40), text, units, groups, forced=[0])      # 작은 조각 앞이 forced -> 뒤와
+        self.assertEqual(got, [(0, 1), (1, 3)])
+        got, _ = self.groups_after(self.engine(10, 40), text, units, groups, forced=[0, 1])   # 양쪽 다 forced -> 그대로 두고 보고
+        self.assertEqual(got, groups)
+        eng = self.engine(10, 40)
+        eng.chunk_spans(text, units, forced=[0, 1])
+        self.assertEqual((eng.stats["merges_across_forced"], eng.stats["under_min"]), (0, 1))
+
+    def test_default_engine_is_unchanged_and_single_unit_over_max_is_reported(self):
+        text, units = self.units([words("alpha", 5), words("beta", 80), words("gamma", 5)])
+        eng = self.engine(3, 30, rebalance=False)
+        eng.chunk_spans(text, units, forced=[0, 1])
+        self.assertEqual((eng.stats["rebalanced"], eng.stats["over_max"], eng.stats["over_max_single_unit"]), (0, 0, 1))
+
+
 if __name__ == "__main__":
     unittest.main()

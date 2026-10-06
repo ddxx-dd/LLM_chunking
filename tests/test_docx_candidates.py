@@ -117,6 +117,44 @@ class TableCandidates(unittest.TestCase):
         self.assertEqual(sum(c["has_table"] for c in cands), 1)
 
 
+class ExtraSamples(unittest.TestCase):
+    """보강 표본: 이미 쓴 구간 피하기, 표 시작만, 큰 표 통째로."""
+    def big_table_doc(self, rows):
+        cells = "\n".join(f"| name{k} | {' '.join(['value'] * 4)} {k} |" for k in range(rows))
+        blocks = body(30)
+        blocks.insert(14, table(99, "| name | value |\n| --- | --- |\n" + cells))
+        return make_doc(blocks)
+
+    def test_avoid_keeps_new_candidates_off_existing_spans(self):
+        doc = make_doc(body(60))
+        first, _ = D.sample_doc(doc, count_words, per_doc=4, **KW)
+        avoid = [(c["start"], c["end"]) for c in first]
+        more, _ = D.sample_doc(doc, count_words, per_doc=4, avoid=avoid, cid_tag="a", **KW)
+        self.assertTrue(more)
+        for c in more:
+            self.assertTrue(all(c["end"] <= a or c["start"] >= b for a, b in avoid))
+            self.assertRegex(c["cid"], r"#a\d+$")
+
+    def test_table_only_gives_only_table_anchored_candidates(self):
+        doc = make_doc(body(30) + [table(98, "| name | value |\n| --- | --- |\n| alpha | 10 |\n| beta | 20 |\n| gamma | 30 |")])
+        cands, _ = D.sample_doc(doc, count_words, table_only=True, cid_tag="t", **KW)
+        self.assertTrue(all(c["anchor"] == "table" and c["has_table"] for c in cands))
+        none, _ = D.sample_doc(make_doc(body(30)), count_words, table_only=True, **KW)
+        self.assertEqual(none, [])
+
+    def test_big_table_is_taken_whole_only_above_the_normal_limit(self):
+        doc = self.big_table_doc(60)
+        text, _ = render(doc)
+        got = D.big_tables(doc, count_words, min_tokens=KW["max_tokens"] + 1, max_tokens=5000)
+        self.assertEqual(len(got), 1)
+        c = got[0]
+        self.assertGreater(c["n_tokens"], KW["max_tokens"])
+        self.assertEqual(text[c["start"]:c["end"]], c["text"])
+        self.assertTrue(c["text"].startswith("| name | value |") and c["text"].rstrip().endswith("59 |"))
+        self.assertEqual(D.big_tables(self.big_table_doc(2), count_words, min_tokens=KW["max_tokens"] + 1, max_tokens=5000), [])      # 작은 표는 대상 아님
+        self.assertEqual(D.big_tables(doc, count_words, avoid=[(c["start"], c["end"])], min_tokens=KW["max_tokens"] + 1, max_tokens=5000), [])
+
+
 class CutSpans(unittest.TestCase):
     """구간이 문장·목록 중간에서 끊기지 않게 하는 검증."""
 

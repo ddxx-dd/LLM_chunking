@@ -28,6 +28,7 @@ SEED = 42
 MIN_TOKENS = 150
 MAX_TOKENS = 600
 PER_DOC = 5
+BIG_TABLE_MAX_TOKENS = 1600                # 큰 표를 통째로 쓸 때 허용하는 토큰 상한(보강 표본)
 MAX_TABLE_TRIES = 20  # 표에서 시작하는 시도 횟수 상한(표 구간이 조건을 못 채우는 문서에서 헛돌지 않게)
 TABLE_PER_DOC = 2                          # 표가 있는 문서에서 표 블록에서 시작하는 후보 수(최대)
 MAX_ATTEMPTS = 300                         # 후보 하나를 만들려고 시도하는 최대 횟수(문서 전체 기준)
@@ -167,23 +168,26 @@ def _trim_headings(atoms, i, j):
 
 
 def sample_doc(doc, count, topic=None, doc_type=None, per_doc=PER_DOC, seed=SEED,
-               min_tokens=MIN_TOKENS, max_tokens=MAX_TOKENS):
-    """공통 JSON 문서 하나 -> (후보 목록, 거절 사유 집계). 같은 입력이면 결과가 항상 같다."""
+               min_tokens=MIN_TOKENS, max_tokens=MAX_TOKENS, avoid=(), table_only=False, cid_tag=""):
+    """공통 JSON 문서 하나 -> (후보 목록, 거절 사유 집계). 같은 입력이면 결과가 항상 같다.
+
+    보강 표본용: avoid=이미 쓴 구간 [(start, end)](겹치지 않게 뽑음), table_only=표 블록에서 시작하는 후보만,
+    cid_tag=후보 id 접두사(기존 `<doc>#k`와 겹치지 않게 `<doc>#<tag>k`)."""
     text, pieces = render(doc)
     atoms = _atoms(text, pieces, count, max_tokens)
     blocks = {b["id"]: b for b in doc["blocks"]}
     usable = [k for k, a in enumerate(atoms) if a["usable"] and a["kind"] != "heading"]
     table_anchors = [k for k in usable if atoms[k]["kind"] == "table" and _table_ok(text[atoms[k]["start"]:atoms[k]["end"]])]
-    rng = random.Random(f"{seed}:{doc['doc_id']}")
-    out, rejected, taken = [], {}, []
+    rng = random.Random(f"{seed}:{doc['doc_id']}:{cid_tag}" if cid_tag else f"{seed}:{doc['doc_id']}")
+    out, rejected, taken = [], {}, [tuple(a) for a in avoid]
     attempts = table_tries = 0
     is_free = lambda k: not any(atoms[k]["start"] < b and a < atoms[k]["end"] for a, b in taken)
     while len(out) < per_doc and attempts < MAX_ATTEMPTS and usable:
         attempts += 1
         free_tables = [k for k in table_anchors if is_free(k)]
-        want_table = bool(free_tables) and sum(c["anchor"] == "table" for c in out) < TABLE_PER_DOC and table_tries < MAX_TABLE_TRIES
+        want_table = bool(free_tables) and sum(c["anchor"] == "table" for c in out) < (per_doc if table_only else TABLE_PER_DOC) and table_tries < MAX_TABLE_TRIES
         table_tries += want_table
-        pool = free_tables if want_table else [k for k in usable if is_free(k)]
+        pool = free_tables if want_table else ([] if table_only else [k for k in usable if is_free(k)])
         if not pool:
             break
         anchor = rng.choice(pool)
@@ -224,8 +228,31 @@ def sample_doc(doc, count, topic=None, doc_type=None, per_doc=PER_DOC, seed=SEED
                         anchor="table" if want_table else "random", heading_path=heading_path, text=text[s:e]))
     out.sort(key=lambda c: c["start"])
     for k, c in enumerate(out):
-        c["cid"] = f"{doc['doc_id']}#{k}"
+        c["cid"] = f"{doc['doc_id']}#{cid_tag}{k}"
     return out, rejected
+
+
+def big_tables(doc, count, topic=None, doc_type=None, avoid=(), min_tokens=MAX_TOKENS + 1, max_tokens=BIG_TABLE_MAX_TOKENS, cid_tag="b"):
+    """길이 상한(600) 때문에 후보가 못 된 큰 표를 통째로 근거 구간으로 만든다(표는 쪼개지 않는다). 이미 쓴 구간과 겹치면 제외."""
+    text, pieces = render(doc)
+    blocks = {b["id"]: b for b in doc["blocks"]}
+    out = []
+    for p in pieces:
+        if p.kind != "table":
+            continue
+        t = text[p.start:p.end]
+        n = count(t)
+        if not (min_tokens <= n <= max_tokens) or not _table_ok(t) or any(p.start < b and a < p.end for a, b in avoid):
+            continue
+        block_ids = sorted(p.block_ids, key=lambda x: int(x[1:]) if x[1:].isdigit() else x)
+        heading_path = list((blocks.get(block_ids[0], {}) if block_ids else {}).get("heading_path") or [])
+        if _passes_filters(t, [(p.kind, t)], heading_path):
+            continue
+        out.append(dict(doc_id=doc["doc_id"], topic=topic, type=doc_type, start=p.start, end=p.end, block_ids=block_ids,
+                        n_tokens=n, has_table=True, table_ratio=1.0, anchor="table", heading_path=heading_path, text=t))
+    for k, c in enumerate(out):
+        c["cid"] = f"{doc['doc_id']}#{cid_tag}{k}"
+    return out
 
 
 def sample_corpus(count, doc_ids=None, per_doc=PER_DOC):
