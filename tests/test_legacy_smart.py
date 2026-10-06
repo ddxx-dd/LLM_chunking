@@ -1,5 +1,5 @@
-"""제약 기반 의미 분할(ConstrainedSmartChunker) 단위 테스트 - 가짜 임베딩(키워드 축)과 공백 단위 토큰 카운터.
-5개 제약: ① 제목 앞 강제 경계 ② 제목 뒤 금지 ③ 표 분할 금지 ④ 표-캡션 금지 ⑤ 문단 경계 선호."""
+"""legacy smart 테스트 (기본 경로에서는 쓰지 않는 보관 코드). 가짜 임베딩(키워드 축)과 공백 단위 토큰 카운터.
+  SmartParts: 예전 SmartChunker(srt 설정이 아직 사용) / 나머지: 문단 단위 ConstrainedSmartChunker(이전 구현, 5개 제약)."""
 import re
 import sys
 import unittest
@@ -11,10 +11,10 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "src"))
 sys.path.insert(0, str(HERE))
 
-from chunking import splitters  # noqa: E402
-from chunking.smart import ConstrainedSmartChunker, SmartChunker, caption_glue  # noqa: E402
-from common.docjson import load_doc, render, to_text  # noqa: E402
-from test_chunking import count_words  # noqa: E402
+from chunking.legacy_smart import ConstrainedSmartChunker, SmartChunker, cue_continues, split_sentences  # noqa: E402
+from chunking.units import caption_glue  # noqa: E402
+from common.docjson import block_spans, load_doc, render, to_text  # noqa: E402
+from test_chunking import FIX, count_words, make_stub, AXES, models_for  # noqa: E402
 
 TOPICS = ["alpha", "beta", "gamma"]
 
@@ -205,35 +205,57 @@ class SrtMode(unittest.TestCase):
         self.assertEqual(spans[-1][1], blocks[-1][1])
 
 
-class IntegrationWithDocuments(unittest.TestCase):
-    def test_invariants_on_fixture_documents(self):
-        emb = Emb()
-        models = {"embed_model": emb, "count": count_words}
-        for name in ("example_a", "example_c"):
-            doc = load_doc(HERE / "fixtures" / f"{name}.json")
-            cfg = {"mode": "pdf", "algorithm": "constrained", "min_tokens": 20, "max_tokens": 60, "window": 2, "percentile": 90}
-            chunks, info = splitters.chunk(doc, "smart", cfg, models)
-            text = to_text(doc)
-            self.assertTrue(chunks)
-            for c in chunks:
-                self.assertEqual(c["text"], text[c["start"]:c["end"]])    # 리터럴 슬라이스
-            for a, b in zip(chunks, chunks[1:]):
-                self.assertLessEqual(a["end"], b["start"])
-            kept = re.sub(r"\s+", "", "".join(c["text"] for c in chunks))
-            self.assertEqual(kept, re.sub(r"\s+", "", text))              # 내용 보존
-            types = {b["id"]: b["type"] for b in doc["blocks"]}
-            self.assertTrue(all(types[c["block_ids"][-1]] != "heading" for c in chunks))   # 제목으로 끝나는 청크 없음
-            self.assertIn("smart_chunks", info)
-            self.assertEqual(chunks, splitters.chunk(doc, "smart", cfg, models)[0])         # 결정적
+class LegacySmartParts(unittest.TestCase):
+    def setUp(self):
+        self.sm = SmartChunker(models_for("A")["embed_model"], count_words, mode="pdf", lang="en", min_tokens=25, max_tokens=60)
 
-    def test_runner_tag_and_default_algorithm(self):
-        from chunking.runner import tag_for
-        from common.config import dataset_cfg
-        self.assertEqual(dataset_cfg("vectara")["chunkers"]["smart"]["algorithm"], "constrained")
-        self.assertNotIn("algorithm", dataset_cfg("srt")["chunkers"]["smart"])      # srt는 legacy 유지(앞서 정한 대로)
-        self.assertEqual(tag_for("smart", {"algorithm": "constrained", "percentile": 90, "min_tokens": 100, "max_tokens": 400, "window": 2}),
-                         "smart__c-p90-min100-max400-w2")
-        self.assertEqual(tag_for("smart", {"min_tokens": 100, "max_tokens": 400, "window": 2}), "smart__min100-max400-w2")
+    def test_sections_split_at_headings(self):
+        doc = load_doc(FIX / "example_a.json")
+        text = to_text(doc)
+        secs = self.sm.sections(text, block_spans(doc))
+        self.assertEqual([[k for _, _, k in s] for s in secs],
+                         [["heading", "para", "para"], ["heading", "para", "table", "para"], ["heading", "para"]])
+
+    def test_long_paragraph_becomes_sentence_pieces_but_table_stays_whole(self):
+        doc = load_doc(FIX / "example_c.json")
+        text = to_text(doc)
+        sm = SmartChunker(models_for("C")["embed_model"], count_words, mode="pdf", lang="en", min_tokens=20, max_tokens=45)
+        kinds = [k for _, _, k in sm.sections(text, block_spans(doc))[0]]
+        self.assertEqual(kinds, ["heading"] + ["sent"] * 9)
+        docA = load_doc(FIX / "example_a.json")
+        kindsA = [k for s in self.sm.sections(to_text(docA), block_spans(docA)) for _, _, k in s]
+        self.assertEqual(kindsA.count("table"), 1)
+
+    def test_split_sentences_offsets_are_literal(self):
+        t = "One. Two? Three!"
+        self.assertEqual([t[a:b] for a, b in split_sentences(t, 0, len(t))], ["One.", "Two?", "Three!"])
+
+    def test_cue_continues_rules(self):
+        self.assertTrue(cue_continues("Then the driver asked me if", "I wanted pizza.", "en"))     # 문장부호 없음
+        self.assertTrue(cue_continues("Hello.", "and then", "en"))                                  # 다음 큐가 소문자로 시작
+        self.assertTrue(cue_continues("Wait...", "Okay.", "en"))                                    # 말줄임
+        self.assertTrue(cue_continues("Well,", "Okay.", "en"))                                      # 쉼표
+        self.assertFalse(cue_continues("He left.", "She stayed.", "en"))
+        self.assertTrue(cue_continues("그래서 우리는 가기로 했고", "다음날 떠났다.", "ko"))            # 연결어미
+        self.assertFalse(cue_continues("그는 떠났다.", "그녀는 남았다.", "ko"))
+
+    def test_continuation_bonus_moves_cut_away_from_a_split_sentence(self):
+        # 큐 4 "Then the driver asked me if" → 큐 5 "I wanted pizza…" 사이는 주제도 바뀌지만 문장이 이어진다 (srt 모드)
+        cues = ["The cab driver took the wheel.", "He said the cab was fast.", "The driver smiled at me.",
+                "Then the driver asked me if", "I wanted pizza with cheese.", "The oven was already hot.",
+                "Cheese melted in the oven.", "Pizza smelled great."]
+        text = "\n".join(cues) + "\n"
+        pieces, pos = [], 0
+        for c in cues:
+            pieces.append((pos, pos + len(c), "cue"))
+            pos += len(c) + 1
+        emb = make_stub(["cab|driver|wheel", "pizza|cheese|oven"])
+        sm = SmartChunker(emb._client, count_words, mode="srt", lang="en", min_tokens=8, max_tokens=22, window=1)
+        spans = sm.chunk_spans(text, pieces)
+        grouped = [[i + 1 for i, (a, b, _) in enumerate(pieces) if a >= s and b <= e] for s, e in spans]
+        self.assertEqual([(g[0], g[-1]) for g in grouped], [(1, 2), (3, 5), (6, 8)])               # 큐 4|5에서 자르지 않음
+
+
 
 
 if __name__ == "__main__":

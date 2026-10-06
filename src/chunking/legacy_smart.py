@@ -1,27 +1,12 @@
-"""smart 청커 (docs/restructure_plan.md 5.1·5.3절). 두 가지 알고리즘이 있다.
+"""예전 smart 청커 (legacy) - 기본 경로에서는 쓰지 않는다. docs/restructure_plan.md 5절 참고.
 
-  SmartChunker             (legacy) 제목으로 섹션을 먼저 나누고, 섹션이 max를 넘을 때만 의미(경계 점수)로 자른다.
-  ConstrainedSmartChunker  (constrained) 의미 분할을 항상 쓰되 구조 규칙을 제약으로 건다(아래).
+현재 smart는 의미 분할 공유 엔진 + 구조 제약 규칙이다(semantic_core.py, units.py). 이 파일은 두 가지를 보관한다.
 
-ConstrainedSmartChunker - 제약 기반 의미 분할
-  조각(문단, max보다 긴 문단은 문장, 표, 제목, srt는 큐)마다 임베딩하고, 인접 조각 사이의 의미 거리
-  d = 1 - cos(왼쪽 window개 평균, 오른쪽 window개 평균)를 구한다. 구조 정보는 "자를 수 있는 위치"를 제한하는 제약으로 쓴다.
+  SmartChunker             제목으로 섹션을 먼저 나누고, 섹션이 max를 넘을 때만 의미(경계 점수)로 자른다.
+                           srt 설정(algorithm="legacy")이 아직 이것을 쓴다(srt는 나중에 정리). pdf·docx에서는 대조군용.
+  ConstrainedSmartChunker  문단 단위 조각 + 윈도우 평균 거리 + 문단 보너스 + 제약(제목 앞 강제, 제목 뒤·표-캡션 금지)을 거는
+                           이전 구현(2026-10-06). 새 구조로 대체되어 숨겨 두었고, 문단 단위 엔진을 어블레이션으로 다시 볼 때 쓴다.
 
-  제약                                              종류
-  1 제목 앞은 반드시 경계                            강제 (연속된 제목 사이는 5번이 이긴다)
-  2 제목 바로 뒤는 자르지 않는다                     금지  -> 제목만 남는 청크가 생기지 않는다
-  3 표는 쪼개지 않는다(max를 넘어도 한 청크)          금지  -> 표는 하나의 조각
-  4 표와 캡션 사이는 자르지 않는다                   금지  (caption_glue)
-  5 문단 경계가 문장 경계보다 자르기 좋다             선호  -> 문단 경계의 거리에 para_bonus를 더한다
-
-  경계 선택: 강제 위치 + (금지가 아닌 경계 중 거리가 문서 전체 분포의 percentile을 넘는 곳).
-  크기 정리: max 초과 청크는 허용된 경계 중 거리가 가장 큰 곳에서 자르고(양쪽이 min 이상이 되는 곳을 우선),
-             min 미만 청크는 다음 청크와 합친다(합쳐서 max 이하일 때. 없으면 앞 청크). 제목 경계를 넘는 합치기는
-             min 미만일 때만 일어난다. 크기는 합친 텍스트 기준(조각 뒤 공백 포함)으로 센다.
-  srt(mode="srt"): 구조 제약은 없고, 문장이 다음 큐로 이어지는 경계는 거리에서 1.0을 뺀다(cue_continues).
-  청크는 항상 평문의 리터럴 슬라이스(text[start:end]). min/max를 지킬 수 없는 경우는 위반으로 남기고 self.stats에 센다.
-
-SmartChunker(legacy)는 정의가 바뀌지 않도록 그대로 두었다(기존 청크 파일·테스트·대조군용).
 legacy는 입력 블록을 평문에서 정규식으로 다시 찾지 않고 common.docjson.block_spans(doc)가 준 (start, end, kind)를 받는다.
 srt 모드는 영화 한 편이 섹션 하나이고, 문장이 다음 큐로 이어지는 경계는 경계 점수에 +1을 더해 사실상 자르지 않는다.
 """
@@ -145,24 +130,6 @@ class SmartChunker:
             section_groups = self.split_section(pieces, scores, toks)
             groups += self.merge_small(text, section_groups)
         return [(g[0][0], g[-1][1]) for g in groups]
-
-
-def caption_glue(doc, pieces):
-    """표와 캡션이 붙어 있어야 하는 위치 -> {그 경계 뒤 조각의 start}. 제약 4(표와 캡션 사이는 자르지 않는다)에 쓴다.
-    (a) 표 블록의 caption 필드: 렌더가 캡션 조각 + 표 조각을 만들고 둘이 같은 블록 id를 가진다.
-    (b) Docling 캡션: role="caption", for=<표 블록 id>인 문단이 표 바로 앞이나 바로 뒤에 있다."""
-    by_id = {b["id"]: b for b in doc["blocks"]}
-    glue = set()
-    for a, b in zip(pieces, pieces[1:]):
-        if a.kind == "para" and b.kind == "table" and set(a.block_ids) & set(b.block_ids):
-            glue.add(b.start)
-        ba = by_id.get(a.block_ids[0]) if a.block_ids else None
-        bb = by_id.get(b.block_ids[0]) if b.block_ids else None
-        if ba and ba.get("role") == "caption" and b.kind == "table" and ba.get("for") in b.block_ids:
-            glue.add(b.start)                       # 캡션 -> 표
-        if bb and bb.get("role") == "caption" and a.kind == "table" and bb.get("for") in a.block_ids:
-            glue.add(b.start)                       # 표 -> 캡션
-    return glue
 
 
 class ConstrainedSmartChunker:

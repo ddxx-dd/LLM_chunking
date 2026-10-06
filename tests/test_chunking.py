@@ -1,12 +1,13 @@
-"""청킹 단위 테스트 - 가짜 임베딩(키워드 축)과 공백 단위 토큰 카운터를 쓴다(모델·GPU 불필요).
-기대 경계는 기존 코드(legacy/src/chunkers.py)를 같은 입력·같은 설명용 파라미터로 한 번 돌려 얻은 값이다
-(docs/restructure_plan.md 5.3절 예시 A·B와 새 예시 C). 실행: .venv311/bin/python -m unittest discover -s tests -v
+"""청킹 공통 테스트(글자수 분할, 청커 등록부, 불변식, 메타데이터) - 가짜 임베딩(키워드 축)과 공백 단위 토큰 카운터를 쓴다.
+fixed의 기대 경계는 기존 코드(legacy/src/chunkers.py)와 같고, semantic·smart는 공유 엔진(semantic_core)의 결과를
+손으로 검토해 고정한 값이다(예시 A=논문, B=자막, C=긴 문단; docs/restructure_plan.md 5.3절).
+엔진·규칙 테스트는 test_semantic_engine.py / test_constraints.py, 보관용 legacy는 test_legacy_smart.py.
+실행: .venv311/bin/python -m unittest discover -s tests -v
 """
 import re
 import sys
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 
 import numpy as np
 
@@ -15,8 +16,7 @@ sys.path.insert(0, str(HERE.parent / "src"))
 
 from chunking import splitters  # noqa: E402
 from chunking.meta import attach_meta  # noqa: E402
-from chunking.smart import SmartChunker, cue_continues, split_sentences  # noqa: E402
-from common.docjson import block_spans, load_doc, render, to_text  # noqa: E402
+from common.docjson import load_doc, render, to_text  # noqa: E402
 
 FIX = HERE / "fixtures"
 
@@ -27,21 +27,27 @@ AXES = {
           "love|world|daffodil|yoga|mama|taste|bad|tight", "suit|christmas|pool"],
     "C": ["accuracy|benchmark|seeds|baseline", "cost|gpu|clients|round|hours", "privacy|encrypted|raw data|device|gradient"],
 }
-# 설명용 작은 파라미터: fixed 글자 수, strip, min/max(공백 단위 단어 수), smart mode
+# 설명용 작은 파라미터: fixed 글자 수, strip, min/max(공백 단위 단어 수), mode(srt는 legacy smart 설정이 쓴다)
 PARAMS = {"A": dict(fixed=160, strip=True, mn=25, mx=60, mode="pdf"),
           "B": dict(fixed=200, strip=False, mn=15, mx=40, mode="srt"),
           "C": dict(fixed=160, strip=True, mn=20, mx=45, mode="pdf")}
 FILES = {"A": "example_a", "B": "example_b", "C": "example_c"}
 
 EXPECTED = {
+    # 거리 계산은 buffer_size=0(단위 하나씩)이 기본이다.
+    # A: smart는 모든 "##" 제목이 청크의 시작이고(390, 939), 표는 제목 + 문단과 한 청크(390~602)에 통째로 들어간다.
+    #    마지막 청크(939~, 21단어)는 min 25 미달인데 앞 청크(49단어)와 합치면 max 60을 넘어 합치지 못하고 위반으로 남는다.
+    #    semantic은 제목을 모르므로 "## 2 Method"가 청크 끝(196~401)에 홀로 남는다.
     "A": dict(fixed=[(0, 160), (160, 320), (320, 480), (480, 640), (640, 799), (800, 959), (960, 1069)],
-              semantic=[(0, 16), (18, 388), (390, 401), (403, 583), (584, 937), (939, 1069)],
-              smart=[(0, 16), (18, 388), (390, 602), (604, 937), (939, 1069)]),
+              semantic=[(0, 195), (196, 401), (403, 602), (604, 780), (781, 1069)],
+              smart=[(0, 195), (196, 388), (390, 602), (604, 937), (939, 1069)]),
+    # B(srt): smart는 아직 legacy 설정(큐 단위 경계 점수), semantic은 공유 엔진
     "B": dict(fixed=[(0, 200), (200, 400), (400, 600), (600, 691)],
-              semantic=[(0, 138), (139, 354), (355, 394), (395, 611), (612, 690)],
+              semantic=[(0, 138), (139, 282), (283, 394), (395, 497), (498, 690)],
               smart=[(0, 138), (139, 282), (283, 394), (395, 601), (602, 690)]),
+    # C: 제목 + 한 문단(주제 3개). 표·캡션이 없어서 semantic과 smart가 같다. 컷이 주제 전환 문장 경계에 정확히 생긴다.
     "C": dict(fixed=[(0, 160), (160, 320), (320, 480), (480, 586)],
-              semantic=[(0, 283), (284, 408), (409, 586)],
+              semantic=[(0, 212), (213, 408), (409, 586)],
               smart=[(0, 212), (213, 408), (409, 586)]),
 }
 
@@ -81,9 +87,9 @@ def cfg_for(key, chunker):
     p = PARAMS[key]
     if chunker == "fixed":
         return {"chunk_size_chars": p["fixed"], "strip_whitespace": p["strip"], "overlap_ratio": 0.0}
-    if chunker == "semantic":
-        return {"percentile": 90, "min_tokens": p["mn"], "max_tokens": p["mx"]}
-    return {"mode": p["mode"], "min_tokens": p["mn"], "max_tokens": p["mx"], "window": 2}
+    if chunker == "smart" and p["mode"] == "srt":                      # srt smart는 아직 legacy
+        return {"mode": "srt", "algorithm": "legacy", "min_tokens": p["mn"], "max_tokens": p["mx"], "window": 2}
+    return {"percentile": 90, "min_tokens": p["mn"], "max_tokens": p["mx"]}     # semantic(규칙 off) / smart(규칙 on)
 
 
 def run(key, chunker):
@@ -92,7 +98,7 @@ def run(key, chunker):
 
 
 class ExpectedBoundaries(unittest.TestCase):
-    """예시 A(논문), B(자막), C(긴 문단)에서 세 청커의 청크 경계가 기존 코드의 결과와 같다."""
+    """예시 A(논문), B(자막), C(긴 문단)에서 세 청커의 청크 경계가 고정해 둔 값과 같다."""
 
     def test_all(self):
         for key in "ABC":
@@ -101,13 +107,14 @@ class ExpectedBoundaries(unittest.TestCase):
                     _, chunks, _ = run(key, chunker)
                     self.assertEqual([(c["start"], c["end"]) for c in chunks], EXPECTED[key][chunker])
 
-    def test_example_c_smart_cuts_one_paragraph_at_topic_changes(self):
-        # 한 문단(9문장, 주제 3개)이 주제가 바뀌는 문장 경계에서만 갈린다
-        doc, chunks, _ = run("C", "smart")
-        text = to_text(doc)
-        self.assertEqual([text.startswith(p, c["start"]) for c, p in zip(chunks, ["# 3 Results", "Training cost", "Privacy is"])],
-                         [True, True, True])
-        self.assertTrue(all(c["text"].rstrip().endswith(".") for c in chunks))     # 문장 끝에서만 끝남
+    def test_example_c_cuts_fall_exactly_on_the_topic_changes(self):
+        # 한 문단(9문장, 주제 3개). buffer 0에서는 주제가 바뀌는 문장 경계에서 정확히 잘린다(semantic도 같다).
+        for chunker in ("semantic", "smart"):
+            doc, chunks, _ = run("C", chunker)
+            text = to_text(doc)
+            self.assertEqual([text.startswith(p, c["start"]) for c, p in zip(chunks, ["# 3 Results", "Training cost", "Privacy is"])],
+                             [True, True, True])
+            self.assertTrue(all(c["text"].rstrip().endswith(".") for c in chunks))     # 문장 끝에서만 끝남
 
 
 class Invariants(unittest.TestCase):
@@ -149,7 +156,6 @@ class Invariants(unittest.TestCase):
             text = to_text(doc)
             kept = re.sub(r"\s+", "", "".join(c["text"] for c in chunks))
             self.assertEqual(kept, re.sub(r"\s+", "", text), (key, chunker))
-            self.assertEqual(info.get("semantic_dropped_chunks", 0), 0)
 
 
 class Metadata(unittest.TestCase):
@@ -207,84 +213,6 @@ class FixedOverlap(unittest.TestCase):
         size, ov = splitters.resolve_fixed_size({"dataset": "vectara", "lang": "en"}, {"target_tokens": 400, "overlap_ratio": 0.1})
         self.assertAlmostEqual(size, 1343, delta=10)
         self.assertEqual(ov, round(0.1 * size))
-
-
-class SemanticParts(unittest.TestCase):
-    def test_recover_spans_ignores_whitespace_and_keeps_order(self):
-        flat = "A b\n\nC d\n\nA b"
-        chunks = ["A b C d", "A b"]                       # 줄바꿈이 공백으로 바뀐 청크 + 앞에 나온 글이 반복됨
-        spans = splitters.recover_spans(flat, chunks)
-        self.assertEqual(spans, [(0, 8), (10, 13)])                                  # 두 번째는 뒤쪽 "A b"(앞쪽 0~3이 아님)
-        self.assertEqual([flat[s:e] for s, e in spans], ["A b\n\nC d", "A b"])           # 줄바꿈이 살아 있는 원문 슬라이스
-
-    def test_recover_spans_returns_none_when_not_found(self):
-        self.assertEqual(splitters.recover_spans("hello world", ["zzz", ""]), [None, None])
-
-    def test_unrecoverable_chunk_is_counted_not_silently_hidden(self):
-        class FakeInner:
-            def split_text(self, text):
-                return ["# 1 Introduction", "text that is not in the document"]
-        doc = load_doc(FIX / "example_a.json")
-        text = to_text(doc)
-        sp = splitters.SemanticSpanner(models_for("A")["embeddings"], count_words, 90, 25, 60, inner=FakeInner())
-        spans, info = sp.spans(text)
-        self.assertEqual(info["semantic_dropped_chunks"], 1)
-        self.assertEqual(spans, [(0, 16)])
-
-    def test_empty_text(self):
-        sp = splitters.SemanticSpanner(models_for("A")["embeddings"], count_words, 90, 25, 60, inner=SimpleNamespace(split_text=lambda t: []))
-        self.assertEqual(sp.spans("  \n "), ([], {"semantic_dropped_chunks": 0}))
-
-
-class SmartParts(unittest.TestCase):
-    def setUp(self):
-        self.sm = SmartChunker(models_for("A")["embed_model"], count_words, mode="pdf", lang="en", min_tokens=25, max_tokens=60)
-
-    def test_sections_split_at_headings(self):
-        doc = load_doc(FIX / "example_a.json")
-        text = to_text(doc)
-        secs = self.sm.sections(text, block_spans(doc))
-        self.assertEqual([[k for _, _, k in s] for s in secs],
-                         [["heading", "para", "para"], ["heading", "para", "table", "para"], ["heading", "para"]])
-
-    def test_long_paragraph_becomes_sentence_pieces_but_table_stays_whole(self):
-        doc = load_doc(FIX / "example_c.json")
-        text = to_text(doc)
-        sm = SmartChunker(models_for("C")["embed_model"], count_words, mode="pdf", lang="en", min_tokens=20, max_tokens=45)
-        kinds = [k for _, _, k in sm.sections(text, block_spans(doc))[0]]
-        self.assertEqual(kinds, ["heading"] + ["sent"] * 9)
-        docA = load_doc(FIX / "example_a.json")
-        kindsA = [k for s in self.sm.sections(to_text(docA), block_spans(docA)) for _, _, k in s]
-        self.assertEqual(kindsA.count("table"), 1)
-
-    def test_split_sentences_offsets_are_literal(self):
-        t = "One. Two? Three!"
-        self.assertEqual([t[a:b] for a, b in split_sentences(t, 0, len(t))], ["One.", "Two?", "Three!"])
-
-    def test_cue_continues_rules(self):
-        self.assertTrue(cue_continues("Then the driver asked me if", "I wanted pizza.", "en"))     # 문장부호 없음
-        self.assertTrue(cue_continues("Hello.", "and then", "en"))                                  # 다음 큐가 소문자로 시작
-        self.assertTrue(cue_continues("Wait...", "Okay.", "en"))                                    # 말줄임
-        self.assertTrue(cue_continues("Well,", "Okay.", "en"))                                      # 쉼표
-        self.assertFalse(cue_continues("He left.", "She stayed.", "en"))
-        self.assertTrue(cue_continues("그래서 우리는 가기로 했고", "다음날 떠났다.", "ko"))            # 연결어미
-        self.assertFalse(cue_continues("그는 떠났다.", "그녀는 남았다.", "ko"))
-
-    def test_continuation_bonus_moves_cut_away_from_a_split_sentence(self):
-        # 큐 4 "Then the driver asked me if" → 큐 5 "I wanted pizza…" 사이는 주제도 바뀌지만 문장이 이어진다 (srt 모드)
-        cues = ["The cab driver took the wheel.", "He said the cab was fast.", "The driver smiled at me.",
-                "Then the driver asked me if", "I wanted pizza with cheese.", "The oven was already hot.",
-                "Cheese melted in the oven.", "Pizza smelled great."]
-        text = "\n".join(cues) + "\n"
-        pieces, pos = [], 0
-        for c in cues:
-            pieces.append((pos, pos + len(c), "cue"))
-            pos += len(c) + 1
-        emb = make_stub(["cab|driver|wheel", "pizza|cheese|oven"])
-        sm = SmartChunker(emb._client, count_words, mode="srt", lang="en", min_tokens=8, max_tokens=22, window=1)
-        spans = sm.chunk_spans(text, pieces)
-        grouped = [[i + 1 for i, (a, b, _) in enumerate(pieces) if a >= s and b <= e] for s, e in spans]
-        self.assertEqual([(g[0], g[-1]) for g in grouped], [(1, 2), (3, 5), (6, 8)])               # 큐 4|5에서 자르지 않음
 
 
 if __name__ == "__main__":

@@ -21,28 +21,30 @@ EMBED_MODEL = "BAAI/bge-m3"
 TOKENIZER = "google/gemma-4-12B-it-qat-q4_0-unquantized"
 
 
-def _doc_chunkers(mode):
-    """pdf/docx 공통 시작값: min 100 / max 400 토큰(bge-m3 카운터)."""
+def _doc_chunkers():
+    """pdf/docx 공통 시작값: min 100 / max 400 토큰(bge-m3 카운터). 튜닝 전 값이다.
+    semantic과 smart는 같은 엔진(chunking/semantic_core.py)이고 차이는 구조 제약 규칙(rules)뿐이다(chunking/units.py)."""
+    none = dict(heading_forced=False, heading_glue=False, table_atomic=False, caption_glue=False)
+    allr = dict(heading_forced=True, heading_glue=True, table_atomic=True, caption_glue=True)
     return dict(
         fixed=dict(target_tokens=400, overlap_ratio=0.0),
-        semantic=dict(percentile=90, min_tokens=100, max_tokens=400),
-        # smart: 제약 기반 의미 분할 (chunking/smart.py의 ConstrainedSmartChunker). "legacy"가 예전 방식(대조군)
-        smart=dict(mode=mode, algorithm="constrained", min_tokens=100, max_tokens=400, window=2, percentile=90, para_bonus=0.05),
+        semantic=dict(percentile=90, min_tokens=100, max_tokens=400, buffer_size=0, rules=none),
+        smart=dict(percentile=90, min_tokens=100, max_tokens=400, buffer_size=0, rules=allr),
     )
 
 
 DATASETS = {
     "vectara": dict(
         fmt="pdf", lang="en", raw="vectara_pdf", counter="bge-m3",
-        tasks=["retrieval", "qa"], chunkers=_doc_chunkers("pdf"),
+        tasks=["retrieval", "qa"], chunkers=_doc_chunkers(),
     ),
     "allganize": dict(
         fmt="pdf", lang="ko", raw="allganize_pdf", counter="bge-m3",
-        tasks=["retrieval", "qa"], chunkers=_doc_chunkers("pdf"),
+        tasks=["retrieval", "qa"], chunkers=_doc_chunkers(),
     ),
     "docx_corpus": dict(
         fmt="docx", lang="en", raw="docx_corpus", counter="bge-m3",
-        tasks=["retrieval", "qa"], chunkers=_doc_chunkers("docx"),
+        tasks=["retrieval", "qa"], chunkers=_doc_chunkers(),
     ),
     # srt: 영화 쌍은 manifests/srt.json. smart의 lang은 번역 방향(원문 언어)마다 정한다.
     "srt": dict(
@@ -51,8 +53,9 @@ DATASETS = {
         chunkers=dict(
             fixed=dict(target_tokens=400, overlap_ratio=0.0, strip_whitespace=False),
             # semantic max는 기존 1024에서 512로 낮췄다(smart와 같은 값, 5.4절의 공정성 조정)
-            semantic=dict(percentile=90, min_tokens=128, max_tokens=512),
-            smart=dict(mode="srt", min_tokens=128, max_tokens=512, window=2),
+            semantic=dict(percentile=90, min_tokens=128, max_tokens=512, buffer_size=0),
+            # srt smart는 아직 예전 방식(legacy_smart.SmartChunker). pdf·docx smart와 달리 srt 전략은 나중에 정리한다
+            smart=dict(mode="srt", algorithm="legacy", min_tokens=128, max_tokens=512, window=2),
         ),
     ),
 }

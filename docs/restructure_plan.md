@@ -377,6 +377,32 @@ python scripts/preprocess.py --dataset vectara [--limit N] [--force]
 
 ## 5. 청킹 상세 (② 공통 JSON → 청크)
 
+> **개정 (2026-10-06, v3.4) — semantic과 smart는 같은 엔진이고, 차이는 구조 제약 규칙뿐이다.**
+> 아래 5.1·5.3·5.4의 semantic/smart 설명(LangChain `SemanticChunker` + `recover_spans`, 섹션 우선 `SmartChunker`)은 v3.3까지의 설계이고,
+> 코드에서는 `chunking/legacy_smart.py`로 옮겨 보관한다(srt 설정이 아직 `SmartChunker`를 쓴다). 5.3의 예시는 그 옛 동작을 보여 주는 기록이다.
+>
+> **현재 구현 (pdf·docx)**
+>
+> | 모듈 | 역할 |
+> |---|---|
+> | `chunking/semantic_core.py` | 공유 엔진. 단위(문장) → (이웃 결합) 임베딩 → 코사인 거리 → 문서 percentile 임계값 → 컷(+forced) → max 초과는 최대 거리에서 쪼개기 → min 미만은 합치기. **이웃 결합은 기본 끔(`buffer_size=0`)** |
+> | `chunking/units.py` | 구조 제약 규칙(`Rules`)과 `build_units`: 규칙에 따라 엔진에 넘길 단위와 forced 경계를 만든다. `caption_glue`도 여기 있다 |
+> | `chunking/splitters.py` | `fixed`(LangChain 글자 수 분할), `semantic`(엔진 + 규칙 전부 off), `smart`(엔진 + 규칙 전부 on) 등록부 |
+>
+> | 규칙 | 켜면 | 끄면 |
+> |---|---|---|
+> | `heading_forced` | 제목 앞은 반드시 자른다(forced) | forced 없음 |
+> | `heading_glue` | 제목을 뒤따르는 첫 문장 단위에 붙여 제목 뒤를 못 자른다(연속 제목은 함께) | 제목이 평문의 한 문장 |
+> | `table_atomic` | 표 전체가 단위 하나(max를 넘어도 한 덩어리) | 표를 행마다 쪼갠다 |
+> | `caption_glue` | 표와 캡션 사이를 못 자른다 | 따로 둔다 |
+>
+> - 제약은 엔진 안의 분기가 아니라 **엔진에 넘기는 단위 목록**으로 표현한다. 규칙을 모두 끄면 단위가 평문 전체의 문장 분할과 같아져 semantic과 청크가 동일하다(`tests/test_constraints.py`). 일부 규칙만 켜는 어블레이션은 설정(`rules`)만 바꾸면 되고 파일 이름에 `-r<H|G|T|C>`가 붙는다.
+> - **semantic은 LangChain `SemanticChunker`를 호출하지 않는다.** 그 계산(이웃 결합 임베딩, 코사인 거리, `np.percentile`, `>` 판정)을 엔진에 다시 구현했고, 크기 정리 전의 경계가 LangChain 결과와 같음을 buffer 0·1·2에서 동치 테스트로 확인한다(`tests/test_semantic_engine.py`; LangChain의 기본은 buffer 1이므로 `buffer_size=1`로 설정하면 기본 동작을 재현한다). 청크는 원문 구간을 그대로 자르므로 `recover_spans`와 `semantic_dropped_chunks`는 사라졌다.
+> - **정책 결정(사용자, 2026-10-06)**: 표는 쪼개지 않는다(앞뒤 문단과 한 청크에 들어갈 수 있고, max를 넘으면 단독). 제목 앞 강제 컷도 청크가 min 미만이면 합친다(합친 횟수는 `merges_across_forced`로 보고).
+> - 이전 semantic 결과와 청크가 다르다: 크기 정리가 단위 경계 위에서 같은 거리값을 쓰고(문장을 다시 임베딩하지 않음) 양쪽이 min 이상이 되는 곳을 우선한다.
+> - **buffer 기본값 0의 이유(2026-10-06 결정)**: 이웃을 결합하면 경계 양쪽 내용이 두 임베딩에 모두 섞여서 진짜 경계의 거리 대비가 줄고(통제된 가짜 임베딩 데이터에서 0.988 → 0.199) 양옆에 반높이 어깨가 생긴다. percentile 임계값에서 어깨가 함께 넘으면 봉우리 둘레에 컷이 여러 개 생길 수 있고, 문장별 주제 밀도가 들쭉날쭉하면 최대 위치가 한 칸 어긋날 수 있다(buffer 2에서 관찰). buffer 1이 체계적으로 한 칸 뒤에 컷을 만드는 것은 아니다(이전에 그렇게 적은 것은 한 예시에서의 과장이었다). 문장 하나만 임베딩하므로 실제 임베딩에서는 거리가 더 흔들릴 수 있다(Qu 외의 문맥 없는 문장 임베딩 한계). 실제 문서에서 제목 앞 경계(알려진 주제 전환)로 buffer·겹치지 않는 창 방식을 비교하는 진단은 아직 하지 않았다. 문장 단위 임베딩이라 문단 단위 방식보다 느리지만, 결합을 끄면 입력이 짧아 비용과 메모리 부담은 줄어든다.
+> - srt: `smart`는 아직 legacy(`algorithm="legacy"`), `semantic`은 같은 엔진(규칙 off)이다. srt 전략은 나중에 정리한다.
+
 ### 5.1 인터페이스 (`chunking/splitters.py`)
 
 ```python
@@ -1023,3 +1049,10 @@ export TOKENIZERS_PARALLELISM=false
 | 4.2 | PDF 정제(PyMuPDF `clean`) 규칙·근거·옵션(`--no-pdf-clean`)·`delta_chars`, `pymupdf` 의존성 |
 | 4.6 | vectara·allganize 재변환 결과(블록 수, 글자 수 변화, 누락 줄 복구, 중복 제거 확인) |
 | 5.4.1 | vectara 글자/토큰 비율 갱신(3.357) |
+
+**v3.4 (2026-10-06)** — semantic·smart를 공유 엔진으로 통합
+
+| 절 | 변경 |
+|---|---|
+| 5 (머리 블록) | semantic = 엔진 + 규칙 off, smart = 엔진 + 규칙 on. 규칙 4개와 정책 결정(표 분할 금지, 제목 앞 컷도 min 미만이면 합침). 5.1·5.3·5.4의 옛 semantic/smart 설명은 v3.3 기록으로 남김 |
+| 코드 | `semantic_core.py`·`units.py` 신설, `smart.py` → `legacy_smart.py`, `splitters.py`에서 `SemanticSpanner`·`recover_spans`·후처리 함수 삭제, 청크 파일 태그 규칙 변경 |
