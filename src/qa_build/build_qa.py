@@ -1,6 +1,9 @@
 """raw/_meta 의 질문·정답 원본 -> data/qa/<dataset>.jsonl (docs/restructure_plan.md 3.3·7.1·7.2·8절).
 
 vectara   queries/answers/qrels.json + corpus/<doc>.json 의 정답 섹션 텍스트(evidence.text)
+docx_corpus raw/docx_corpus/_meta 의 queries/answers/qrels.json (qa_build/docx_candidates.py -> Claude 생성 -> docx_filters.py 로 만든 것).
+          근거는 청커와 무관하게 고른 구간 [start, end) 이고(evidence.kind="span"), 전처리를 바꾸면 위치가 틀어지므로 읽을 때마다
+          그 구간 텍스트가 현재 to_text()와 맞는지 검사한다(어긋나면 문제로 보고).
 allganize rag_evaluation_result.csv 의 target_file_name -> documents.csv 의 orig_file_name -> doc_id,
           gold_page = target_page_no. context_type=image 질문은 excluded=True, split=None (이미지는 처리하지 않는다).
 
@@ -93,13 +96,47 @@ def build_allganize(meta_dir=None):
     return recs, dict(problems)
 
 
-BUILDERS = {"vectara": build_vectara, "allganize": build_allganize}
+def build_docx_corpus(meta_dir=None):
+    from common.config import PROCESSED_DIR
+    from common.docjson import load_doc, to_text
+
+    meta_dir = meta_dir or RAW_DIR / "docx_corpus" / "_meta"
+    queries = json.loads((meta_dir / "queries.json").read_text(encoding="utf-8"))
+    answers = json.loads((meta_dir / "answers.json").read_text(encoding="utf-8"))
+    qrels = json.loads((meta_dir / "qrels.json").read_text(encoding="utf-8"))
+    known = {m["file"].rsplit(".", 1)[0]: m for m in json.loads((MANIFEST_DIR / "docx_corpus.json").read_text(encoding="utf-8"))}
+
+    texts, recs, problems = {}, [], Counter()
+    for qid, q in queries.items():
+        rel = qrels.get(qid) or {}
+        doc = rel.get("doc_id")
+        if doc not in known:
+            problems["문서가 매니페스트에 없음"] += 1
+            continue
+        if doc not in texts:
+            texts[doc] = to_text(load_doc(PROCESSED_DIR / "docx_corpus" / f"{doc}.json"))
+        if texts[doc][rel["start"]:rel["end"]] != rel["text"]:
+            problems["근거 구간이 현재 전처리와 맞지 않음(stale)"] += 1
+            continue
+        recs.append({"qid": qid, "dataset": "docx_corpus", "question": q["query"], "answer": answers.get(qid, ""), "doc_id": doc,
+                     "qtype": q["type"], "source": q["source"], "topic": q["topic"], "doc_type": q["doc_type"],
+                     "evidence": {"kind": "span", "start": rel["start"], "end": rel["end"], "block_ids": rel["block_ids"],
+                                  "text": rel["text"], "support": rel.get("support")},
+                     "gold_page": None, "excluded": False})
+    strata = {d: known[d]["topic"] for d in {r["doc_id"] for r in recs}}      # 문서 단위 분할, 주제로 층화
+    split = assign_splits(strata)
+    for r in recs:
+        r["split"] = split[r["doc_id"]]
+    return recs, dict(problems)
+
+
+BUILDERS = {"vectara": build_vectara, "allganize": build_allganize, "docx_corpus": build_docx_corpus}
 
 
 def build(dataset):
     """-> (레코드, 문제 집계). 파일은 쓰지 않는다."""
     if dataset not in BUILDERS:
-        raise KeyError(f"QA를 만들 수 없는 데이터셋: {dataset!r} (docx_corpus는 6단계에서 생성, srt는 QA 없음)")
+        raise KeyError(f"QA를 만들 수 없는 데이터셋: {dataset!r} (srt는 QA 없음)")
     return BUILDERS[dataset]()
 
 

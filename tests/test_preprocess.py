@@ -155,6 +155,26 @@ class BuildBlocks(unittest.TestCase):
         self.assertEqual([b["text"] for b in blocks], ["A B", "| x | | y |"])
         self.assertEqual((log["docling_tables"], log["empty_tables"]), (2, 1))
 
+    def test_table_cell_paragraphs_already_in_the_table_are_not_emitted_twice(self):
+        table = FakeItem(L.TABLE, md="| **Category 1** | Seal by physical seal or two event counters |\n| - | - |", ref="#/tables/0")
+        cell = SimpleNamespace(cref="#/groups/5", resolve=lambda doc: table)
+        items = [FakeItem(L.TEXT, "Before."), table,
+                 FakeItem(L.TEXT, "Category 1", parent=cell),                                   # 표 안에 이미 있다 -> 건너뜀
+                 FakeItem(L.TEXT, "Seal by  physical seal or two event counters", parent=cell),  # 공백 차이는 무시
+                 FakeItem(L.TEXT, "Text only in the cell structure", parent=cell),              # 표 마크다운에 없다 -> 남긴다
+                 FakeItem(L.TEXT, "After.")]
+        blocks, log = blocks_of(items)
+        self.assertEqual([b["text"] for b in blocks][0:2], ["Before.", table._md.strip()])
+        self.assertEqual([b["text"] for b in blocks][2:], ["Text only in the cell structure", "After."])
+        self.assertEqual(log["table_cell_dups"], 2)
+
+    def test_paragraphs_with_a_non_table_parent_are_kept(self):
+        group = SimpleNamespace(cref="#/groups/1", resolve=lambda doc: SimpleNamespace(label=GroupLabel.LIST, parent=None))
+        items = [FakeItem(L.TABLE, md="| a |", ref="#/tables/0"), FakeItem(L.TEXT, "a", parent=group)]
+        blocks, log = blocks_of(items)
+        self.assertEqual([b["type"] for b in blocks], ["table", "paragraph"])
+        self.assertEqual(log["table_cell_dups"], 0)
+
     def test_empty_heading_dropped(self):
         blocks, log = blocks_of([FakeItem(L.SECTION_HEADER, "  ", level=1), FakeItem(L.TEXT, "x")])
         self.assertEqual([b["type"] for b in blocks], ["paragraph"])

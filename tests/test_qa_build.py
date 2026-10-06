@@ -101,9 +101,41 @@ class Builders(unittest.TestCase):
         self.assertEqual([r["qid"] for r in got], ["1", "2"])
         self.assertEqual(got[0]["question"], "x\x85y\u2028z")
 
+    def test_docx_corpus_checks_that_evidence_spans_match_the_current_text(self):
+        from common.docjson import render
+        proc = self.tmp / "processed" / "docx_corpus"
+        proc.mkdir(parents=True)
+        for did, words in (("D1", "Alpha beta gamma."), ("D2", "Delta epsilon zeta.")):
+            doc = {"doc_id": did, "dataset": "docx_corpus", "fmt": "docx", "lang": "en",
+                   "blocks": [{"id": "b0", "type": "paragraph", "text": words, "heading_path": [], "page": None}]}
+            (proc / f"{did}.json").write_text(json.dumps(doc), encoding="utf-8")
+        text, _ = render(json.loads((proc / "D1.json").read_text(encoding="utf-8")))
+        meta = self.tmp / "meta"
+        meta.mkdir()
+        qr = lambda doc, start, end, t: {"doc_id": doc, "cid": doc + "#0", "start": start, "end": end, "block_ids": ["b0"], "text": t, "support": "x"}
+        (meta / "queries.json").write_text(json.dumps({
+            "q1": {"query": "ok?", "type": "extractive", "source": "text", "topic": "education", "doc_type": "reports"},
+            "q2": {"query": "stale?", "type": "extractive", "source": "text", "topic": "education", "doc_type": "reports"},
+            "q3": {"query": "stray", "type": "extractive", "source": "text", "topic": "education", "doc_type": "reports"}}), encoding="utf-8")
+        (meta / "answers.json").write_text(json.dumps({"q1": "a1", "q2": "a2", "q3": "a3"}), encoding="utf-8")
+        (meta / "qrels.json").write_text(json.dumps({
+            "q1": qr("D1", 0, len(text), text),
+            "q2": qr("D2", 3, 9, "Delta epsilon zeta."[:6]),                                # 위치가 어긋난 근거
+            "q3": qr("NOPE", 0, 1, "x")}), encoding="utf-8")
+        (self.tmp / "manifests" / "docx_corpus.json").write_text(json.dumps([
+            {"file": "D1.docx", "topic": "education"}, {"file": "D2.docx", "topic": "education"}]), encoding="utf-8")
+        with mock.patch.object(B, "MANIFEST_DIR", self.tmp / "manifests"), mock.patch("common.config.PROCESSED_DIR", self.tmp / "processed"):
+            recs, problems = B.build_docx_corpus(meta)
+        self.assertEqual([r["qid"] for r in recs], ["q1"])
+        self.assertEqual(problems, {"근거 구간이 현재 전처리와 맞지 않음(stale)": 1, "문서가 매니페스트에 없음": 1})
+        r = recs[0]
+        self.assertEqual(r["evidence"]["kind"], "span")
+        self.assertEqual((r["topic"], r["doc_type"], r["dataset"]), ("education", "reports", "docx_corpus"))
+        self.assertIn(r["split"], ("tune", "eval"))
+
     def test_unknown_dataset(self):
         with self.assertRaises(KeyError):
-            B.build("docx_corpus")
+            B.build("srt")
 
 
 if __name__ == "__main__":

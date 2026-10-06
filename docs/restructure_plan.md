@@ -760,6 +760,18 @@ C안 세부:
 - 질문 생성·정답 판정·답변 생성이 모두 같은 Gemma 계열이면 자기 선호 편향이 있을 수 있다. 완화: 검수 표본, 어휘 기반 필터, 생성에 쓰지 않는 임베딩 모델로 평가.
 - LLM이 만든 질문은 사람이 만든 vectara/allganize QA보다 쉬울 수 있다. 데이터셋별 결과를 합치지 않고 따로 보고한다.
 
+**구현 결과와 계획 변경 (2026-10-06, docx_corpus QA 생성 완료)**
+- 생성자는 Gemma가 아니라 **Claude(claude-sonnet-5-5, Claude Code 세션)**로 바꿨다: 평가용 LLM(Gemma)과 질문 생성자를 분리해 자기 선호 편향을 끊기 위함. 생성은 수동이라 재현하지 않고, 결과 파일(`data/qa/docx_corpus.jsonl`)을 고정해서 쓴다.
+  지침은 `data/raw/docx_corpus/_meta/gen_prompt.md`, 생성 원본은 `_meta/gen/batch_*.json`에 남겼다.
+- 순서: 전처리 확정 -> 샘플링(`scripts/sample_docx_spans.py`) -> 생성 -> 자동 필터(`qa_build/docx_filters.py`) -> `scripts/build_qa.py --dataset docx_corpus`.
+  전처리를 바꾸면 근거 위치가 틀어지므로 `docx_candidates.stale_report/relocate`로 검사·재배치한다(3.7절).
+- 근거 구간: 길이 150~600토큰 무작위(시드 42), 청커·제목과 무관. **끊김 검증**(문장 중간·번호 항목으로 시작하거나 콜론·접속어로 끝나면 앞뒤로 확장하고 상한을 넘으면 버림), 표는 통째로만, 목차·참고문헌·점선 목차 구간 제외.
+- 전처리 수정: Docling이 표의 셀 문단을 표의 자식으로도 내보내 같은 내용이 표와 문단으로 두 번 나오는 문제를 고쳤다(`table_cell_dups`, docx 24개 문서에서 710블록 제거, 글자 손실 0).
+- 필터(어휘 통계만): 근거 인용이 구간에 있음(support), 정답 단어의 구간 포함(grounding), 지시어 없음(deictic), 문서 특정성(specific: **희귀 단어 규칙을 TF-IDF 순위 10위 이내로 교체** - 규칙에 걸린 질문이 전부 정답 문서 1위였기 때문),
+  8단어 이상 복사 없음(copy, 이름 구간은 예외), **근거 인용이 코퍼스 전체에서 한 번만 나옴(unique)**, 같은 문서 안 중복 없음. 판만 다른 규격·법령 문서가 따로 있어 같은 문장이 여러 문서에 있는 경우가 많았다.
+- 결과: 후보 500개(문서 100개 x 5) -> 질문 417개(extractive 255 / abstractive 143 / table 19), 질문이 있는 문서 94개. 한계: 법령·규정 문서 비중이 높고(어휘 겹침이 큰 질문), 사람 검수 10%는 아직 하지 않았다. 질문 0개 문서 6개는 모두 이력서·법령 목록·다른 판과 중복인 문서다.
+- 평가 지표: 근거가 `evidence.kind="span"`이라 `section_hit`가 아니라 `evidence_recall@5`(10절)로 채점한다. 아직 구현하지 않았다.
+
 ### 7.4 srt
 
 QA가 없다. 번역 품질은 **참조 자막**(같은 영화의 다른 언어 자막)을 시간 겹침(Jaccard)으로 큐에 정렬해 채점한다(`timestamp_align.align_by_overlap`, 현재와 동일).
