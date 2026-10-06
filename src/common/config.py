@@ -28,8 +28,8 @@ def _doc_chunkers():
     allr = dict(heading_forced=True, heading_glue=True, table_atomic=True, caption_glue=True)
     return dict(
         fixed=dict(target_tokens=400, overlap_ratio=0.0),
-        semantic=dict(percentile=90, min_tokens=100, max_tokens=400, buffer_size=0, rules=none),
-        smart=dict(percentile=90, min_tokens=100, max_tokens=400, buffer_size=0, rules=allr, rebalance=True),   # rebalance는 smart만(semantic은 기본 합치기)
+        semantic=dict(percentile=90, min_tokens=100, max_tokens=400, buffer_size=0, rules=none, size_control="greedy"),
+        smart=dict(percentile=90, min_tokens=100, max_tokens=400, buffer_size=0, rules=allr, size_control="dp", min_weight=0.5),   # DP 크기 제어는 smart만(semantic은 그리디)
     )
 
 

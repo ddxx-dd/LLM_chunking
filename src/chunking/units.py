@@ -43,6 +43,12 @@ class Rules:
 NO_RULES = Rules()
 ALL_RULES = Rules(True, True, True, True)
 DEFAULT_RULES = {"semantic": NO_RULES, "smart": ALL_RULES}
+DEFAULT_SIZE_CONTROL = {"semantic": "greedy", "smart": "dp"}     # 크기(min/max) 제어 방식: semantic은 그리디, smart는 DP(semantic_core.py)
+
+
+def size_control_for(chunker, cfg):
+    """cfg["size_control"]이 있으면 그것, 없으면 청커의 기본(semantic=greedy, smart=dp)."""
+    return cfg.get("size_control", DEFAULT_SIZE_CONTROL[chunker])
 
 
 def rules_for(chunker, cfg):

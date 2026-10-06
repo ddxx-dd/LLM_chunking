@@ -14,7 +14,7 @@ from langchain_text_splitters import CharacterTextSplitter
 from chunking.legacy_smart import SmartChunker
 from chunking.meta import attach_meta
 from chunking.semantic_core import SemanticEngine
-from chunking.units import build_units, caption_glue, rules_for
+from chunking.units import build_units, caption_glue, rules_for, size_control_for
 from common.docjson import render
 
 
@@ -66,9 +66,9 @@ def chunk_spans(doc, text, pieces, chunker, cfg, models):
         units, forced = build_units(text, pieces, caption_glue(doc, pieces), rules)
         engine = SemanticEngine(models["embed_model"], models["count"], percentile=cfg["percentile"],
                                 min_tokens=cfg["min_tokens"], max_tokens=cfg["max_tokens"], buffer_size=cfg.get("buffer_size", 0),
-                                rebalance=cfg.get("rebalance", False))
+                                size_control=size_control_for(chunker, cfg), min_weight=cfg.get("min_weight", 0.5))
         spans = engine.chunk_spans(text, units, forced)
-        return spans, {f"{chunker}_{k}": v for k, v in engine.stats.items()}, {**cfg, "rules": rules.as_dict(), "lang": doc["lang"]}
+        return spans, {f"{chunker}_{k}": v for k, v in engine.stats.items()}, {**cfg, "rules": rules.as_dict(), "size_control": size_control_for(chunker, cfg), "lang": doc["lang"]}
     raise KeyError(f"unknown chunker: {chunker!r}")
 
 

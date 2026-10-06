@@ -57,8 +57,7 @@ class RulesObject(unittest.TestCase):
             self.assertEqual(Rules.from_dict(cfgs["smart"]["rules"]), ALL_RULES)
             for k in ("percentile", "min_tokens", "max_tokens", "buffer_size"):
                 self.assertEqual(cfgs["semantic"][k], cfgs["smart"][k])        # 엔진 파라미터는 둘이 같다
-            self.assertFalse(cfgs["semantic"].get("rebalance", False))       # 재균형은 smart 전용(semantic은 기본 합치기)
-            self.assertTrue(cfgs["smart"]["rebalance"])
+            self.assertEqual((cfgs["semantic"]["size_control"], cfgs["smart"]["size_control"]), ("greedy", "dp"))   # DP 크기 제어는 smart 전용
 
 
 class BuildUnits(unittest.TestCase):
@@ -122,14 +121,16 @@ class BuildUnits(unittest.TestCase):
 
 
 class SmartEqualsEnginePlusRules(unittest.TestCase):
-    def cfg(self, rules=None):
+    def cfg(self, rules=None, size_control=None):
         c = {"percentile": 90, "min_tokens": 10, "max_tokens": 80}
         if rules is not None:
             c["rules"] = rules
+        if size_control is not None:
+            c["size_control"] = size_control
         return c
 
-    def run_smart(self, doc, chunker="smart", rules=None):
-        return splitters.chunk(doc, chunker, self.cfg(rules), models())
+    def run_smart(self, doc, chunker="smart", rules=None, size_control=None):
+        return splitters.chunk(doc, chunker, self.cfg(rules, size_control), models())
 
     def paper(self):
         return make_doc([("heading", "One", {}), ("paragraph", words("alpha", 12) + " " + words("alpha", 13), {}),
@@ -140,7 +141,7 @@ class SmartEqualsEnginePlusRules(unittest.TestCase):
 
     def test_smart_with_all_rules_off_equals_semantic(self):
         doc = self.paper()
-        smart_off, _ = self.run_smart(doc, "smart", rules=NO_RULES.as_dict())
+        smart_off, _ = self.run_smart(doc, "smart", rules=NO_RULES.as_dict(), size_control="greedy")      # 크기 제어가 같을 때만 같다
         semantic, _ = self.run_smart(doc, "semantic")
         self.assertEqual([(c["start"], c["end"]) for c in smart_off], [(c["start"], c["end"]) for c in semantic])
         smart_on, _ = self.run_smart(doc, "smart")                         # 헛통과 방지: 이 문서에서는 규칙이 실제로 결과를 바꾼다
@@ -148,13 +149,13 @@ class SmartEqualsEnginePlusRules(unittest.TestCase):
 
     def test_semantic_with_all_rules_on_equals_smart(self):
         doc = self.paper()
-        sem_on, _ = self.run_smart(doc, "semantic", rules=ALL_RULES.as_dict())
+        sem_on, _ = self.run_smart(doc, "semantic", rules=ALL_RULES.as_dict(), size_control="dp")        # 규칙과 크기 제어가 같으면 같다
         smart, _ = self.run_smart(doc, "smart")
         self.assertEqual([(c["start"], c["end"]) for c in sem_on], [(c["start"], c["end"]) for c in smart])
 
     def test_on_a_plain_text_document_rules_change_nothing(self):
         doc = make_doc([("paragraph", words("alpha", 9 + i), {}) for i in range(6)] + [("paragraph", words("beta", 9 + i), {}) for i in range(6)])
-        a, _ = self.run_smart(doc, "smart")
+        a, _ = self.run_smart(doc, "smart", size_control="greedy")
         b, _ = self.run_smart(doc, "semantic")
         self.assertEqual([(c["start"], c["end"]) for c in a], [(c["start"], c["end"]) for c in b])
 
@@ -185,16 +186,23 @@ class SmartEqualsEnginePlusRules(unittest.TestCase):
         self.assertEqual(len(inside(smart)), 1)                                           # smart: 표 하나가 한 청크에만 걸침
         self.assertEqual((inside(smart)[0]["start"], inside(smart)[0]["end"]), (table.start, table.end))   # max를 넘어도 단독 청크
 
-    def test_short_section_merges_across_heading_when_below_min(self):
+    def test_short_section_stays_separate_with_dp_but_merges_across_heading_with_greedy(self):
         doc = make_doc([("heading", "A", {}), ("paragraph", words("alpha", 30), {}), ("heading", "B", {}), ("paragraph", words("beta", 3), {})])
-        chunks, info = splitters.chunk(doc, "smart", {"percentile": 90, "min_tokens": 10, "max_tokens": 80}, models())
-        self.assertEqual(len(chunks), 1)                                                   # B 섹션(5단어)은 min 미만이라 앞과 합쳐짐
+        cfg = {"percentile": 90, "min_tokens": 10, "max_tokens": 80}
+        chunks, info = splitters.chunk(doc, "smart", cfg, models())                          # 기본(DP): 제목 경계는 하드라서 작은 절이 따로 남고 보고된다
+        self.assertEqual(len(chunks), 2)
+        self.assertEqual((info["smart_under_min"], info["smart_merges_across_forced"]), (1, 0))
+        chunks, info = splitters.chunk(doc, "smart", {**cfg, "size_control": "greedy"}, models())   # 그리디: min 때문에 제목 경계를 넘어 합침
+        self.assertEqual(len(chunks), 1)
         self.assertEqual(info["smart_merges_across_forced"], 1)
 
     def test_tag_distinguishes_ablated_rules(self):
         self.assertEqual(tag_for("smart", self.cfg()), "smart__p90-min10-max80")
         self.assertEqual(tag_for("smart", self.cfg({"table_atomic": True})), "smart__p90-min10-max80-rT")
         self.assertEqual(tag_for("semantic", self.cfg()), "semantic__p90-min10-max80")
+        self.assertEqual(tag_for("smart", self.cfg(size_control="greedy")), "smart__p90-min10-max80-scgreedy")      # 어블레이션은 이름에 남는다
+        self.assertEqual(tag_for("semantic", self.cfg(size_control="dp")), "semantic__p90-min10-max80-scdp")
+        self.assertEqual(tag_for("smart", {**self.cfg(), "min_weight": 1}), "smart__p90-min10-max80-mw1")
 
 
 if __name__ == "__main__":
