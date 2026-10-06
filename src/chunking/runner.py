@@ -1,0 +1,96 @@
+"""데이터셋 하나를 청커 하나로 청킹해 data/chunks/<dataset>/<청커>__<설정>.jsonl 로 저장한다
+(docs/restructure_plan.md 3.2·5절).
+
+- 문서 순서는 매니페스트 순서, 입력은 data/processed/<dataset>/<doc_id>.json.
+- 파일이 이미 있으면 건너뛴다(이어하기). force=True면 다시 만든다. 쓸 때는 임시 파일에 쓴 뒤 이름을 바꾼다.
+- 청크 파일 옆에 <태그>.meta.json을 둔다: 설정, 청크 수, semantic이 버린 청크 수, 내용 보존 검사 실패 문서.
+- 내용 보존 검사(overlap 0일 때): 청크들의 공백 아닌 글자를 이어 붙인 것 == 원문의 공백 아닌 글자.
+  어긋난 문서는 meta에 기록하고 계속 진행한다(조용히 넘어가지 않게 보고한다).
+"""
+import datetime
+import json
+import os
+import time
+
+from chunking.splitters import chunk
+from chunking.stats import coverage_ok
+from common.config import CHUNKS_DIR, PROCESSED_DIR, dataset_cfg
+from common.docjson import load_doc, to_text
+
+CHUNKERS = ("fixed", "semantic", "smart")
+
+
+def default_cfg(dataset, chunker, overrides=None):
+    cfg = dict(dataset_cfg(dataset)["chunkers"][chunker])
+    cfg.update({k: v for k, v in (overrides or {}).items() if v is not None})
+    return cfg
+
+
+def tag_for(chunker, cfg):
+    """파일 이름에 쓰는 사람이 읽는 설정 요약. 정확한 값은 청크 줄의 params가 기준이다."""
+    if chunker == "fixed":
+        base = f"t{cfg['target_tokens']}" if cfg.get("target_tokens") and not cfg.get("chunk_size_chars") else f"c{cfg.get('chunk_size_chars')}"
+        ov = cfg.get("overlap_ratio", 0.0)
+        return f"fixed__{base}" + (f"-o{round(ov * 100)}" if ov else "") + ("" if cfg.get("strip_whitespace", True) else "-nostrip")
+    if chunker == "semantic":
+        return f"semantic__p{cfg['percentile']}-min{cfg['min_tokens']}-max{cfg['max_tokens']}"
+    if chunker == "smart":
+        if cfg.get("algorithm", "legacy") == "constrained":
+            return (f"smart__c-p{cfg.get('percentile', 90):g}-min{cfg['min_tokens']}-max{cfg['max_tokens']}"
+                    f"-w{cfg.get('window', 2)}")
+        return f"smart__min{cfg['min_tokens']}-max{cfg['max_tokens']}-w{cfg.get('window', 2)}"
+    raise KeyError(chunker)
+
+
+def chunk_documents(docs, chunker, cfg, models, log=None):
+    """문서 목록 -> (청크 dict 목록, 요약). 파일 입출력 없음(테스트·스크립트 공용)."""
+    records, dropped, bad, totals = [], 0, [], {}
+    for doc in docs:
+        chunks, info = chunk(doc, chunker, cfg, models)
+        dropped += info.get("semantic_dropped_chunks", 0)
+        for k, v in info.items():
+            if k != "semantic_dropped_chunks" and isinstance(v, int):
+                totals[k] = totals.get(k, 0) + v            # 청커가 세어 준 통계(예: smart의 위반 개수)
+        overlap = (chunks[0]["params"].get("chunk_overlap_chars", 0) if chunks else 0)
+        if not overlap and coverage_ok(to_text(doc), [(c["start"], c["end"]) for c in chunks]) is False:
+            bad.append(doc["doc_id"])
+        records += chunks
+        if log:
+            log(f"  {doc['doc_id'][:44]:44} 청크 {len(chunks):>4}")
+    summary = {"semantic_dropped_chunks": dropped, "coverage_failures": bad}
+    if totals:
+        summary["info_totals"] = totals
+    return records, summary
+
+
+def chunk_dataset(dataset, chunker, models, overrides=None, doc_ids=None, limit=None, force=False, out_dir=None, log=print):
+    from preprocess.datasets import load_entries
+
+    cfg = default_cfg(dataset, chunker, overrides)
+    tag = tag_for(chunker, cfg)
+    out_dir = out_dir or (CHUNKS_DIR / dataset)
+    path = out_dir / f"{tag}.jsonl"
+    if path.exists() and not force:
+        log(f"[{dataset}/{tag}] 이미 있음, 건너뜀 (--force로 다시 만들기)")
+        return {"path": path, "skipped": True}
+    ids = [e["doc_id"] for e in load_entries(dataset)]
+    if doc_ids:
+        ids = [i for i in ids if i in set(doc_ids)]
+    if limit:
+        ids = ids[:limit]
+    log(f"[{dataset}/{tag}] 문서 {len(ids)}개, 설정 {cfg}")
+    t0 = time.time()
+    docs = (load_doc(PROCESSED_DIR / dataset / f"{i}.json") for i in ids)
+    records, summary = chunk_documents(docs, chunker, cfg, models, log=log)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".jsonl.tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        for r in records:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    os.replace(tmp, path)
+    meta = {"dataset": dataset, "chunker": chunker, "tag": tag, "cfg": cfg, "n_docs": len(ids), "n_chunks": len(records),
+            "seconds": round(time.time() - t0, 1), "created_at": datetime.datetime.now().isoformat(timespec="seconds"), **summary}
+    (out_dir / f"{tag}.meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+    log(f"[{dataset}/{tag}] 청크 {len(records)}개 → {path} | semantic이 버린 청크 {summary['semantic_dropped_chunks']}개 | "
+        f"내용 보존 검사 실패 문서 {len(summary['coverage_failures'])}개 | {meta['seconds']}초")
+    return {"path": path, "skipped": False, **meta}

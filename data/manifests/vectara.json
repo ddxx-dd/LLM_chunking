@@ -1,0 +1,2259 @@
+[
+ {
+  "paper_id": "2401.06326v4",
+  "n_pages": 24,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2401.06326v4",
+  "title": "Optimal linear prediction with functional observations: Why you can use a simple post-dimension reduction estimator",
+  "n_queries": 4,
+  "published": "2024-01-12T02:34:32Z",
+  "categories": [
+   "math.ST",
+   "stat.TH"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 196,
+  "n_tables_docling": 9,
+  "n_footnotes": 1,
+  "chars_json": 53345,
+  "n_pages_docling": 24
+ },
+ {
+  "paper_id": "2401.06740v2",
+  "n_pages": 17,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2401.06740v2",
+  "title": "A deep implicit-explicit minimizing movement method for option pricing in jump-diffusion models",
+  "n_queries": 1,
+  "published": "2024-01-12T18:21:01Z",
+  "categories": [
+   "q-fin.CP",
+   "cs.LG",
+   "cs.NA",
+   "math.NA",
+   "math.PR",
+   "stat.ML"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 172,
+  "n_tables_docling": 1,
+  "n_footnotes": 4,
+  "chars_json": 48219,
+  "n_pages_docling": 17
+ },
+ {
+  "paper_id": "2402.12350v3",
+  "n_pages": 30,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2402.12350v3",
+  "title": "Rational powers, invariant ideals, and the summation formula",
+  "n_queries": 2,
+  "published": "2024-02-19T18:28:02Z",
+  "categories": [
+   "math.AC"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 324,
+  "n_tables_docling": 0,
+  "n_footnotes": 4,
+  "chars_json": 73410,
+  "n_pages_docling": 30
+ },
+ {
+  "paper_id": "2403.03367v4",
+  "n_pages": 17,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2403.03367v4",
+  "title": "am-AMM: An Auction-Managed Automated Market Maker",
+  "n_queries": 7,
+  "published": "2024-03-05T23:28:50Z",
+  "categories": [
+   "q-fin.TR",
+   "cs.GT",
+   "math.OC",
+   "q-fin.MF"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 159,
+  "n_tables_docling": 0,
+  "n_footnotes": 4,
+  "chars_json": 40948,
+  "n_pages_docling": 17
+ },
+ {
+  "paper_id": "2403.06613v3",
+  "n_pages": 28,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2403.06613v3",
+  "title": "Maxitive functions with respect to general orders",
+  "n_queries": 8,
+  "published": "2024-03-11T11:01:31Z",
+  "categories": [
+   "math.ST",
+   "stat.TH"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 391,
+  "n_tables_docling": 0,
+  "n_footnotes": 25,
+  "chars_json": 73400,
+  "n_pages_docling": 28
+ },
+ {
+  "paper_id": "2404.03783v3",
+  "n_pages": 28,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2404.03783v3",
+  "title": "Coherent risk measures and uniform integrability",
+  "n_queries": 2,
+  "published": "2024-04-04T19:54:37Z",
+  "categories": [
+   "q-fin.RM"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 282,
+  "n_tables_docling": 0,
+  "n_footnotes": 2,
+  "chars_json": 57820,
+  "n_pages_docling": 28
+ },
+ {
+  "paper_id": "2404.09358v3",
+  "n_pages": 73,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2404.09358v3",
+  "title": "Two-stage Estimators for Spatial Confounding with Point-Referenced Data",
+  "n_queries": 3,
+  "published": "2024-04-14T21:10:57Z",
+  "categories": [
+   "stat.ME"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 371,
+  "n_tables_docling": 15,
+  "n_footnotes": 2,
+  "chars_json": 104527,
+  "n_pages_docling": 73
+ },
+ {
+  "paper_id": "2404.14041v2",
+  "n_pages": 13,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2404.14041v2",
+  "title": "Natural Capital as a Stock Option",
+  "n_queries": 2,
+  "published": "2024-04-22T09:54:06Z",
+  "categories": [
+   "econ.GN",
+   "q-fin.EC"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 78,
+  "n_tables_docling": 0,
+  "n_footnotes": 3,
+  "chars_json": 30291,
+  "n_pages_docling": 13
+ },
+ {
+  "paper_id": "2404.18884v2",
+  "n_pages": 32,
+  "n_tables": 0,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2404.18884v2",
+  "title": "Reputation and Risk in Regimes",
+  "n_queries": 7,
+  "published": "2024-04-29T17:19:24Z",
+  "categories": [
+   "econ.TH"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 256,
+  "n_tables_docling": 1,
+  "n_footnotes": 20,
+  "chars_json": 76979,
+  "n_pages_docling": 32
+ },
+ {
+  "paper_id": "2405.08177v5",
+  "n_pages": 27,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2405.08177v5",
+  "title": "Parameter identifiability, parameter estimation and model prediction for differential equation models",
+  "n_queries": 4,
+  "published": "2024-05-13T20:56:05Z",
+  "categories": [
+   "stat.ME"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 116,
+  "n_tables_docling": 0,
+  "n_footnotes": 0,
+  "chars_json": 54753,
+  "n_pages_docling": 27
+ },
+ {
+  "paper_id": "2405.13422v2",
+  "n_pages": 46,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2405.13422v2",
+  "title": "Learning to Import through Production Networks",
+  "n_queries": 8,
+  "published": "2024-05-22T08:04:10Z",
+  "categories": [
+   "econ.GN",
+   "q-fin.EC"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 225,
+  "n_tables_docling": 10,
+  "n_footnotes": 27,
+  "chars_json": 99529,
+  "n_pages_docling": 46
+ },
+ {
+  "paper_id": "2405.13879v3",
+  "n_pages": 20,
+  "n_tables": 2,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2405.13879v3",
+  "title": "FACT or Fiction: Can Truthful Mechanisms Eliminate Federated Free Riding?",
+  "n_queries": 6,
+  "published": "2024-05-22T17:59:44Z",
+  "categories": [
+   "cs.GT",
+   "cs.DC",
+   "cs.LG",
+   "econ.TH"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 205,
+  "n_tables_docling": 2,
+  "n_footnotes": 0,
+  "chars_json": 59262,
+  "n_pages_docling": 20
+ },
+ {
+  "paper_id": "2405.19171v3",
+  "n_pages": 29,
+  "n_tables": 0,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2405.19171v3",
+  "title": "Dedekind-MacNeille and related completions: subfitness, regularity, and Booleanness",
+  "n_queries": 6,
+  "published": "2024-05-29T15:15:33Z",
+  "categories": [
+   "math.GN"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 465,
+  "n_tables_docling": 4,
+  "n_footnotes": 11,
+  "chars_json": 68547,
+  "n_pages_docling": 29
+ },
+ {
+  "paper_id": "2406.00785v2",
+  "n_pages": 19,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2406.00785v2",
+  "title": "Electric-Field Control of Magnetic Skyrmion Chirality in a Centrosymmetric 2D van der Waals Magnet",
+  "n_queries": 2,
+  "published": "2024-06-02T15:53:33Z",
+  "categories": [
+   "cond-mat.mes-hall",
+   "cond-mat.other",
+   "physics.app-ph"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 30,
+  "n_tables_docling": 0,
+  "n_footnotes": 0,
+  "chars_json": 17190,
+  "n_pages_docling": 19
+ },
+ {
+  "paper_id": "2406.02238v6",
+  "n_pages": 54,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2406.02238v6",
+  "title": "Random Reed-Solomon Codes and Random Linear Codes are Locally Equivalent",
+  "n_queries": 8,
+  "published": "2024-06-04T11:59:12Z",
+  "categories": [
+   "cs.IT",
+   "math.IT"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 562,
+  "n_tables_docling": 3,
+  "n_footnotes": 13,
+  "chars_json": 109755,
+  "n_pages_docling": 54
+ },
+ {
+  "paper_id": "2406.07641v2",
+  "n_pages": 33,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2406.07641v2",
+  "title": "Interconnected Markets: Exploring the Dynamic Relationship Between BRICS Stock Markets and Cryptocurrency",
+  "n_queries": 2,
+  "published": "2024-06-11T18:15:15Z",
+  "categories": [
+   "econ.GN",
+   "q-fin.EC",
+   "q-fin.RM"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 193,
+  "n_tables_docling": 10,
+  "n_footnotes": 0,
+  "chars_json": 54866,
+  "n_pages_docling": 33
+ },
+ {
+  "paper_id": "2406.16586v3",
+  "n_pages": 19,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2406.16586v3",
+  "title": "Stationarity and elimination of imaginaries in stable and simple theories",
+  "n_queries": 7,
+  "published": "2024-06-24T12:21:47Z",
+  "categories": [
+   "math.LO"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 266,
+  "n_tables_docling": 0,
+  "n_footnotes": 3,
+  "chars_json": 55885,
+  "n_pages_docling": 19
+ },
+ {
+  "paper_id": "2407.02507v2",
+  "n_pages": 9,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2407.02507v2",
+  "title": "On foundations for deductive mathematics",
+  "n_queries": 10,
+  "published": "2024-06-18T01:44:00Z",
+  "categories": [
+   "math.LO"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 74,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 29192,
+  "n_pages_docling": 9
+ },
+ {
+  "paper_id": "2407.11894v2",
+  "n_pages": 28,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2407.11894v2",
+  "title": "Deep Learning without Global Optimization by Random Fourier Neural Networks",
+  "n_queries": 3,
+  "published": "2024-07-16T16:23:40Z",
+  "categories": [
+   "cs.LG",
+   "cs.NA",
+   "math.NA",
+   "stat.ML"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 240,
+  "n_tables_docling": 2,
+  "n_footnotes": 3,
+  "chars_json": 72006,
+  "n_pages_docling": 28
+ },
+ {
+  "paper_id": "2408.06427v2",
+  "n_pages": 21,
+  "n_tables": 3,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2408.06427v2",
+  "title": "Quantification of Multi-Compartment Flow with Spectral Diffusion MRI",
+  "n_queries": 10,
+  "published": "2024-08-12T18:07:59Z",
+  "categories": [
+   "physics.med-ph",
+   "eess.IV"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 150,
+  "n_tables_docling": 3,
+  "n_footnotes": 2,
+  "chars_json": 45980,
+  "n_pages_docling": 21
+ },
+ {
+  "paper_id": "2408.06977v4",
+  "n_pages": 29,
+  "n_tables": 0,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2408.06977v4",
+  "title": "Endogeneity Corrections in Binary Outcome Models with Nonlinear Transformations: Identification and Inference",
+  "n_queries": 3,
+  "published": "2024-08-13T15:33:27Z",
+  "categories": [
+   "econ.EM"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 193,
+  "n_tables_docling": 5,
+  "n_footnotes": 1,
+  "chars_json": 66989,
+  "n_pages_docling": 29
+ },
+ {
+  "paper_id": "2408.08704v2",
+  "n_pages": 12,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2408.08704v2",
+  "title": "Beyond the Hype: A dispassionate look at vision-language models in medical scenario",
+  "n_queries": 2,
+  "published": "2024-08-16T12:32:44Z",
+  "categories": [
+   "cs.CV",
+   "cs.AI"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 197,
+  "n_tables_docling": 6,
+  "n_footnotes": 1,
+  "chars_json": 66028,
+  "n_pages_docling": 12
+ },
+ {
+  "paper_id": "2408.09208v2",
+  "n_pages": 34,
+  "n_tables": 2,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2408.09208v2",
+  "title": "Parametric Sensitivity Analysis for Models of Reaction Networks within Interacting Compartments",
+  "n_queries": 4,
+  "published": "2024-08-17T14:15:23Z",
+  "categories": [
+   "q-bio.MN",
+   "cs.NA",
+   "math.NA",
+   "math.PR",
+   "q-bio.QM"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 332,
+  "n_tables_docling": 3,
+  "n_footnotes": 4,
+  "chars_json": 81655,
+  "n_pages_docling": 34
+ },
+ {
+  "paper_id": "2408.09344v2",
+  "n_pages": 12,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2408.09344v2",
+  "title": "GitHub is an effective platform for collaborative and reproducible laboratory research",
+  "n_queries": 1,
+  "published": "2024-08-18T03:35:26Z",
+  "categories": [
+   "q-bio.OT"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 87,
+  "n_tables_docling": 1,
+  "n_footnotes": 2,
+  "chars_json": 39885,
+  "n_pages_docling": 12
+ },
+ {
+  "paper_id": "2408.13427v2",
+  "n_pages": 27,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2408.13427v2",
+  "title": "Evidence of Dark Energy Prior to its Discovery",
+  "n_queries": 10,
+  "published": "2024-08-24T01:39:56Z",
+  "categories": [
+   "hep-ph",
+   "astro-ph.CO",
+   "physics.hist-ph"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 302,
+  "n_tables_docling": 0,
+  "n_footnotes": 119,
+  "chars_json": 86013,
+  "n_pages_docling": 27
+ },
+ {
+  "paper_id": "2408.13702v3",
+  "n_pages": 17,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2408.13702v3",
+  "title": "Examining Differential Item Functioning (DIF) in Self-Reported Health Survey Data: Via Multilevel Modeling",
+  "n_queries": 8,
+  "published": "2024-08-25T01:35:46Z",
+  "categories": [
+   "stat.AP"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 140,
+  "n_tables_docling": 3,
+  "n_footnotes": 1,
+  "chars_json": 41058,
+  "n_pages_docling": 17
+ },
+ {
+  "paper_id": "2409.08951v2",
+  "n_pages": 58,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2409.08951v2",
+  "title": "On the Viability of Open-Source Financial Rails: Economic Security of Permissionless Consensus",
+  "n_queries": 9,
+  "published": "2024-09-13T16:12:19Z",
+  "categories": [
+   "cs.GT",
+   "econ.TH"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 476,
+  "n_tables_docling": 1,
+  "n_footnotes": 87,
+  "chars_json": 148543,
+  "n_pages_docling": 58
+ },
+ {
+  "paper_id": "2409.10938v2",
+  "n_pages": 20,
+  "n_tables": 0,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2409.10938v2",
+  "title": "Beyond Rationality: Unveiling the Role of Animal Spirits and Inflation Extrapolation in Central Bank Communication of the US",
+  "n_queries": 4,
+  "published": "2024-09-17T07:16:58Z",
+  "categories": [
+   "econ.TH"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 165,
+  "n_tables_docling": 9,
+  "n_footnotes": 17,
+  "chars_json": 40037,
+  "n_pages_docling": 20
+ },
+ {
+  "paper_id": "2410.12036v2",
+  "n_pages": 23,
+  "n_tables": 0,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2410.12036v2",
+  "title": "Deep Optimal Sensor Placement for Black Box Stochastic Simulations",
+  "n_queries": 9,
+  "published": "2024-10-15T20:10:25Z",
+  "categories": [
+   "stat.ML",
+   "cs.LG",
+   "stat.AP"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 282,
+  "n_tables_docling": 11,
+  "n_footnotes": 1,
+  "chars_json": 76838,
+  "n_pages_docling": 23
+ },
+ {
+  "paper_id": "2410.14317v2",
+  "n_pages": 45,
+  "n_tables": 0,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2410.14317v2",
+  "title": "Identification of a Rank-dependent Peer Effect Model",
+  "n_queries": 7,
+  "published": "2024-10-18T09:25:20Z",
+  "categories": [
+   "econ.EM"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 288,
+  "n_tables_docling": 8,
+  "n_footnotes": 7,
+  "chars_json": 68412,
+  "n_pages_docling": 45
+ },
+ {
+  "paper_id": "2410.15316v3",
+  "n_pages": 21,
+  "n_tables": 0,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2410.15316v3",
+  "title": "Ichigo: Mixed-Modal Early-Fusion Realtime Voice Assistant",
+  "n_queries": 4,
+  "published": "2024-10-20T07:03:49Z",
+  "categories": [
+   "cs.CL",
+   "cs.SD",
+   "eess.AS"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 216,
+  "n_tables_docling": 6,
+  "n_footnotes": 2,
+  "chars_json": 55589,
+  "n_pages_docling": 21
+ },
+ {
+  "paper_id": "2410.17420v2",
+  "n_pages": 30,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2410.17420v2",
+  "title": "A kinetic derivation of spatial distributed models for tumor-immune system interactions",
+  "n_queries": 4,
+  "published": "2024-10-22T20:47:19Z",
+  "categories": [
+   "math.DS",
+   "q-bio.TO"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 272,
+  "n_tables_docling": 1,
+  "n_footnotes": 2,
+  "chars_json": 83495,
+  "n_pages_docling": 30
+ },
+ {
+  "paper_id": "2410.17708v2",
+  "n_pages": 20,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2410.17708v2",
+  "title": "Proteome-wide prediction of mode of inheritance and molecular mechanism underlying genetic diseases using structural interactomics",
+  "n_queries": 1,
+  "published": "2024-10-23T09:33:13Z",
+  "categories": [
+   "q-bio.QM",
+   "q-bio.GN"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 759,
+  "n_tables_docling": 3,
+  "n_footnotes": 5,
+  "chars_json": 52433,
+  "n_pages_docling": 20
+ },
+ {
+  "paper_id": "2410.19654v2",
+  "n_pages": 18,
+  "n_tables": 0,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2410.19654v2",
+  "title": "An explicit condition for boundedly supermultiplicative subshifts",
+  "n_queries": 3,
+  "published": "2024-10-25T15:56:48Z",
+  "categories": [
+   "math.CO",
+   "cs.DM"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 214,
+  "n_tables_docling": 1,
+  "n_footnotes": 4,
+  "chars_json": 36081,
+  "n_pages_docling": 18
+ },
+ {
+  "paper_id": "2410.22706v2",
+  "n_pages": 27,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2410.22706v2",
+  "title": "Graph Signal Processing for Global Stock Market Realized Volatility Forecasting",
+  "n_queries": 4,
+  "published": "2024-10-30T05:34:46Z",
+  "categories": [],
+  "origin": "v1_50",
+  "n_blocks": 136,
+  "n_tables_docling": 11,
+  "n_footnotes": 1,
+  "chars_json": 60479,
+  "n_pages_docling": 27
+ },
+ {
+  "paper_id": "2410.23473v2",
+  "n_pages": 11,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2410.23473v2",
+  "title": "One-sided identity and zero sets in semigroups; maximal subsemigroups of certain types",
+  "n_queries": 6,
+  "published": "2024-10-30T21:36:45Z",
+  "categories": [
+   "math.GR"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 251,
+  "n_tables_docling": 0,
+  "n_footnotes": 0,
+  "chars_json": 30229,
+  "n_pages_docling": 11
+ },
+ {
+  "paper_id": "2411.00296v4",
+  "n_pages": 11,
+  "n_tables": 3,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2411.00296v4",
+  "title": "Applying numerosity to surreal integration",
+  "n_queries": 9,
+  "published": "2024-11-01T01:34:20Z",
+  "categories": [
+   "math.GM"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 109,
+  "n_tables_docling": 1,
+  "n_footnotes": 0,
+  "chars_json": 18153,
+  "n_pages_docling": 11
+ },
+ {
+  "paper_id": "2411.03676v2",
+  "n_pages": 23,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2411.03676v2",
+  "title": "Phase transition on superfluid vortices in Higgs-Confinement crossover",
+  "n_queries": 10,
+  "published": "2024-11-06T05:33:42Z",
+  "categories": [
+   "hep-th",
+   "cond-mat.supr-con",
+   "hep-lat",
+   "hep-ph",
+   "nucl-th"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 191,
+  "n_tables_docling": 0,
+  "n_footnotes": 6,
+  "chars_json": 39950,
+  "n_pages_docling": 23
+ },
+ {
+  "paper_id": "2411.06484v2",
+  "n_pages": 19,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2411.06484v2",
+  "title": "ajdmom: A Python Package for Deriving Moment Formulas of Affine Jump Diffusion Processes",
+  "n_queries": 2,
+  "published": "2024-11-10T14:55:10Z",
+  "categories": [
+   "q-fin.MF"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 187,
+  "n_tables_docling": 3,
+  "n_footnotes": 0,
+  "chars_json": 46272,
+  "n_pages_docling": 19
+ },
+ {
+  "paper_id": "2411.09808v3",
+  "n_pages": 44,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2411.09808v3",
+  "title": "Sharp Testable Implications of Encouragement Designs",
+  "n_queries": 5,
+  "published": "2024-11-14T20:52:10Z",
+  "categories": [
+   "econ.EM"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 449,
+  "n_tables_docling": 13,
+  "n_footnotes": 6,
+  "chars_json": 89902,
+  "n_pages_docling": 44
+ },
+ {
+  "paper_id": "2411.10511v4",
+  "n_pages": 35,
+  "n_tables": 3,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2411.10511v4",
+  "title": "How quantum computing can enhance biomarker discovery",
+  "n_queries": 10,
+  "published": "2024-11-15T16:50:05Z",
+  "categories": [
+   "q-bio.OT",
+   "quant-ph"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 300,
+  "n_tables_docling": 1,
+  "n_footnotes": 0,
+  "chars_json": 95642,
+  "n_pages_docling": 35
+ },
+ {
+  "paper_id": "2411.11841v3",
+  "n_pages": 15,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2411.11841v3",
+  "title": "Remarks on Halin's end-degree Conjecture",
+  "n_queries": 6,
+  "published": "2024-11-18T18:58:40Z",
+  "categories": [
+   "math.LO",
+   "math.CO"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 182,
+  "n_tables_docling": 0,
+  "n_footnotes": 2,
+  "chars_json": 31443,
+  "n_pages_docling": 15
+ },
+ {
+  "paper_id": "2411.12110v2",
+  "n_pages": 8,
+  "n_tables": 3,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2411.12110v2",
+  "title": "Impacto Redistributivo da Reforma da Tributacao do Consumo no Brasil: Simulacoes Baseadas no PLP68/2024",
+  "n_queries": 2,
+  "published": "2024-11-18T22:42:19Z",
+  "categories": [
+   "econ.GN",
+   "q-fin.EC"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 41,
+  "n_tables_docling": 3,
+  "n_footnotes": 3,
+  "chars_json": 20600,
+  "n_pages_docling": 8
+ },
+ {
+  "paper_id": "2411.12860v4",
+  "n_pages": 39,
+  "n_tables": 0,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2411.12860v4",
+  "title": "Matching Design with Algorithms and Applications to Foster Care",
+  "n_queries": 9,
+  "published": "2024-11-19T21:09:23Z",
+  "categories": [
+   "econ.TH"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 386,
+  "n_tables_docling": 6,
+  "n_footnotes": 10,
+  "chars_json": 123499,
+  "n_pages_docling": 39
+ },
+ {
+  "paper_id": "2411.14884v3",
+  "n_pages": 12,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2411.14884v3",
+  "title": "Uncertain standard quadratic optimization under distributional assumptions: a chance-constrained epigraphic approach",
+  "n_queries": 5,
+  "published": "2024-11-22T12:07:59Z",
+  "categories": [
+   "math.OC"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 135,
+  "n_tables_docling": 0,
+  "n_footnotes": 2,
+  "chars_json": 24182,
+  "n_pages_docling": 12
+ },
+ {
+  "paper_id": "2411.19887v2",
+  "n_pages": 28,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2411.19887v2",
+  "title": "Non-orderability and the contact Hofer norm",
+  "n_queries": 5,
+  "published": "2024-11-29T17:53:27Z",
+  "categories": [
+   "math.SG"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 358,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 77832,
+  "n_pages_docling": 28
+ },
+ {
+  "paper_id": "2412.03227v2",
+  "n_pages": 10,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2412.03227v2",
+  "title": "Never-ending Search for Innovation",
+  "n_queries": 8,
+  "published": "2024-12-04T11:23:43Z",
+  "categories": [
+   "econ.GN",
+   "q-fin.EC"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 76,
+  "n_tables_docling": 0,
+  "n_footnotes": 7,
+  "chars_json": 21368,
+  "n_pages_docling": 10
+ },
+ {
+  "paper_id": "2412.06031v2",
+  "n_pages": 15,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2412.06031v2",
+  "title": "Strict comparison in reduced group $C^*$-algebras",
+  "n_queries": 5,
+  "published": "2024-12-08T19:00:56Z",
+  "categories": [
+   "math.OA",
+   "math.FA",
+   "math.GR",
+   "math.LO"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 187,
+  "n_tables_docling": 0,
+  "n_footnotes": 0,
+  "chars_json": 50017,
+  "n_pages_docling": 15
+ },
+ {
+  "paper_id": "2412.11692v4",
+  "n_pages": 34,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2412.11692v4",
+  "title": "A partial likelihood approach to tree-based density modeling and its application in Bayesian inference",
+  "n_queries": 9,
+  "published": "2024-12-16T12:10:23Z",
+  "categories": [
+   "stat.ME",
+   "math.ST",
+   "stat.CO",
+   "stat.ML",
+   "stat.TH"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 201,
+  "n_tables_docling": 0,
+  "n_footnotes": 2,
+  "chars_json": 74296,
+  "n_pages_docling": 34
+ },
+ {
+  "paper_id": "2412.13914v3",
+  "n_pages": 25,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2412.13914v3",
+  "title": "Isometric rigidity of $L^2$-spaces with manifold targets",
+  "n_queries": 7,
+  "published": "2024-12-18T14:54:45Z",
+  "categories": [
+   "math.MG",
+   "math.DG"
+  ],
+  "origin": "v1_50",
+  "n_blocks": 253,
+  "n_tables_docling": 1,
+  "n_footnotes": 0,
+  "chars_json": 57745,
+  "n_pages_docling": 25
+ },
+ {
+  "paper_id": "2401.03776v8",
+  "n_pages": 26,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2401.03776v8",
+  "title": "Short-Term Asymptotics of Volatility Skew and Curvature Based on Cumulants",
+  "n_queries": 5,
+  "published": "2024-01-08T09:59:26Z",
+  "categories": [
+   "q-fin.PR",
+   "q-fin.MF"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 231,
+  "n_tables_docling": 0,
+  "n_footnotes": 2,
+  "chars_json": 41349,
+  "n_pages_docling": 26
+ },
+ {
+  "paper_id": "2401.05657v5",
+  "n_pages": 10,
+  "n_tables": 6,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2401.05657v5",
+  "title": "An impossibility theorem concerning positive involvement in voting",
+  "n_queries": 7,
+  "published": "2024-01-11T04:40:02Z",
+  "categories": [
+   "econ.TH",
+   "cs.GT",
+   "cs.MA"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 106,
+  "n_tables_docling": 6,
+  "n_footnotes": 15,
+  "chars_json": 39010,
+  "n_pages_docling": 10
+ },
+ {
+  "paper_id": "2402.04840v3",
+  "n_pages": 16,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2402.04840v3",
+  "title": "Efficient Estimation of a Gaussian Mean with Local Differential Privacy",
+  "n_queries": 4,
+  "published": "2024-02-07T13:41:45Z",
+  "categories": [
+   "math.ST",
+   "stat.TH"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 213,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 44567,
+  "n_pages_docling": 16
+ },
+ {
+  "paper_id": "2402.09721v6",
+  "n_pages": 37,
+  "n_tables": 2,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2402.09721v6",
+  "title": "Generalized Principal-Agent Problem with a Learning Agent",
+  "n_queries": 10,
+  "published": "2024-02-15T05:30:47Z",
+  "categories": [
+   "cs.GT",
+   "cs.AI",
+   "cs.LG",
+   "econ.TH"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 400,
+  "n_tables_docling": 2,
+  "n_footnotes": 7,
+  "chars_json": 89021,
+  "n_pages_docling": 37
+ },
+ {
+  "paper_id": "2402.13385v2",
+  "n_pages": 75,
+  "n_tables": 4,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2402.13385v2",
+  "title": "Regular Languages in the Sliding Window Model",
+  "n_queries": 10,
+  "published": "2024-02-20T21:29:53Z",
+  "categories": [
+   "cs.FL"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 809,
+  "n_tables_docling": 2,
+  "n_footnotes": 5,
+  "chars_json": 200795,
+  "n_pages_docling": 75
+ },
+ {
+  "paper_id": "2402.15828v4",
+  "n_pages": 20,
+  "n_tables": 2,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2402.15828v4",
+  "title": "Pricing of geometric Asian options in the Volterra-Heston model",
+  "n_queries": 2,
+  "published": "2024-02-24T14:41:56Z",
+  "categories": [
+   "q-fin.PR",
+   "math.PR"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 221,
+  "n_tables_docling": 2,
+  "n_footnotes": 2,
+  "chars_json": 45183,
+  "n_pages_docling": 20
+ },
+ {
+  "paper_id": "2403.01012v4",
+  "n_pages": 29,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2403.01012v4",
+  "title": "Hilbert Space-Valued LQ Mean Field Games: An Infinite-Dimensional Analysis",
+  "n_queries": 5,
+  "published": "2024-03-01T22:21:43Z",
+  "categories": [
+   "math.OC",
+   "math.FA",
+   "math.PR",
+   "q-fin.MF",
+   "q-fin.RM"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 296,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 60298,
+  "n_pages_docling": 29
+ },
+ {
+  "paper_id": "2403.04768v3",
+  "n_pages": 5,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2403.04768v3",
+  "title": "On the sum of reciprocals of primes",
+  "n_queries": 3,
+  "published": "2024-01-06T07:47:12Z",
+  "categories": [
+   "math.GM"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 52,
+  "n_tables_docling": 0,
+  "n_footnotes": 0,
+  "chars_json": 2893,
+  "n_pages_docling": 5
+ },
+ {
+  "paper_id": "2403.05412v2",
+  "n_pages": 10,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2403.05412v2",
+  "title": "On classical solutions and canonical transformations for Hamilton--Jacobi--Bellman equations",
+  "n_queries": 4,
+  "published": "2024-03-08T16:11:03Z",
+  "categories": [
+   "math.OC",
+   "math.AP"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 136,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 23208,
+  "n_pages_docling": 10
+ },
+ {
+  "paper_id": "2403.08753v2",
+  "n_pages": 58,
+  "n_tables": 6,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2403.08753v2",
+  "title": "Invalid proxies and volatility changes",
+  "n_queries": 4,
+  "published": "2024-03-13T17:51:47Z",
+  "categories": [
+   "econ.EM"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 372,
+  "n_tables_docling": 6,
+  "n_footnotes": 16,
+  "chars_json": 127072,
+  "n_pages_docling": 58
+ },
+ {
+  "paper_id": "2404.07128v3",
+  "n_pages": 79,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2404.07128v3",
+  "title": "Learning of deep convolutional network image classifiers via stochastic gradient descent and over-parametrization",
+  "n_queries": 3,
+  "published": "2024-04-10T16:07:29Z",
+  "categories": [
+   "math.ST",
+   "stat.TH"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 714,
+  "n_tables_docling": 0,
+  "n_footnotes": 2,
+  "chars_json": 82561,
+  "n_pages_docling": 79
+ },
+ {
+  "paper_id": "2404.17509v2",
+  "n_pages": 55,
+  "n_tables": 3,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2404.17509v2",
+  "title": "Understanding the Cluster LP for Correlation Clustering",
+  "n_queries": 8,
+  "published": "2024-04-26T16:23:53Z",
+  "categories": [
+   "cs.DS"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 782,
+  "n_tables_docling": 1,
+  "n_footnotes": 6,
+  "chars_json": 133413,
+  "n_pages_docling": 55
+ },
+ {
+  "paper_id": "2404.18137v2",
+  "n_pages": 18,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2404.18137v2",
+  "title": "The role of substitution elasticity in Domar aggregation",
+  "n_queries": 10,
+  "published": "2024-04-28T10:35:23Z",
+  "categories": [
+   "econ.TH"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 181,
+  "n_tables_docling": 0,
+  "n_footnotes": 5,
+  "chars_json": 35004,
+  "n_pages_docling": 18
+ },
+ {
+  "paper_id": "2404.18869v2",
+  "n_pages": 54,
+  "n_tables": 8,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2404.18869v2",
+  "title": "Learning Mixtures of Gaussians Using Diffusion Models",
+  "n_queries": 6,
+  "published": "2024-04-29T17:00:20Z",
+  "categories": [
+   "cs.LG",
+   "cs.DS",
+   "math.PR",
+   "math.ST",
+   "stat.ML",
+   "stat.TH"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 463,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 94801,
+  "n_pages_docling": 54
+ },
+ {
+  "paper_id": "2405.03910v2",
+  "n_pages": 50,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2405.03910v2",
+  "title": "A Primer on the Analysis of Randomized Experiments and a Survey of some Recent Advances",
+  "n_queries": 10,
+  "published": "2024-05-06T23:59:24Z",
+  "categories": [
+   "econ.EM",
+   "stat.ME"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 425,
+  "n_tables_docling": 0,
+  "n_footnotes": 4,
+  "chars_json": 115463,
+  "n_pages_docling": 50
+ },
+ {
+  "paper_id": "2405.14131v3",
+  "n_pages": 33,
+  "n_tables": 5,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2405.14131v3",
+  "title": "Statistical Advantages of Perturbing Cosine Router in Mixture of Experts",
+  "n_queries": 4,
+  "published": "2024-05-23T03:11:07Z",
+  "categories": [
+   "stat.ML",
+   "cs.LG"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 398,
+  "n_tables_docling": 5,
+  "n_footnotes": 1,
+  "chars_json": 89419,
+  "n_pages_docling": 33
+ },
+ {
+  "paper_id": "2406.00912v2",
+  "n_pages": 73,
+  "n_tables": 2,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2406.00912v2",
+  "title": "Definable convolution and idempotent Keisler measures III. Generic stability, generic transitivity, and revised Newelski's conjecture",
+  "n_queries": 7,
+  "published": "2024-06-03T00:43:16Z",
+  "categories": [
+   "math.LO",
+   "math.DS",
+   "math.GN",
+   "math.GR"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 848,
+  "n_tables_docling": 2,
+  "n_footnotes": 0,
+  "chars_json": 178634,
+  "n_pages_docling": 73
+ },
+ {
+  "paper_id": "2406.02969v2",
+  "n_pages": 33,
+  "n_tables": 11,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2406.02969v2",
+  "title": "Filtered not Mixed: Stochastic Filtering-Based Online Gating for Mixture of Large Language Models",
+  "n_queries": 5,
+  "published": "2024-06-05T05:53:50Z",
+  "categories": [
+   "cs.LG",
+   "cs.AI",
+   "cs.CL",
+   "q-fin.CP",
+   "q-fin.MF"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 414,
+  "n_tables_docling": 11,
+  "n_footnotes": 6,
+  "chars_json": 91068,
+  "n_pages_docling": 33
+ },
+ {
+  "paper_id": "2406.05714v3",
+  "n_pages": 40,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2406.05714v3",
+  "title": "Contextual Continuum Bandits: Static Versus Dynamic Regret",
+  "n_queries": 5,
+  "published": "2024-06-09T10:12:08Z",
+  "categories": [
+   "stat.ML",
+   "cs.LG",
+   "math.ST",
+   "stat.TH"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 337,
+  "n_tables_docling": 0,
+  "n_footnotes": 0,
+  "chars_json": 59098,
+  "n_pages_docling": 40
+ },
+ {
+  "paper_id": "2406.06650v2",
+  "n_pages": 20,
+  "n_tables": 5,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2406.06650v2",
+  "title": "Assessing the risk of recurrence in early-stage breast cancer through H&E stained whole slide images",
+  "n_queries": 6,
+  "published": "2024-06-10T08:51:59Z",
+  "categories": [
+   "eess.IV",
+   "cs.CV"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 122,
+  "n_tables_docling": 5,
+  "n_footnotes": 0,
+  "chars_json": 42562,
+  "n_pages_docling": 20
+ },
+ {
+  "paper_id": "2406.15888v2",
+  "n_pages": 9,
+  "n_tables": 13,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2406.15888v2",
+  "title": "Real-time Speech Summarization for Medical Conversations",
+  "n_queries": 10,
+  "published": "2024-06-22T16:37:51Z",
+  "categories": [
+   "cs.CL",
+   "cs.AI",
+   "cs.LG",
+   "cs.SD",
+   "eess.AS"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 182,
+  "n_tables_docling": 13,
+  "n_footnotes": 10,
+  "chars_json": 40105,
+  "n_pages_docling": 9
+ },
+ {
+  "paper_id": "2407.00037v2",
+  "n_pages": 34,
+  "n_tables": 6,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2407.00037v2",
+  "title": "Information About Other Players in Mechanism Design",
+  "n_queries": 8,
+  "published": "2024-05-28T16:40:35Z",
+  "categories": [
+   "econ.TH"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 267,
+  "n_tables_docling": 6,
+  "n_footnotes": 8,
+  "chars_json": 65176,
+  "n_pages_docling": 34
+ },
+ {
+  "paper_id": "2407.02511v2",
+  "n_pages": 15,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2407.02511v2",
+  "title": "LLM-A*: Large Language Model Enhanced Incremental Heuristic Search on Path Planning",
+  "n_queries": 8,
+  "published": "2024-06-20T01:24:30Z",
+  "categories": [
+   "cs.RO",
+   "cs.AI",
+   "cs.CL"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 207,
+  "n_tables_docling": 1,
+  "n_footnotes": 0,
+  "chars_json": 56334,
+  "n_pages_docling": 15
+ },
+ {
+  "paper_id": "2408.11878v2",
+  "n_pages": 30,
+  "n_tables": 15,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2408.11878v2",
+  "title": "Open-FinLLMs: Open Multimodal Large Language Models for Financial Applications",
+  "n_queries": 10,
+  "published": "2024-08-20T16:15:28Z",
+  "categories": [
+   "cs.CL",
+   "cs.CE",
+   "q-fin.CP"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 427,
+  "n_tables_docling": 15,
+  "n_footnotes": 5,
+  "chars_json": 98543,
+  "n_pages_docling": 30
+ },
+ {
+  "paper_id": "2408.13919v4",
+  "n_pages": 5,
+  "n_tables": 2,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2408.13919v4",
+  "title": "Quantum Multimodal Contrastive Learning Framework",
+  "n_queries": 2,
+  "published": "2024-08-25T19:08:43Z",
+  "categories": [
+   "quant-ph",
+   "q-bio.NC"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 86,
+  "n_tables_docling": 2,
+  "n_footnotes": 0,
+  "chars_json": 24805,
+  "n_pages_docling": 5
+ },
+ {
+  "paper_id": "2408.16142v4",
+  "n_pages": 28,
+  "n_tables": 4,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2408.16142v4",
+  "title": "Classifying acoustic cavitation with machine learning trained on multiple physical models",
+  "n_queries": 10,
+  "published": "2024-08-28T21:07:48Z",
+  "categories": [
+   "physics.comp-ph",
+   "physics.flu-dyn"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 194,
+  "n_tables_docling": 4,
+  "n_footnotes": 1,
+  "chars_json": 56393,
+  "n_pages_docling": 28
+ },
+ {
+  "paper_id": "2408.16309v2",
+  "n_pages": 64,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2408.16309v2",
+  "title": "First-order deformations of freely generated vertex algebras",
+  "n_queries": 3,
+  "published": "2024-08-29T07:16:07Z",
+  "categories": [
+   "math.QA",
+   "hep-th"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 616,
+  "n_tables_docling": 1,
+  "n_footnotes": 0,
+  "chars_json": 80027,
+  "n_pages_docling": 64
+ },
+ {
+  "paper_id": "2409.06325v3",
+  "n_pages": 49,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2409.06325v3",
+  "title": "Dense networks of integrate-and-fire neurons: Spatially-extended mean-field limit of the empirical measure",
+  "n_queries": 1,
+  "published": "2024-09-10T08:29:49Z",
+  "categories": [
+   "math.PR",
+   "math.AP",
+   "q-bio.NC"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 410,
+  "n_tables_docling": 0,
+  "n_footnotes": 5,
+  "chars_json": 84504,
+  "n_pages_docling": 49
+ },
+ {
+  "paper_id": "2409.14494v3",
+  "n_pages": 5,
+  "n_tables": 2,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2409.14494v3",
+  "title": "CPT-Boosted Wav2vec2.0: Towards Noise Robust Speech Recognition for Classroom Environments",
+  "n_queries": 3,
+  "published": "2024-09-13T19:14:18Z",
+  "categories": [
+   "cs.CL",
+   "cs.LG",
+   "cs.SD",
+   "eess.AS"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 106,
+  "n_tables_docling": 2,
+  "n_footnotes": 4,
+  "chars_json": 29662,
+  "n_pages_docling": 5
+ },
+ {
+  "paper_id": "2409.14616v2",
+  "n_pages": 8,
+  "n_tables": 1,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2409.14616v2",
+  "title": "Learning to Refine Input Constrained Control Barrier Functions via Uncertainty-Aware Online Parameter Adaptation",
+  "n_queries": 6,
+  "published": "2024-09-22T22:50:06Z",
+  "categories": [
+   "cs.RO",
+   "cs.SY"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 178,
+  "n_tables_docling": 1,
+  "n_footnotes": 5,
+  "chars_json": 39813,
+  "n_pages_docling": 8
+ },
+ {
+  "paper_id": "2409.16171v2",
+  "n_pages": 16,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2409.16171v2",
+  "title": "New Improvements to Heron and Heinz Inequality Using Matrix Techniques",
+  "n_queries": 5,
+  "published": "2024-09-24T15:10:11Z",
+  "categories": [
+   "math.FA",
+   "math.OA"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 197,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 28818,
+  "n_pages_docling": 16
+ },
+ {
+  "paper_id": "2409.16644v2",
+  "n_pages": 5,
+  "n_tables": 5,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2409.16644v2",
+  "title": "Enabling Auditory Large Language Models for Automatic Speech Quality Evaluation",
+  "n_queries": 2,
+  "published": "2024-09-25T05:44:44Z",
+  "categories": [
+   "eess.AS",
+   "cs.CL",
+   "cs.SD"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 115,
+  "n_tables_docling": 5,
+  "n_footnotes": 2,
+  "chars_json": 34261,
+  "n_pages_docling": 5
+ },
+ {
+  "paper_id": "2409.17550v3",
+  "n_pages": 9,
+  "n_tables": 4,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2409.17550v3",
+  "title": "A Simple but Strong Baseline for Sounding Video Generation: Effective Adaptation of Audio and Video Diffusion Models for Joint Generation",
+  "n_queries": 1,
+  "published": "2024-09-26T05:39:52Z",
+  "categories": [
+   "cs.LG",
+   "cs.MM",
+   "cs.SD",
+   "eess.AS"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 150,
+  "n_tables_docling": 4,
+  "n_footnotes": 0,
+  "chars_json": 45504,
+  "n_pages_docling": 9
+ },
+ {
+  "paper_id": "2409.17635v2",
+  "n_pages": 5,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2409.17635v2",
+  "title": "FlowMAC: Conditional Flow Matching for Audio Coding at Low Bit Rates",
+  "n_queries": 2,
+  "published": "2024-09-26T08:32:31Z",
+  "categories": [
+   "eess.AS",
+   "cs.LG",
+   "cs.SD"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 111,
+  "n_tables_docling": 1,
+  "n_footnotes": 2,
+  "chars_json": 24978,
+  "n_pages_docling": 5
+ },
+ {
+  "paper_id": "2409.18681v6",
+  "n_pages": 18,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2409.18681v6",
+  "title": "Efficient pseudometrics for data-driven comparisons of nonlinear dynamical systems",
+  "n_queries": 10,
+  "published": "2024-09-27T12:11:47Z",
+  "categories": [
+   "math.DS",
+   "cs.SY",
+   "math-ph",
+   "math.MP"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 223,
+  "n_tables_docling": 1,
+  "n_footnotes": 1,
+  "chars_json": 66260,
+  "n_pages_docling": 18
+ },
+ {
+  "paper_id": "2410.07913v3",
+  "n_pages": 15,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2410.07913v3",
+  "title": "Motives of central slope Kronecker moduli",
+  "n_queries": 5,
+  "published": "2024-10-10T13:39:38Z",
+  "categories": [
+   "math.AG",
+   "math.RT"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 187,
+  "n_tables_docling": 0,
+  "n_footnotes": 0,
+  "chars_json": 24624,
+  "n_pages_docling": 15
+ },
+ {
+  "paper_id": "2410.08143v2",
+  "n_pages": 24,
+  "n_tables": 13,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2410.08143v2",
+  "title": "DelTA: An Online Document-Level Translation Agent Based on Multi-Level Memory",
+  "n_queries": 6,
+  "published": "2024-10-10T17:30:09Z",
+  "categories": [
+   "cs.CL",
+   "cs.AI"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 284,
+  "n_tables_docling": 13,
+  "n_footnotes": 14,
+  "chars_json": 88447,
+  "n_pages_docling": 24
+ },
+ {
+  "paper_id": "2410.15824v2",
+  "n_pages": 71,
+  "n_tables": 2,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2410.15824v2",
+  "title": "Long time behavior of semi-Markov modulated perpetuity and some related processes",
+  "n_queries": 5,
+  "published": "2024-10-21T09:41:59Z",
+  "categories": [
+   "math.PR",
+   "math.DS",
+   "q-fin.MF",
+   "stat.CO"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 962,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 136059,
+  "n_pages_docling": 71
+ },
+ {
+  "paper_id": "2410.23209v2",
+  "n_pages": 43,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2410.23209v2",
+  "title": "Chapman-Enskog theory and crossover between diffusion and superdiffusion for nearly integrable quantum gases",
+  "n_queries": 10,
+  "published": "2024-10-30T16:59:52Z",
+  "categories": [
+   "cond-mat.stat-mech",
+   "cond-mat.quant-gas",
+   "nlin.SI"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 459,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 99191,
+  "n_pages_docling": 43
+ },
+ {
+  "paper_id": "2410.23841v2",
+  "n_pages": 32,
+  "n_tables": 18,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2410.23841v2",
+  "title": "Beyond Content Relevance: Evaluating Instruction Following in Retrieval Models",
+  "n_queries": 10,
+  "published": "2024-10-31T11:47:21Z",
+  "categories": [
+   "cs.IR"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 308,
+  "n_tables_docling": 18,
+  "n_footnotes": 7,
+  "chars_json": 95290,
+  "n_pages_docling": 32
+ },
+ {
+  "paper_id": "2411.05391v4",
+  "n_pages": 6,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2411.05391v4",
+  "title": "Impossibility results for equating the Youden Index with average scoring rules and Tjur $R^2$-like metrics",
+  "n_queries": 3,
+  "published": "2024-11-08T08:05:44Z",
+  "categories": [
+   "stat.OT",
+   "math.PR",
+   "math.ST",
+   "stat.TH"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 86,
+  "n_tables_docling": 0,
+  "n_footnotes": 2,
+  "chars_json": 10629,
+  "n_pages_docling": 6
+ },
+ {
+  "paper_id": "2411.17395v2",
+  "n_pages": 51,
+  "n_tables": 0,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2411.17395v2",
+  "title": "Asymptotics for estimating a diverging number of parameters -- with and without sparsity",
+  "n_queries": 8,
+  "published": "2024-11-26T12:55:51Z",
+  "categories": [
+   "math.ST",
+   "stat.ME",
+   "stat.TH"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 625,
+  "n_tables_docling": 0,
+  "n_footnotes": 1,
+  "chars_json": 84693,
+  "n_pages_docling": 51
+ },
+ {
+  "paper_id": "2412.00710v2",
+  "n_pages": 31,
+  "n_tables": 2,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2412.00710v2",
+  "title": "On-Chain Credit Risk Score in Decentralized Finance",
+  "n_queries": 9,
+  "published": "2024-12-01T07:18:04Z",
+  "categories": [
+   "q-fin.RM"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 325,
+  "n_tables_docling": 2,
+  "n_footnotes": 0,
+  "chars_json": 37246,
+  "n_pages_docling": 31
+ },
+ {
+  "paper_id": "2412.06947v3",
+  "n_pages": 7,
+  "n_tables": 4,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2412.06947v3",
+  "title": "PyraNet: A Multi-Layered Hierarchical Dataset for Verilog",
+  "n_queries": 2,
+  "published": "2024-12-09T19:45:54Z",
+  "categories": [
+   "cs.AR",
+   "cs.AI",
+   "cs.LG",
+   "cs.PL"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 133,
+  "n_tables_docling": 4,
+  "n_footnotes": 0,
+  "chars_json": 38661,
+  "n_pages_docling": 7
+ },
+ {
+  "paper_id": "2412.14369v2",
+  "n_pages": 8,
+  "n_tables": 1,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2412.14369v2",
+  "title": "Uncertainty Awareness in Wireless Communications and Sensing",
+  "n_queries": 4,
+  "published": "2024-12-18T22:08:17Z",
+  "categories": [
+   "eess.SP"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 110,
+  "n_tables_docling": 1,
+  "n_footnotes": 0,
+  "chars_json": 52437,
+  "n_pages_docling": 8
+ },
+ {
+  "paper_id": "2412.15448v2",
+  "n_pages": 32,
+  "n_tables": 3,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2412.15448v2",
+  "title": "Risk-Adjusted Performance of Random Forest Models in High-Frequency Trading",
+  "n_queries": 10,
+  "published": "2024-12-19T23:02:02Z",
+  "categories": [
+   "q-fin.CP",
+   "q-fin.RM"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 285,
+  "n_tables_docling": 3,
+  "n_footnotes": 1,
+  "chars_json": 67471,
+  "n_pages_docling": 32
+ },
+ {
+  "paper_id": "2412.16874v3",
+  "n_pages": 5,
+  "n_tables": 4,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2412.16874v3",
+  "title": "A Multi-modal Approach to Dysarthria Detection and Severity Assessment Using Speech and Text Information",
+  "n_queries": 6,
+  "published": "2024-12-22T06:08:35Z",
+  "categories": [
+   "cs.AI",
+   "eess.AS"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 90,
+  "n_tables_docling": 4,
+  "n_footnotes": 0,
+  "chars_json": 31712,
+  "n_pages_docling": 5
+ },
+ {
+  "paper_id": "2412.16915v2",
+  "n_pages": 11,
+  "n_tables": 4,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2412.16915v2",
+  "title": "FADA: Fast Diffusion Avatar Synthesis with Mixed-Supervised Multi-CFG Distillation",
+  "n_queries": 3,
+  "published": "2024-12-22T08:19:22Z",
+  "categories": [
+   "cs.CV",
+   "cs.AI",
+   "cs.GR",
+   "cs.SD",
+   "eess.AS"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 172,
+  "n_tables_docling": 4,
+  "n_footnotes": 3,
+  "chars_json": 47319,
+  "n_pages_docling": 11
+ },
+ {
+  "paper_id": "2412.18180v3",
+  "n_pages": 29,
+  "n_tables": 11,
+  "query_sources": [
+   "text"
+  ],
+  "url": "https://arxiv.org/pdf/2412.18180v3",
+  "title": "PCM Selector: Penalized Covariate-Mediator Selection Operator for Evaluating Linear Causal Effects",
+  "n_queries": 4,
+  "published": "2024-12-24T05:34:05Z",
+  "categories": [
+   "stat.ME",
+   "cs.LG"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 347,
+  "n_tables_docling": 11,
+  "n_footnotes": 2,
+  "chars_json": 78735,
+  "n_pages_docling": 29
+ },
+ {
+  "paper_id": "2412.19754v3",
+  "n_pages": 69,
+  "n_tables": 17,
+  "query_sources": [
+   "text",
+   "text-table"
+  ],
+  "url": "https://arxiv.org/pdf/2412.19754v3",
+  "title": "Complement or substitute? How AI increases the demand for human skills",
+  "n_queries": 2,
+  "published": "2024-12-27T17:26:30Z",
+  "categories": [
+   "econ.GN",
+   "cs.AI",
+   "q-fin.EC"
+  ],
+  "origin": "v2_added_50",
+  "n_blocks": 329,
+  "n_tables_docling": 17,
+  "n_footnotes": 11,
+  "chars_json": 100154,
+  "n_pages_docling": 69
+ }
+]

@@ -1,0 +1,17 @@
+{
+ "dataset": "docx_corpus",
+ "counter": "bge-m3",
+ "tokenizer": "BAAI/bge-m3",
+ "measured_at": "2026-10-02T11:03:39",
+ "by_lang": {
+  "en": {
+   "chars_per_token": 4.3352,
+   "n_docs": 100,
+   "total_chars": 5342587,
+   "total_tokens": 1232377,
+   "per_doc_min": 3.191,
+   "per_doc_p50": 4.393,
+   "per_doc_max": 5.011
+  }
+ }
+}

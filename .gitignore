@@ -1,21 +1,28 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-data/srt_kor/*
-!data/srt_kor/.gitkeep
-data/srt_eng/*
-!data/srt_eng/.gitkeep
-data/allganize/*
-!data/allganize/.gitkeep
-data/vectara_ragbench/*
-!data/vectara_ragbench/.gitkeep
 venv/
-results/*.json
 .venv311/
 .venv-eval/
+.python/
+.tools/
 *.log
 .env
 .pytest_cache/
 *.egg-info/
-.python/
-.tools/
+
+# data/: 원본·중간 산출물은 제외, QA·manifest만 추적.
+# (.git/info/exclude 의 'data/' 규칙을 이기려면 아래 순서가 필요하다 - 임시 저장소 실험으로 확인함)
+!/data/
+/data/*
+!/data/qa/
+!/data/manifests/
+
+# results/: 요약 파일만 추적
+results/**
+!results/
+!results/**/
+!results/**/summary*.json
+
+# legacy/: 코드는 추적, 백업은 제외
+legacy/backup_removed_*/

@@ -1,0 +1,37 @@
+[
+ {
+  "movie": "Noah",
+  "en_file": "Noah_Eng.srt",
+  "ko_file": "노아.srt",
+  "en_doc": "Noah.en",
+  "ko_doc": "Noah.ko"
+ },
+ {
+  "movie": "Deadpool",
+  "en_file": "Deadpool_Eng.srt",
+  "ko_file": "데드풀.srt",
+  "en_doc": "Deadpool.en",
+  "ko_doc": "Deadpool.ko"
+ },
+ {
+  "movie": "InsidiousChapter2",
+  "en_file": "Insidious_Chapter2_Eng.srt",
+  "ko_file": "인시디어스2.srt",
+  "en_doc": "InsidiousChapter2.en",
+  "ko_doc": "InsidiousChapter2.ko"
+ },
+ {
+  "movie": "DoctorStrange",
+  "en_file": "Doctor_Strange_Eng.srt",
+  "ko_file": "닥터스트레인지.srt",
+  "en_doc": "DoctorStrange.en",
+  "ko_doc": "DoctorStrange.ko"
+ },
+ {
+  "movie": "CaptainAmericaCivilWar",
+  "en_file": "Captain_America_Civil_War_Eng.srt",
+  "ko_file": "캡틴아메리카시빌워.srt",
+  "en_doc": "CaptainAmericaCivilWar.en",
+  "ko_doc": "CaptainAmericaCivilWar.ko"
+ }
+]

@@ -1,0 +1,26 @@
+{
+ "dataset": "srt",
+ "counter": "gemma",
+ "tokenizer": "google/gemma-4-12B-it-qat-q4_0-unquantized",
+ "measured_at": "2026-10-02T11:03:42",
+ "by_lang": {
+  "en": {
+   "chars_per_token": 3.4327,
+   "n_docs": 5,
+   "total_chars": 149688,
+   "total_tokens": 43606,
+   "per_doc_min": 3.342,
+   "per_doc_p50": 3.431,
+   "per_doc_max": 3.522
+  },
+  "ko": {
+   "chars_per_token": 1.4943,
+   "n_docs": 5,
+   "total_chars": 75889,
+   "total_tokens": 50785,
+   "per_doc_min": 1.433,
+   "per_doc_p50": 1.494,
+   "per_doc_max": 1.561
+  }
+ }
+}

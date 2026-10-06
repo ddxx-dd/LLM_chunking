@@ -1,0 +1,17 @@
+{
+ "dataset": "vectara",
+ "counter": "bge-m3",
+ "tokenizer": "BAAI/bge-m3",
+ "measured_at": "2026-10-03T14:59:57",
+ "by_lang": {
+  "en": {
+   "chars_per_token": 3.3566,
+   "n_docs": 100,
+   "total_chars": 6455228,
+   "total_tokens": 1923147,
+   "per_doc_min": 2.668,
+   "per_doc_p50": 3.459,
+   "per_doc_max": 4.389
+  }
+ }
+}

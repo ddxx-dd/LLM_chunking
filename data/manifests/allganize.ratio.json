@@ -1,0 +1,17 @@
+{
+ "dataset": "allganize",
+ "counter": "bge-m3",
+ "tokenizer": "BAAI/bge-m3",
+ "measured_at": "2026-10-03T15:00:10",
+ "by_lang": {
+  "ko": {
+   "chars_per_token": 1.9566,
+   "n_docs": 45,
+   "total_chars": 897491,
+   "total_tokens": 458698,
+   "per_doc_min": 1.449,
+   "per_doc_p50": 1.879,
+   "per_doc_max": 2.729
+  }
+ }
+}

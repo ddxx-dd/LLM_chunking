@@ -1,0 +1,100 @@
+{
+ "doc_id": "example_a",
+ "dataset": "fixture",
+ "fmt": "pdf",
+ "lang": "en",
+ "title": "Example A",
+ "parser": "fixture",
+ "blocks": [
+  {
+   "id": "b0",
+   "type": "heading",
+   "text": "1 Introduction",
+   "level": 1,
+   "heading_path": [
+    "1 Introduction"
+   ],
+   "page": 1
+  },
+  {
+   "id": "b1",
+   "type": "paragraph",
+   "text": "Federated learning lets many clients train a shared model without sharing raw data. However, clients may free ride by contributing little while still receiving the global model. This paper studies how to detect free riding.",
+   "heading_path": [
+    "1 Introduction"
+   ],
+   "page": 1
+  },
+  {
+   "id": "b2",
+   "type": "paragraph",
+   "text": "Prior work assumes honest participation. We relax this assumption and model each client as a rational agent that chooses its own training effort.",
+   "heading_path": [
+    "1 Introduction"
+   ],
+   "page": 1
+  },
+  {
+   "id": "b3",
+   "type": "heading",
+   "text": "2 Method",
+   "level": 2,
+   "heading_path": [
+    "1 Introduction",
+    "2 Method"
+   ],
+   "page": 1
+  },
+  {
+   "id": "b4",
+   "type": "paragraph",
+   "text": "We propose a truthful mechanism that rewards clients in proportion to their verified contribution.",
+   "heading_path": [
+    "1 Introduction",
+    "2 Method"
+   ],
+   "page": 1
+  },
+  {
+   "id": "b5",
+   "type": "table",
+   "text": "| Client | Effort | Reward |\n|---|---|---|\n| A | 0.9 | 0.45 |\n| B | 0.2 | 0.10 |\n| C | 0.0 | 0.00 |",
+   "heading_path": [
+    "1 Introduction",
+    "2 Method"
+   ],
+   "page": 1
+  },
+  {
+   "id": "b6",
+   "type": "paragraph",
+   "text": "The server estimates each contribution by comparing the submitted update with a held-out validation gradient. Clients whose updates have low alignment receive a smaller reward. The reward rule is monotone in alignment, so exaggerating effort never helps. We prove that truthful reporting is a dominant strategy under mild conditions.",
+   "heading_path": [
+    "1 Introduction",
+    "2 Method"
+   ],
+   "page": 1
+  },
+  {
+   "id": "b7",
+   "type": "heading",
+   "text": "3 Experiments",
+   "level": 2,
+   "heading_path": [
+    "1 Introduction",
+    "3 Experiments"
+   ],
+   "page": 1
+  },
+  {
+   "id": "b8",
+   "type": "paragraph",
+   "text": "We evaluate on CIFAR-10 and FEMNIST with one hundred simulated clients. Thirty percent of the clients free ride.",
+   "heading_path": [
+    "1 Introduction",
+    "3 Experiments"
+   ],
+   "page": 1
+  }
+ ]
+}
