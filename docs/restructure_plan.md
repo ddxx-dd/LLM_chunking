@@ -236,7 +236,7 @@ srt는 `{"movie": "Deadpool", "en": "Deadpool.en", "ko": "Deadpool.ko"}` 쌍 목
 
 ### 3.5 인덱스 캐시 — `data/index/<dataset>/<chunker>__<설정>/`
 
-- 저장 방식: LangChain `InMemoryVectorStore.dump/load`. 설치된 langchain-core에서 두 메서드 모두 있음을 확인했다(2026-10-02).
+- 저장 방식(2026-10-06 개정): **FAISS `IndexFlatIP`(정확 검색)** - `index.faiss`, `chunk_ids.json`, `info.json`. `faiss-cpu`는 `.venv311`에만 설치한다. 원래 계획은 LangChain `InMemoryVectorStore.dump/load`였으나 dump가 벡터를 들여쓴 JSON으로 저장해 파일이 매우 커서 쓰지 않았다(그 사이 numpy 직접 검색을 거쳐 FAISS로 옮김). 청커 비교 실험이라 검색 근사 오차가 섞이지 않도록 근사 인덱스(HNSW, IVF)는 쓰지 않는다.
 - 규칙은 단순하다: **폴더가 있으면 불러오고, `--force`면 다시 만든다.** 해시 검사와 자동 재생성은 하지 않는다.
 - `info.json`(`embed_model`, `n_chunks`, `created_at`)은 사람이 확인하는 용도이고 검증에는 쓰지 않는다.
 - 청크 파일이 바뀐 뒤에는 같은 폴더 이름의 옛 인덱스가 남을 수 있으므로 3.7절 규칙으로 정리한다.

@@ -1,8 +1,10 @@
 """청크 파일 통계 (docs/restructure_plan.md 5.5절).
 
-  .venv311/bin/python scripts/chunk_stats.py --dataset vectara [--tag smart__min100-max400-w2] [--min-tokens N --max-tokens N]
+  .venv311/bin/python scripts/chunk_stats.py --dataset vectara [--tag smart__p90-min100-max400] [--min-tokens N --max-tokens N]
 
 --tag를 안 주면 data/chunks/<dataset>/ 의 모든 청크 파일을 처리한다.
+태그는 청크 파일 이름(확장자 제외)이다. 예: fixed__c300, semantic__p90-min100-max400, smart__p90-min100-max400
+(srt의 legacy smart는 smart__min128-max512-w2 형식).
 --min-tokens/--max-tokens는 under_min_rate/over_max_rate의 기준이다. 안 주면 청크 파일 안 params의 값을 쓰고,
 없으면(fixed) 그 두 지표는 빼므로, 청커를 같은 기준으로 비교하려면 같은 값을 명시할 것.
 결과: results/<dataset>/chunk_stats/<tag>.json

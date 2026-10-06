@@ -1,23 +1,18 @@
 """청크 통계·러너 단위 테스트 (가짜 임베딩, 실제 문서·모델 없음). 임시 파일은 tests/ 아래에 만들고 지운다."""
 import json
 import shutil
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent / "src"))
-sys.path.insert(0, str(HERE))
 
-from chunking import runner  # noqa: E402
-from chunking.splitters import chunk  # noqa: E402
-from chunking.stats import compute_stats, coverage_ok  # noqa: E402
-from common.docjson import load_doc  # noqa: E402
-from test_chunking import FILES, cfg_for, models_for  # noqa: E402
+from support import HERE, FIX, FILES, models_for, cfg_for
+from chunking import runner
+from chunking.splitters import chunk
+from chunking.stats import compute_stats, coverage_ok
+from common.docjson import load_doc
 
-FIX = HERE / "fixtures"
 
 
 def stats_for(key, chunker, **kw):

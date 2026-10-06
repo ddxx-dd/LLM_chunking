@@ -1,7 +1,6 @@
 """검색 지표·인덱스 단위 테스트 (가짜 인코더, 모델 불필요). 임시 파일은 tests/ 아래에 만들고 지운다."""
 import json
 import shutil
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,11 +8,10 @@ from unittest import mock
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent / "src"))
 
-from indexing import index as I  # noqa: E402
-from tasks import retrieval as R  # noqa: E402
+from support import HERE
+from indexing import index as I
+from tasks import retrieval as R
 
 WORDS = ["apple", "banana", "cherry", "dog"]
 
@@ -122,6 +120,29 @@ class Index(unittest.TestCase):
         self.assertEqual([c["chunk_id"] for c in got], ["n#0", "n#1"])
         self.assertEqual(got[0]["text"], "앞\x85뒤 and\u2028more")
 
+    def test_faiss_flat_equals_exact_numpy_search(self):
+        # FAISS IndexFlatIP는 정확 검색이므로 이전 numpy 구현(기준)과 상위 k의 id·점수가 같아야 한다
+        rng = np.random.default_rng(7)
+        mat = rng.normal(size=(400, 48)).astype(np.float32)
+        mat /= np.linalg.norm(mat, axis=1, keepdims=True)
+        qs = rng.normal(size=(25, 48)).astype(np.float32)
+        qs /= np.linalg.norm(qs, axis=1, keepdims=True)
+        chunks = [chunk(f"c#{i}", "D", f"t{i}") for i in range(400)]
+        idx = I.ChunkIndex(chunks, mat, lambda texts: qs[[int(t) for t in texts]])
+        got = idx.search([str(i) for i in range(25)], k=7)
+        sims = qs @ mat.T
+        for row, hits in zip(sims, got):
+            order = np.argsort(-row, kind="stable")[:7]
+            self.assertEqual([c["chunk_id"] for c, _ in hits], [f"c#{i}" for i in order])
+            np.testing.assert_allclose([s for _, s in hits], row[order], rtol=1e-5, atol=1e-6)
+
+    def test_k_larger_than_index_and_empty_index(self):
+        idx = I.build_index(CHUNKS, fake_encode)
+        self.assertEqual(len(idx.search(["apple"], k=50)[0]), len(CHUNKS))          # k가 청크 수보다 커도 있는 만큼만
+        empty = I.build_index([], fake_encode)
+        self.assertEqual(empty.search(["apple", "dog"], k=5), [[], []])
+        self.assertEqual(empty.matrix.shape[0], 0)
+
     def test_truncation_count_recorded(self):
         big = CHUNKS + [chunk("z#0", "Z", "dog", n=9000)]
         self.assertEqual(I.build_index(big, fake_encode, max_seq_length=8192).truncated, 1)
@@ -133,15 +154,22 @@ class Index(unittest.TestCase):
         with mock.patch.object(I, "CHUNKS_DIR", chunks_dir), mock.patch.object(I, "INDEX_DIR", self.tmp / "index"):
             a = I.get_index("ds", "tag", self.encode)
             n_first = self.calls
+            folder = self.tmp / "index" / "ds" / "tag"                                     # 저장 형식: FAISS 인덱스 + 청크 id + 정보
+            self.assertTrue((folder / "index.faiss").exists())
+            self.assertFalse((folder / "embeddings.npy").exists())                       # 예전 numpy 저장 형식은 더 쓰지 않는다
+            info = json.loads((folder / "info.json").read_text(encoding="utf-8"))
+            self.assertEqual((info["backend"], info["n_chunks"], info["dim"]), ("faiss.IndexFlatIP", 4, 4))
             b = I.get_index("ds", "tag", self.encode)                                     # 캐시에서 불러옴 -> 인코딩 안 함
             self.assertEqual(self.calls, n_first)
             np.testing.assert_allclose(a.matrix, b.matrix)
+            q = ["apple pie", "dog walks", "banana"]                                      # 파일에서 불러온 인덱스의 검색 = 처음 만든 것과 같다
+            self.assertEqual([[(c["chunk_id"], round(s, 6)) for c, s in h] for h in b.search(q, 3)],
+                             [[(c["chunk_id"], round(s, 6)) for c, s in h] for h in a.search(q, 3)])
             I.get_index("ds", "tag", self.encode, force=True)
             self.assertGreater(self.calls, n_first)                                       # force면 다시 만듦
             sub = I.get_index("ds", "tag", self.encode, doc_ids=["A"])                    # 표본(문서 일부) -> 청크 id가 달라 다시 만듦
             self.assertEqual([c["chunk_id"] for c in sub.chunks], ["a#0", "a#1"])
-            self.assertTrue((self.tmp / "index" / "ds" / "tag" / "info.json").exists())
-
+            self.assertEqual(json.loads((folder / "info.json").read_text(encoding="utf-8"))["n_chunks"], 2)   # 캐시가 표본 것으로 덮어써짐(섞이지 않음)
 
 if __name__ == "__main__":
     unittest.main()

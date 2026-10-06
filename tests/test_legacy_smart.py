@@ -1,22 +1,16 @@
 """legacy smart 테스트 (기본 경로에서는 쓰지 않는 보관 코드). 가짜 임베딩(키워드 축)과 공백 단위 토큰 카운터.
   SmartParts: 예전 SmartChunker(srt 설정이 아직 사용) / 나머지: 문단 단위 ConstrainedSmartChunker(이전 구현, 5개 제약)."""
 import re
-import sys
 import unittest
-from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent / "src"))
-sys.path.insert(0, str(HERE))
 
-from chunking.legacy_smart import ConstrainedSmartChunker, SmartChunker, cue_continues, split_sentences  # noqa: E402
-from chunking.units import caption_glue  # noqa: E402
-from common.docjson import block_spans, load_doc, render, to_text  # noqa: E402
-from test_chunking import FIX, count_words, make_stub, AXES, models_for  # noqa: E402
+from support import FIX, TOPIC_AXES, make_stub, count_words, words, models_for
+from chunking.legacy_smart import ConstrainedSmartChunker, SmartChunker, cue_continues, split_sentences
+from chunking.units import caption_glue
+from common.docjson import block_spans, load_doc, render, to_text
 
-TOPICS = ["alpha", "beta", "gamma"]
 
 
 class Emb:
@@ -25,13 +19,9 @@ class Emb:
         out = []
         for t in texts:
             low = t.lower()
-            v = np.array([low.count(w) for w in TOPICS], float) + 0.05
+            v = np.array([low.count(w) for w in TOPIC_AXES], float) + 0.05
             out.append(v / np.linalg.norm(v))
         return np.array(out)
-
-
-def words(topic, n):
-    return " ".join([topic] * n) + "."
 
 
 def build(parts, sep="\n\n"):

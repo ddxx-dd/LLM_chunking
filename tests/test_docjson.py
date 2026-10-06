@@ -2,18 +2,15 @@
 기존 코드의 출력과 비교하지 않는다. 실행: .venv311/bin/python -m unittest discover -s tests -v
 """
 import shutil
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent / "src"))
 
-from common.docjson import (MD_SEP, SRT_SEP, Piece, block_spans, load_doc, render,  # noqa: E402
+from support import HERE, FIX
+from common.docjson import (MD_SEP, SRT_SEP, Piece, block_spans, load_doc, render,
                             save_doc, to_lc_document, to_text)
 
-FIX = HERE / "fixtures"
 A_SPANS = [(0, 16, "heading"), (18, 241, "para"), (243, 388, "para"), (390, 401, "heading"),
            (403, 501, "para"), (503, 602, "table"), (604, 937, "para"), (939, 955, "heading"),
            (957, 1069, "para")]

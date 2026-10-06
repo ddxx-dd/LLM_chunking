@@ -1,28 +1,18 @@
 """의미 분할 공유 엔진(semantic_core) 단위 테스트 - 가짜 임베딩(키워드 축)과 공백 단위 토큰 카운터.
 핵심은 LangChain SemanticChunker와 같은 경계를 만드는지(동치 테스트)와 크기 정리 규칙이다."""
-import sys
 import unittest
 import zlib
-from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent / "src"))
-sys.path.insert(0, str(HERE))
 
-from langchain_experimental.text_splitter import SemanticChunker  # noqa: E402
+from support import FIX, AXES, FILES, TOPIC_AXES, make_stub, count_words, words
+from langchain_experimental.text_splitter import SemanticChunker
 
-from chunking.semantic_core import (SENTENCE_SPLIT_REGEX, SemanticEngine, combined_texts,  # noqa: E402
+from chunking.semantic_core import (SENTENCE_SPLIT_REGEX, SemanticEngine, combined_texts,
                                     consecutive_distances, sentence_spans)
-from common.docjson import load_doc, to_text  # noqa: E402
-from test_chunking import AXES, FILES, FIX, count_words, make_stub  # noqa: E402
+from common.docjson import load_doc, to_text
 
-TOPIC_AXES = ["alpha", "beta", "gamma"]
-
-
-def words(topic, n):
-    return " ".join([topic] * n) + "."
 
 
 def joined(text, units, a, b):

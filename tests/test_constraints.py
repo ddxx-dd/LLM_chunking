@@ -1,27 +1,17 @@
 """구조 제약 규칙(units.py)과 smart = 엔진 + 규칙 구조의 테스트 - 가짜 임베딩과 공백 단위 토큰 카운터.
 규칙: heading_forced(제목 앞 강제) / heading_glue(제목 뒤 금지) / table_atomic(표 한 덩어리) / caption_glue(표-캡션 금지)."""
 import re
-import sys
 import unittest
-from pathlib import Path
-
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent / "src"))
-sys.path.insert(0, str(HERE))
-
-from chunking import splitters  # noqa: E402
-from chunking.runner import tag_for  # noqa: E402
-from chunking.semantic_core import sentence_spans  # noqa: E402
-from chunking.units import ALL_RULES, NO_RULES, Rules, build_units, caption_glue, rules_for  # noqa: E402
-from common.config import dataset_cfg  # noqa: E402
-from common.docjson import render  # noqa: E402
-from test_chunking import count_words, make_stub  # noqa: E402
-
-TOPIC_AXES = ["alpha", "beta", "gamma"]
 
 
-def words(topic, n):
-    return " ".join([topic] * n) + "."
+from support import TOPIC_AXES, make_stub, count_words, words
+from chunking import splitters
+from chunking.runner import tag_for
+from chunking.semantic_core import sentence_spans
+from chunking.units import ALL_RULES, NO_RULES, Rules, build_units, caption_glue, rules_for
+from common.config import dataset_cfg
+from common.docjson import render
+
 
 
 def make_doc(blocks):

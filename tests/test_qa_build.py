@@ -2,16 +2,14 @@
 import csv
 import json
 import shutil
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent / "src"))
 
-from qa_build import build_qa as B  # noqa: E402
+from support import HERE
+from qa_build import build_qa as B
 
 
 class Splits(unittest.TestCase):

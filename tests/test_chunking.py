@@ -5,33 +5,15 @@ fixed의 기대 경계는 기존 코드(legacy/src/chunkers.py)와 같고, seman
 실행: .venv311/bin/python -m unittest discover -s tests -v
 """
 import re
-import sys
 import unittest
-from pathlib import Path
 
-import numpy as np
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent / "src"))
 
-from chunking import splitters  # noqa: E402
-from chunking.meta import attach_meta  # noqa: E402
-from common.docjson import load_doc, render, to_text  # noqa: E402
+from support import HERE, FIX, FILES, count_words, models_for, cfg_for
+from chunking import splitters
+from chunking.meta import attach_meta
+from common.docjson import load_doc, render, to_text
 
-FIX = HERE / "fixtures"
-
-AXES = {
-    "A": ["free rid|honest|rational|agent|effort|participation", "reward|mechanism|truthful|contribution|align|monotone|strategy",
-          "cifar|femnist|evaluate|simulated", "federated|train|model|data"],
-    "B": ["cab|wheel|excuse|dopinder|nice|smells|lonesome|help", "wife|gita|cousin|bandhu|dishonorable|attractive|reason|called",
-          "love|world|daffodil|yoga|mama|taste|bad|tight", "suit|christmas|pool"],
-    "C": ["accuracy|benchmark|seeds|baseline", "cost|gpu|clients|round|hours", "privacy|encrypted|raw data|device|gradient"],
-}
-# 설명용 작은 파라미터: fixed 글자 수, strip, min/max(공백 단위 단어 수), mode(srt는 legacy smart 설정이 쓴다)
-PARAMS = {"A": dict(fixed=160, strip=True, mn=25, mx=60, mode="pdf"),
-          "B": dict(fixed=200, strip=False, mn=15, mx=40, mode="srt"),
-          "C": dict(fixed=160, strip=True, mn=20, mx=45, mode="pdf")}
-FILES = {"A": "example_a", "B": "example_b", "C": "example_c"}
 
 EXPECTED = {
     # 거리 계산은 buffer_size=0(단위 하나씩)이 기본이다.
@@ -50,46 +32,6 @@ EXPECTED = {
               semantic=[(0, 212), (213, 408), (409, 586)],
               smart=[(0, 212), (213, 408), (409, 586)]),
 }
-
-
-def make_stub(axes):
-    def vec(t):
-        tl = t.lower()
-        v = np.array([len(re.findall(a, tl)) for a in axes], float) + 0.05
-        return v / np.linalg.norm(v)
-
-    class Emb:
-        def embed_documents(self, ts):
-            return [vec(t).tolist() for t in ts]
-
-        def embed_query(self, t):
-            return vec(t).tolist()
-
-        @property
-        def _client(self):
-            class Client:
-                def encode(s, ts, normalize_embeddings=True):
-                    return np.array([vec(t) for t in ts])
-            return Client()
-    return Emb()
-
-
-def count_words(s):
-    return len(s.split())
-
-
-def models_for(key):
-    emb = make_stub(AXES[key])
-    return {"embeddings": emb, "embed_model": emb._client, "count": count_words}
-
-
-def cfg_for(key, chunker):
-    p = PARAMS[key]
-    if chunker == "fixed":
-        return {"chunk_size_chars": p["fixed"], "strip_whitespace": p["strip"], "overlap_ratio": 0.0}
-    if chunker == "smart" and p["mode"] == "srt":                      # srt smart는 아직 legacy
-        return {"mode": "srt", "algorithm": "legacy", "min_tokens": p["mn"], "max_tokens": p["mx"], "window": 2}
-    return {"percentile": 90, "min_tokens": p["mn"], "max_tokens": p["mx"]}     # semantic(규칙 off) / smart(규칙 on)
 
 
 def run(key, chunker):

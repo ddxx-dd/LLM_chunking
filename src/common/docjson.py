@@ -99,7 +99,8 @@ def to_text(doc):
 
 
 def block_spans(doc):
-    """SmartChunker.sections()가 받는 (start, end, kind) 목록."""
+    """조각마다 (start, end, kind) 목록. 옛 방식 legacy_smart.SmartChunker(srt 설정)가 입력으로 받는 모양이다.
+    새 청커(semantic·smart)는 render()의 Piece 목록과 units.build_units를 쓴다."""
     return [(p.start, p.end, p.kind) for p in render(doc)[1]]
 
 

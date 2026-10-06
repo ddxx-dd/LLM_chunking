@@ -4,24 +4,23 @@
 import importlib.util
 import json
 import shutil
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from docling_core.types.doc import DocItemLabel as L, GroupLabel  # noqa: E402
+from support import HERE
+from docling_core.types.doc import DocItemLabel as L, GroupLabel
 
-from common.docjson import render  # noqa: E402
-from preprocess._docling import build_blocks  # noqa: E402
-from preprocess.docx_prep import make_heading_level  # noqa: E402
-from preprocess import pdf_prep  # noqa: E402
-from preprocess.pdf_prep import PdfHeadingLevel  # noqa: E402
-from preprocess.srt_prep import normalize, parse_srt_text, to_sec  # noqa: E402
-from preprocess.validate import validate_doc  # noqa: E402
+from common.docjson import render
+from preprocess._docling import build_blocks
+from preprocess.docx_prep import make_heading_level
+from preprocess import pdf_prep
+from preprocess.pdf_prep import PdfHeadingLevel
+from preprocess.srt_prep import normalize, parse_srt_text, to_sec
+from preprocess.validate import validate_doc
 
 
 class FakeItem:
@@ -233,7 +232,6 @@ class Srt(unittest.TestCase):
         self.assertTrue(any("큐 개수" in e for e in validate_doc(doc)["errors"]))
 
 
-HERE = Path(__file__).resolve().parent
 
 
 def make_pdf(path, text="Hello clean test"):
