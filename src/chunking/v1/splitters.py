@@ -11,10 +11,11 @@
 """
 from langchain_text_splitters import CharacterTextSplitter
 
-from chunking.legacy_smart import SmartChunker
-from chunking.meta import attach_meta
-from chunking.semantic_core import SemanticEngine
-from chunking.units import build_units, caption_glue, rules_for, size_control_for
+from srt.smart import SmartChunker
+from chunking.v1.meta import attach_meta
+from chunking.v1.sections import merge_short_sections, split_sections
+from chunking.sizectl.semantic_core import SemanticEngine
+from chunking.v1.units import build_units, caption_glue, rules_for, size_control_for
 from common.docjson import render
 
 
@@ -42,7 +43,7 @@ def resolve_fixed_size(doc, cfg):
     if cfg.get("chunk_size_chars"):
         size = int(cfg["chunk_size_chars"])
         return size, round(cfg.get("overlap_ratio", 0.0) * size)
-    from chunking.ratio import fixed_chunk_size
+    from chunking.v1.ratio import fixed_chunk_size
     return fixed_chunk_size(doc["dataset"], doc["lang"], cfg["target_tokens"], cfg.get("overlap_ratio", 0.0))
 
 
@@ -63,12 +64,24 @@ def chunk_spans(doc, text, pieces, chunker, cfg, models):
         return sm.chunk_spans(text, blocks), {}, {**cfg, "lang": doc["lang"]}
     if chunker in ("semantic", "smart"):
         rules = rules_for(chunker, cfg)
-        units, forced = build_units(text, pieces, caption_glue(doc, pieces), rules)
+        glue = caption_glue(doc, pieces)
         engine = SemanticEngine(models["embed_model"], models["count"], percentile=cfg["percentile"],
                                 min_tokens=cfg["min_tokens"], max_tokens=cfg["max_tokens"], buffer_size=cfg.get("buffer_size", 0),
-                                size_control=size_control_for(chunker, cfg), min_weight=cfg.get("min_weight", 0.5))
-        spans = engine.chunk_spans(text, units, forced)
-        return spans, {f"{chunker}_{k}": v for k, v in engine.stats.items()}, {**cfg, "rules": rules.as_dict(), "size_control": size_control_for(chunker, cfg), "lang": doc["lang"]}
+                                size_control=size_control_for(chunker, cfg))
+        extra = {}
+        if rules.section_split:
+            sections, _lvl = split_sections(doc, pieces)
+            groups, n_merges = merge_short_sections(text, pieces, sections, models["embed_model"], models["count"], cfg["min_tokens"], cfg["max_tokens"])
+            spans = engine.chunk_groups(text, [build_units(text, pieces[lo:hi], glue, rules, count=models["count"], max_tokens=cfg.get("max_tokens"))
+                                               for lo, hi in groups])
+            bounds = [pieces[lo].start for lo, _ in sections[1:]]                      # 원래 섹션 경계(합치기 전)
+            extra = {"orig_sections": len(sections), "section_merges": n_merges,
+                     "cross_section_chunks": sum(1 for s, e in spans if any(s < b < e for b in bounds))}
+        else:
+            units, forced = build_units(text, pieces, glue, rules, count=models["count"], max_tokens=cfg.get("max_tokens"))
+            spans = engine.chunk_spans(text, units, forced)
+        info = {f"{chunker}_{k}": v for k, v in {**engine.stats, **extra}.items()}
+        return spans, info, {**cfg, "rules": rules.as_dict(), "size_control": size_control_for(chunker, cfg), "lang": doc["lang"]}
     raise KeyError(f"unknown chunker: {chunker!r}")
 
 

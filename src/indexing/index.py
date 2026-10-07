@@ -76,6 +76,18 @@ class ChunkIndex:
         return out
 
 
+def combine_indexes(indexes, encode):
+    """여러 ChunkIndex를 한 인덱스로 합친다(저장된 벡터를 이어 붙일 뿐 다시 임베딩하지 않는다). 청크 id는 서로 달라야 한다."""
+    chunks = [c for idx in indexes for c in idx.chunks]
+    ids = [c["chunk_id"] for c in chunks]
+    if len(set(ids)) != len(ids):
+        raise ValueError("합칠 인덱스들의 청크 id가 겹친다")
+    matrix = np.vstack([idx.matrix for idx in indexes]) if chunks else np.zeros((0, 1), np.float32)
+    out = ChunkIndex(chunks, matrix, encode)
+    out.truncated = sum(getattr(idx, "truncated", None) or 0 for idx in indexes)
+    return out
+
+
 def index_dir(dataset, tag):
     return INDEX_DIR / dataset / tag
 

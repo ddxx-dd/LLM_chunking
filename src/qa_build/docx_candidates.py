@@ -20,7 +20,7 @@ import os
 import random
 import re
 
-from chunking.semantic_core import sentence_spans
+from chunking.sizectl.semantic_core import sentence_spans
 from common.config import MANIFEST_DIR, PROCESSED_DIR, RAW_DIR
 from common.docjson import load_doc, render
 

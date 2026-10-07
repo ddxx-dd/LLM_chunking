@@ -58,6 +58,27 @@ class Builders(unittest.TestCase):
         self.assertIn(by["q1"]["split"], ("tune", "eval"))
         self.assertFalse(by["q1"]["excluded"])
 
+    def test_vectara_excludes_image_questions_and_splits_only_usable_docs(self):
+        meta = self.tmp / "meta"
+        (meta / "corpus").mkdir(parents=True)
+        (meta / "queries.json").write_text(json.dumps({
+            "q1": {"query": "a?", "type": "extractive", "source": "text"},
+            "q2": {"query": "b?", "type": "abstractive", "source": "text-image"},
+            "q3": {"query": "c?", "type": "abstractive", "source": "text-table-image"}}), encoding="utf-8")
+        (meta / "answers.json").write_text(json.dumps({"q1": "a", "q2": "b", "q3": "c"}), encoding="utf-8")
+        (meta / "qrels.json").write_text(json.dumps({"q1": {"doc_id": "P1", "section_id": 0}, "q2": {"doc_id": "P2", "section_id": 0},
+                                                      "q3": {"doc_id": "P2", "section_id": 0}}), encoding="utf-8")
+        for pid in ("P1", "P2", "P3"):                                                  # P3: 질문 없는 어려운 오답 문서
+            (meta / "corpus" / f"{pid}.json").write_text(json.dumps({"sections": [{"section_id": "0", "text": f"{pid} body"}]}), encoding="utf-8")
+        (self.tmp / "manifests" / "vectara.json").write_text(json.dumps([{"paper_id": p} for p in ("P1", "P2", "P3")]), encoding="utf-8")
+        with mock.patch.object(B, "MANIFEST_DIR", self.tmp / "manifests"):
+            recs, problems = B.build_vectara(meta)
+        by = {r["qid"]: r for r in recs}
+        self.assertEqual((by["q1"]["excluded"], by["q2"]["excluded"], by["q3"]["excluded"]), (False, True, True))
+        self.assertIn(by["q1"]["split"], ("tune", "eval"))
+        self.assertEqual((by["q2"]["split"], by["q3"]["split"]), (None, None))
+        self.assertEqual(problems, {"이미지 질문 제외": 2})
+
     def test_allganize_excludes_images_and_maps_files(self):
         meta = self.tmp / "meta"
         meta.mkdir()

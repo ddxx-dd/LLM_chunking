@@ -69,3 +69,48 @@ def convert_srt(entry):
         "log": log,
         "blocks": blocks,
     }
+
+
+# ---- 영화 쌍 목록과 전처리 대상 문서 목록 (원래 preprocess/datasets.py에 있던 srt 부분)
+import json
+
+from common.config import MANIFEST_DIR, RAW_DIR, ROOT
+
+# legacy/src/config.py 의 SUBTITLE_DATASETS (영어 파일, 한국어 파일)
+SRT_MOVIES = {
+    "Noah": ("Noah_Eng.srt", "노아.srt"),
+    "Deadpool": ("Deadpool_Eng.srt", "데드풀.srt"),
+    "InsidiousChapter2": ("Insidious_Chapter2_Eng.srt", "인시디어스2.srt"),
+    "DoctorStrange": ("Doctor_Strange_Eng.srt", "닥터스트레인지.srt"),
+    "CaptainAmericaCivilWar": ("Captain_America_Civil_War_Eng.srt", "캡틴아메리카시빌워.srt"),
+}
+
+
+def _rel(p):
+    return str(Path(p).resolve().relative_to(ROOT))
+
+
+def ensure_srt_manifest():
+    path = MANIFEST_DIR / "srt.json"
+    if path.exists():
+        return json.loads(path.read_text(encoding="utf-8"))
+    movies = []
+    for key, (en, ko) in SRT_MOVIES.items():
+        assert (RAW_DIR / "srt_eng" / en).exists(), en
+        assert (RAW_DIR / "srt_kor" / ko).exists(), ko
+        movies.append({"movie": key, "en_file": en, "ko_file": ko, "en_doc": f"{key}.en", "ko_doc": f"{key}.ko"})
+    MANIFEST_DIR.mkdir(parents=True, exist_ok=True)
+    (MANIFEST_DIR / "srt.json").write_text(json.dumps(movies, ensure_ascii=False, indent=1), encoding="utf-8")
+    return movies
+
+
+def srt_entries(dataset="srt"):
+    """-> [{doc_id, dataset, lang, path, source_file, title}] (영화 쌍마다 en, ko 두 문서)."""
+    out = []
+    for m in ensure_srt_manifest():
+        for lang, fname, folder, doc in (("en", m["en_file"], "srt_eng", m["en_doc"]),
+                                         ("ko", m["ko_file"], "srt_kor", m["ko_doc"])):
+            p = RAW_DIR / folder / fname
+            out.append({"doc_id": doc, "dataset": dataset, "lang": lang, "path": p,
+                        "source_file": _rel(p), "title": m["movie"]})
+    return out

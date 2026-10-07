@@ -7,9 +7,10 @@ import numpy as np
 
 
 from support import FIX, TOPIC_AXES, make_stub, count_words, words, models_for
-from chunking.legacy_smart import ConstrainedSmartChunker, SmartChunker, cue_continues, split_sentences
-from chunking.units import caption_glue
-from common.docjson import block_spans, load_doc, render, to_text
+from srt.smart import ConstrainedSmartChunker, SmartChunker, cue_continues, split_sentences
+from chunking.v1.units import caption_glue
+from common.docjson import load_doc, render, to_text
+from srt.render import block_spans
 
 
 

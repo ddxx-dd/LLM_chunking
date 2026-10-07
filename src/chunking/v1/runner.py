@@ -12,9 +12,9 @@ import json
 import os
 import time
 
-from chunking.splitters import chunk
-from chunking.units import DEFAULT_RULES, DEFAULT_SIZE_CONTROL, rules_for, size_control_for
-from chunking.stats import coverage_ok
+from chunking.v1.splitters import chunk
+from chunking.v1.units import DEFAULT_RULES, DEFAULT_SIZE_CONTROL, rules_for, size_control_for
+from chunking.v1.stats import coverage_ok
 from common.config import CHUNKS_DIR, PROCESSED_DIR, dataset_cfg
 from common.docjson import load_doc, to_text
 
@@ -44,8 +44,6 @@ def tag_for(chunker, cfg):
             tag += f"-r{rules.code()}"
         if size_control_for(chunker, cfg) != DEFAULT_SIZE_CONTROL[chunker]:     # 기본 크기 제어가 아니면 이름에 남긴다(어블레이션)
             tag += f"-sc{size_control_for(chunker, cfg)}"
-        if "min_weight" in cfg and size_control_for(chunker, cfg) == "dp":
-            tag += f"-mw{cfg['min_weight']:g}"
         return tag
     raise KeyError(chunker)
 

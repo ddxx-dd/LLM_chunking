@@ -9,7 +9,7 @@ import numpy as np
 from support import FIX, AXES, FILES, TOPIC_AXES, make_stub, count_words, words
 from langchain_experimental.text_splitter import SemanticChunker
 
-from chunking.semantic_core import (SENTENCE_SPLIT_REGEX, SemanticEngine, combined_texts,
+from chunking.sizectl.semantic_core import (SENTENCE_SPLIT_REGEX, SemanticEngine, combined_texts,
                                     consecutive_distances, sentence_spans)
 from common.docjson import load_doc, to_text
 
@@ -186,109 +186,49 @@ class SizeRegularization(unittest.TestCase):
 
 
 class DPSizeControl(unittest.TestCase):
-    """size_control="dp"(smart 전용): forced/max는 하드, min은 약한 벌점, 남은 작은 청크는 유사한 이웃과 합친다."""
-    def engine(self, mn, mx, pct=100, min_weight=0.5, size_control="dp"):
-        return SemanticEngine(make_stub(TOPIC_AXES)._client, count_words, percentile=pct, min_tokens=mn, max_tokens=mx,
-                              size_control=size_control, min_weight=min_weight)
+    """size_control="dp"(semantic·smart 기본): size_dp.partition을 호출한다. 순수 DP의 정확성은 test_size_dp.py, 여기서는 엔진 연결."""
+    def engine(self, mn, mx, pct=100, size_control="dp"):
+        return SemanticEngine(make_stub(TOPIC_AXES)._client, count_words, percentile=pct, min_tokens=mn, max_tokens=mx, size_control=size_control)
 
     def units(self, parts):
         text = "\n\n".join(parts)
         return text, sentence_spans(text)
 
-    def prepared(self, eng, sizes):
-        text, units = self.units([words("alpha", n) for n in sizes])
-        eng._prepare_sizes(text, units)
-        return text, units
+    def test_min_beats_forced_bonus_and_the_report_is_honest(self):
+        text, units = self.units([words("alpha", 3), words("beta", 12), words("beta", 12)])
+        eng = self.engine(mn=10, mx=100)
+        spans = eng.chunk_spans(text, units, forced=[0])             # 첫 문장(3단어) 뒤가 forced여도 자르면 min 미달이라 합쳐진다
+        self.assertEqual(spans, [(units[0][0], units[2][1])])
+        self.assertEqual((eng.stats["forced_cuts"], eng.stats["under_min"], eng.stats["min_shortfall"]), (0, 0, 0))
 
-    def brute_force(self, eng, n, d, tau, forced):
-        best = None
-        for mask in range(2 ** (n - 1)):
-            cuts = {i for i in range(n - 1) if mask >> i & 1}
-            if not forced <= cuts:
-                continue
-            bounds = [0] + [c + 1 for c in sorted(cuts)] + [n]
-            segs = list(zip(bounds, bounds[1:]))
-            if any(eng._size(a, b) > eng.max_t and b - a > 1 for a, b in segs):
-                continue
-            score = sum(0.0 if c in forced else d[c] - tau for c in cuts)
-            score -= sum(eng.min_w * max(0, eng.min_t - eng._size(a, b)) / eng.min_t for a, b in segs)
-            if best is None or score > best[0] + 1e-12:
-                best = (score, segs)
-        return best
+    def test_forced_is_followed_when_min_allows(self):
+        text, units = self.units([words("alpha", 12), words("alpha", 12), words("alpha", 12)])
+        eng = self.engine(mn=10, mx=100)
+        spans = eng.chunk_spans(text, units, forced=[1])
+        self.assertIn(units[2][0], [s for s, _ in spans])                           # forced 경계(1|2)에서 잘린다(보너스가 약한 경계의 손해보다 큼)
+        self.assertEqual(eng.stats["forced_cuts"], 1)
 
-    def test_worked_example_finds_the_only_partition_that_keeps_every_chunk_in_range(self):
-        # 문서 설명용 예시: 그리디/재균형은 70토큰 청크가 남지만, DP는 앞쪽 경계까지 바꿔서 모두 100~200으로 만든다
-        eng = self.engine(100, 200, min_weight=10)
-        self.prepared(eng, [60, 50, 120, 40, 90, 80, 70])
-        d = [0.10, 0.70, 0.20, 0.60, 0.15, 0.50]
-        groups, score = eng._dp_groups(7, d, 0.30, set())
-        self.assertEqual(groups, [(0, 2), (2, 3), (3, 5), (5, 7)])
-        self.assertAlmostEqual(score, 0.15)
-        self.assertEqual([eng._size(a, b) for a, b in groups], [110, 120, 130, 150])
-        cuts = [i for i, dist in enumerate(d) if dist > 0.30]                  # 임계값 컷만 쓰면 마지막이 70토큰
-        bounds = [0] + [c + 1 for c in cuts] + [7]
-        self.assertEqual([eng._size(a, b) for a, b in zip(bounds, bounds[1:])], [110, 160, 170, 70])
-
-    def test_dp_score_equals_brute_force_on_random_small_inputs(self):
-        rng = np.random.default_rng(7)
-        for _ in range(40):
-            n = int(rng.integers(2, 9))
-            sizes = [int(x) for x in rng.integers(5, 90, n)]
-            d = [float(x) for x in rng.random(n - 1)]
-            forced = {i for i in range(n - 1) if rng.random() < 0.2}
-            eng = self.engine(int(rng.integers(20, 60)), int(rng.integers(90, 160)), min_weight=float(rng.choice([0.0, 0.5, 5.0])))
-            self.prepared(eng, sizes)
-            tau = float(np.percentile(d, 90))
-            groups, score = eng._dp_groups(n, d, tau, forced)
-            best = self.brute_force(eng, n, d, tau, forced)
-            self.assertAlmostEqual(score, best[0], places=9, msg=(sizes, d, forced))
-            self.assertTrue(all(not any(i in forced for i in range(a, b - 1)) for a, b in groups))     # forced는 안쪽에 없다
-            self.assertEqual((groups[0][0], groups[-1][1]), (0, n))
-            self.assertTrue(all(x[1] == y[0] for x, y in zip(groups, groups[1:])))
-
-    def test_without_binding_constraints_it_cuts_exactly_where_distance_exceeds_threshold(self):
-        eng = self.engine(1, 10_000)
-        self.prepared(eng, [10] * 8)
-        d = [0.1, 0.9, 0.2, 0.2, 0.8, 0.1, 0.3]
-        groups, _ = eng._dp_groups(8, d, 0.5, set())
-        self.assertEqual(groups, [(0, 2), (2, 5), (5, 8)])
-
-    def test_forced_is_hard_and_single_unit_over_max_is_allowed(self):
-        eng = self.engine(50, 100)
-        self.prepared(eng, [5, 300, 5, 40, 40])
-        groups, _ = eng._dp_groups(5, [0.0, 0.0, 0.0, 0.0], 0.5, {0, 1})
-        self.assertEqual(groups, [(0, 1), (1, 2), (2, 5)])                      # forced 경계(0|1, 1|2)는 5토큰 청크가 되어도 자르고, 나머지(85)는 한 청크
-        self.assertIn((1, 2), groups)                                            # 300토큰 단위는 그대로 한 청크
-        self.assertEqual(groups[0], (0, 1))                                      # forced 경계는 작아도 자른다
-
-    def test_small_chunk_joins_the_more_similar_neighbour_never_across_forced_or_above_max(self):
-        eng = self.engine(10, 40)
-        text, units = self.units([words("beta", 20), words("alpha", 5), words("alpha", 20)])
-        eng._prepare_sizes(text, units)
-        groups = [(0, 1), (1, 2), (2, 3)]
-        self.assertEqual(eng._merge_similar(groups, set(), text, units), ([(0, 1), (1, 3)], 1))      # alpha 이웃과
-        text, units = self.units([words("alpha", 20), words("alpha", 5), words("beta", 20)])
-        eng._prepare_sizes(text, units)
-        self.assertEqual(eng._merge_similar(groups, set(), text, units)[0], [(0, 2), (2, 3)])      # 앞과
-        self.assertEqual(eng._merge_similar(groups, {0}, text, units)[0], [(0, 1), (1, 3)])        # 앞이 forced면 뒤와
-        self.assertEqual(eng._merge_similar(groups, {0, 1}, text, units)[0], groups)               # 둘 다 forced면 그대로
-        tight = self.engine(10, 22)
-        tight._prepare_sizes(text, units)
-        self.assertEqual(tight._merge_similar(groups, set(), text, units)[0], groups)              # 합치면 max 초과면 그대로
+    def test_unavoidable_shortfall_is_reported_not_hidden(self):
+        text, units = self.units([words("alpha", 6), words("beta", 80)])         # 80단어 단위는 max 30을 넘고, 6단어는 합칠 수 없다
+        eng = self.engine(mn=10, mx=30)
+        spans = eng.chunk_spans(text, units)
+        self.assertEqual(len(spans), 2)
+        self.assertEqual((eng.stats["under_min"], eng.stats["over_max_single_unit"], eng.stats["min_shortfall"]), (1, 1, 4))
 
     def test_end_to_end_literal_slices_stats_and_greedy_default_unchanged(self):
         parts = [words("alpha", 60), words("alpha", 50), words("beta", 120), words("beta", 40), words("gamma", 90), words("gamma", 80), words("gamma", 70)]
         text, units = self.units(parts)
-        dp = self.engine(100, 200, pct=60, min_weight=10)
+        dp = self.engine(100, 200, pct=60)
         spans = dp.chunk_spans(text, units)
         self.assertEqual((spans[0][0], spans[-1][1]), (units[0][0], units[-1][1]))
         self.assertTrue(all(a[1] <= b[0] for a, b in zip(spans, spans[1:])))
         self.assertEqual(dp.stats["chunks"], len(spans))
-        for k in ("forced_cuts", "threshold_cuts", "size_cuts", "merges", "under_min", "over_max", "over_max_single_unit", "dp_score"):
+        self.assertEqual(dp.stats["under_min"], 0)                                  # min을 지킬 수 있으므로 위반 없음
+        for k in ("forced_cuts", "threshold_cuts", "size_cuts", "under_min", "over_max", "over_max_single_unit", "min_shortfall", "section_groups"):
             self.assertIn(k, dp.stats)
-        self.assertEqual(spans, self.engine(100, 200, pct=60, min_weight=10).chunk_spans(text, units))   # 결정적
+        self.assertEqual(spans, self.engine(100, 200, pct=60).chunk_spans(text, units))   # 결정적
         greedy = SemanticEngine(make_stub(TOPIC_AXES)._client, count_words, percentile=60, min_tokens=100, max_tokens=200)
-        self.assertEqual(greedy.size_control, "greedy")
+        self.assertEqual(greedy.size_control, "greedy")                             # 엔진 기본은 그리디(설정이 dp를 지정)
         greedy.chunk_spans(text, units)
         self.assertIn("oversize_splits", greedy.stats)
         with self.assertRaises(ValueError):

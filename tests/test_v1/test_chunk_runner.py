@@ -8,9 +8,9 @@ from unittest import mock
 
 
 from support import HERE, FIX, FILES, models_for, cfg_for
-from chunking import runner
-from chunking.splitters import chunk
-from chunking.stats import compute_stats, coverage_ok
+from chunking.v1 import runner
+from chunking.v1.splitters import chunk
+from chunking.v1.stats import compute_stats, coverage_ok
 from common.docjson import load_doc
 
 
@@ -26,14 +26,14 @@ class Stats(unittest.TestCase):
         smart, _ = stats_for("A", "smart", min_tokens=25, max_tokens=60)
         semantic, _ = stats_for("A", "semantic", min_tokens=25, max_tokens=60)
         fixed, _ = stats_for("A", "fixed", min_tokens=25, max_tokens=60)
-        self.assertEqual((smart["n_chunks"], semantic["n_chunks"]), (5, 5))
+        self.assertEqual((smart["n_chunks"], semantic["n_chunks"]), (5, 4))
         self.assertEqual((smart["sentence_cut_rate"], semantic["sentence_cut_rate"]), (0.0, 0.0))  # 둘 다 문장 끝에서 끝남
         self.assertGreater(fixed["sentence_cut_rate"], 0.5)                                       # fixed는 문장 중간에서 끝남
         self.assertEqual(smart["orphan_heading_rate"], 0.0)                                       # smart: 제목으로 끝나는 청크 없음
-        self.assertAlmostEqual(semantic["orphan_heading_rate"], 0.2)                              # semantic: "## 2 Method"가 청크 끝에 홀로 남음
+        self.assertAlmostEqual(semantic["orphan_heading_rate"], 0.25)                             # semantic: "## 2 Method"가 청크 끝에 홀로 남음(4개 중 1개)
         self.assertEqual((smart["table_split_rate"], semantic["table_split_rate"]), (0.0, 0.0))   # 이 작은 예시에서는 둘 다 표를 안 가름
-        self.assertAlmostEqual(smart["under_min_rate"], 0.2)                                      # 짧은 마지막 섹션(21단어)은 합칠 곳이 없어 남음
-        self.assertEqual(semantic["under_min_rate"], 0.0)
+        self.assertAlmostEqual(smart["under_min_rate"], 0.2)                                      # 마지막 섹션(21단어)은 이웃 섹션과 합치면 max를 넘어 합칠 곳 없이 남음
+        self.assertEqual(semantic["under_min_rate"], 0.0)                                         # semantic(섹션 분할 없음)은 DP가 min을 모두 지키는 분할을 찾는다
         self.assertEqual((smart["over_max_rate"], semantic["over_max_rate"]), (0.0, 0.0))
 
     def test_srt_example_b_cues_split_ratio(self):
@@ -65,9 +65,10 @@ class TagsAndDocs(unittest.TestCase):
         self.assertEqual(runner.tag_for("smart", {"percentile": 90, "min_tokens": 100, "max_tokens": 400, "buffer_size": 1}), "smart__p90-min100-max400-b1")   # LangChain 기본
         only_table = {"percentile": 90, "min_tokens": 100, "max_tokens": 400, "rules": {"table_atomic": True}}   # 어블레이션: 규칙 일부만
         self.assertEqual(runner.tag_for("smart", only_table), "smart__p90-min100-max400-rT")
-        all_on = {"heading_forced": True, "heading_glue": True, "table_atomic": True, "caption_glue": True}
-        self.assertEqual(runner.tag_for("smart", {"percentile": 90, "min_tokens": 100, "max_tokens": 400, "rules": all_on}), "smart__p90-min100-max400")   # 기본 세트면 이름에 안 남김
-        self.assertEqual(runner.tag_for("semantic", {"percentile": 90, "min_tokens": 100, "max_tokens": 400, "rules": all_on}), "semantic__p90-min100-max400-rHGTC")
+        smart_default = {"heading_forced": False, "heading_glue": True, "table_atomic": True, "caption_glue": True, "para_atomic": False, "section_split": True}
+        self.assertEqual(runner.tag_for("smart", {"percentile": 90, "min_tokens": 100, "max_tokens": 400, "rules": smart_default}), "smart__p90-min100-max400")   # 기본 세트면 이름에 안 남김
+        self.assertEqual(runner.tag_for("smart", {"percentile": 90, "min_tokens": 100, "max_tokens": 400, "rules": {**smart_default, "heading_forced": True}}), "smart__p90-min100-max400-rHGTCS")
+        self.assertEqual(runner.tag_for("semantic", {"percentile": 90, "min_tokens": 100, "max_tokens": 400, "rules": smart_default}), "semantic__p90-min100-max400-rGTCS")
         self.assertEqual(runner.tag_for("smart", {"mode": "srt", "algorithm": "legacy", "min_tokens": 128, "max_tokens": 512, "window": 2}), "smart__min128-max512-w2")
 
     def test_chunk_documents_reports_no_failures_on_fixtures(self):
@@ -118,7 +119,7 @@ class ChunkDataset(unittest.TestCase):
             self.assertEqual([(c["start"], c["end"]) for c in lines], [(0, 195), (196, 388), (390, 602), (604, 937), (939, 1069)])
             meta = json.loads((self.tmp / "smart__p90-min25-max60.meta.json").read_text(encoding="utf-8"))
             self.assertEqual((meta["n_docs"], meta["n_chunks"], meta["coverage_failures"]), (1, 5, []))
-            self.assertEqual((meta["info_totals"]["smart_forced_cuts"], meta["info_totals"]["smart_under_min"]), (2, 1))
+            self.assertEqual((meta["info_totals"]["smart_forced_cuts"], meta["info_totals"]["smart_under_min"]), (0, 1))     # 제목 앞 강제 절단은 기본 꺼짐; 마지막 섹션(21단어)은 합칠 곳 없어 min 미달로 남음
             self.assertFalse(list(self.tmp.glob("*.tmp")))                       # 임시 파일이 남지 않는다
             mtime = out.stat().st_mtime_ns
             self.assertTrue(self._run()["skipped"])                              # 이어하기: 건너뜀

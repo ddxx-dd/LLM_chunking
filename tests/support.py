@@ -77,3 +77,12 @@ def cfg_for(key, chunker):
 def words(topic, n):
     """주제어 n개로 이뤄진 문장 하나(합성 문서용): 'alpha alpha ... alpha.'"""
     return " ".join([topic] * n) + "."
+
+
+def runtime_for(key):
+    """새 청커(chunking/)용 Runtime: 키워드 축 가짜 임베딩 + 공백 단위 토큰 카운터(모델·GPU 불필요)."""
+    from chunking.embed import Runtime
+
+    client = make_stub(AXES[key])._client
+    return Runtime(lambda ts: np.asarray(client.encode(list(ts)), dtype=np.float32) if len(ts) else np.zeros((0, 1), np.float32),
+                   lambda ts: [count_words(t) for t in ts])

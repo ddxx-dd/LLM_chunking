@@ -8,8 +8,8 @@ from pathlib import Path
 
 
 from support import HERE, FIX
-from common.docjson import (MD_SEP, SRT_SEP, Piece, block_spans, load_doc, render,
-                            save_doc, to_lc_document, to_text)
+from common.docjson import MD_SEP, Piece, load_doc, render, save_doc, to_text
+from srt.render import SRT_SEP, block_spans, to_lc_document
 
 A_SPANS = [(0, 16, "heading"), (18, 241, "para"), (243, 388, "para"), (390, 401, "heading"),
            (403, 501, "para"), (503, 602, "table"), (604, 937, "para"), (939, 955, "heading"),

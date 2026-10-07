@@ -14,17 +14,20 @@
   3 컷     거리 > 임계값(초과)인 경계 + forced 경계
   4 쪼개기  max 토큰을 넘는 그룹은 그 안의 경계 중 거리가 가장 큰 곳에서 자른다(양쪽이 min 이상인 곳을 우선, 없으면 전체)
   5 합치기  min 토큰 미만 그룹은 다음 그룹과 합친다(합쳐서 max 이하일 때. 안 되면 앞 그룹). forced 경계도 min 미만이면 합친다.
-  5' DP 크기 제어 (size_control="dp"일 때 2~5 대신. smart 설정에서만 쓴다 - semantic은 위의 그리디 2~5를 그대로 쓴다)
-           경계 i를 자르면 r_i = 거리_i - 임계값 점수를 얻는 최적 분할을 동적계획법으로 한 번에 구한다.
-           하드 제약: forced 경계는 반드시 자르고(청크가 포함할 수 없다), 청크는 max 이하(단위 하나가 max를 넘는 경우만 예외).
-           소프트 제약: min 미만이면 min_weight x (min - 크기)/min 만큼 벌점(약하게). 제약이 안 걸리면 "거리 > 임계값"에서만 자르는 결과와 같다.
-           그다음 min 미만으로 남은 청크는 forced가 아닌 앞뒤 이웃 중 청크 임베딩 코사인 유사도가 높은 쪽과 합친다(합쳐서 max 이하일 때만).
-           둘 다 안 되면 그대로 두고 under_min으로 보고한다. forced 경계는 합치기로도 넘지 않는다.
+  5' DP 크기 제어 (size_control="dp"일 때 2~5 대신. semantic·smart 둘 다 기본) - 순수 함수 size_dp.partition을 호출한다
+           경계 i를 자르면 gain_i = 거리_i - 임계값 (+ 구조 계층이 준 보정)을 얻는다. 목표는 사전식: max 초과 금지(하드, 단일 단위 예외)
+           > min 부족분 합 최소화 > gain 합 최대화. min_weight 같은 튜닝 값이 없고, 후처리 병합도 필요 없다
+           (최적이면 "합치면 위반이 줄어드는 이웃"이 남아 있을 수 없다). 제약이 안 걸리면 "거리 > 임계값"에서만 자르는 결과와 같다.
+           forced(제목 앞 강제 절단 어블레이션)는 하드 제약이 아니라 gain 보정(FORCED_BONUS)이라서 min이 우선한다.
 청크는 평문의 리터럴 슬라이스(text[start:end])다 - LangChain처럼 문장을 다시 이어 붙이지 않으므로 위치 복원이 필요 없다.
 """
 import re
 
 import numpy as np
+
+from chunking.sizectl.size_dp import partition
+
+FORCED_BONUS = 1000.0       # forced 경계의 gain 보정. 거리 점수(0~1)보다 훨씬 크지만 min 부족분(토큰 단위)보다 사전식에서 아래다
 
 SENTENCE_SPLIT_REGEX = r"(?<=[.?!。])\s+|\n+"      # LangChain SemanticChunker 설정과 같다(줄바꿈에서도 나눔)
 _SPLIT = re.compile(SENTENCE_SPLIT_REGEX)
@@ -64,12 +67,12 @@ def consecutive_distances(embed_model, texts, buffer_size=0):
 
 class SemanticEngine:
     def __init__(self, embed_model, count_tokens, percentile=90, min_tokens=100, max_tokens=400, buffer_size=0,
-                 size_control="greedy", min_weight=0.5):
+                 size_control="greedy"):
         self.embed, self.count = embed_model, count_tokens
         self.pct, self.min_t, self.max_t, self.buffer = percentile, min_tokens, max_tokens, buffer_size
         if size_control not in ("greedy", "dp"):
             raise ValueError(f"size_control must be 'greedy' or 'dp', got {size_control!r}")
-        self.size_control, self.min_w = size_control, min_weight
+        self.size_control = size_control
         self.stats = {}
 
     # -- 크기 (합친 텍스트 기준) -----------------------------------------
@@ -134,81 +137,59 @@ class SemanticEngine:
                 break
         return groups, across
 
-    # -- 5': DP 크기 제어 (smart 전용 옵션) -------------------------------------
-    def _dp_groups(self, n, d, tau, forced):
-        """단위 n개를 forced/max를 지키면서 점수(자른 경계의 거리-임계값 합 - min 벌점)가 최대가 되게 나눈다 -> [(a, b)]."""
-        f, prev = [float("-inf")] * (n + 1), [0] * (n + 1)
-        f[0] = 0.0
-        for j in range(1, n + 1):
-            for a in range(j - 1, -1, -1):
-                size = self._size(a, j)
-                if a < j - 1 and (a in forced or size > self.max_t):    # 더 왼쪽으로 늘려도 forced를 품거나 더 커질 뿐이다
-                    break
-                cut_gain = 0.0 if a == 0 or (a - 1) in forced else d[a - 1] - tau
-                gain = f[a] + cut_gain - self.min_w * max(0, self.min_t - size) / self.min_t
-                if gain > f[j]:
-                    f[j], prev[j] = gain, a
-        groups, j = [], n
-        while j > 0:
-            groups.append((prev[j], j))
-            j = prev[j]
-        return groups[::-1], f[n]
-
-    def _chunk_vec(self, text, units, g):
-        v = np.asarray(self.embed.encode([text[units[g[0]][0]:units[g[1] - 1][1]]], normalize_embeddings=True), dtype=float)[0]
-        return v / max(np.linalg.norm(v), 1e-12)
-
-    def _merge_similar(self, groups, forced, text, units):
-        """min 미만 그룹을 forced가 아니고 합쳐서 max 이하인 이웃 중 청크 유사도가 높은 쪽과 합친다. -> (그룹, 합친 횟수)."""
-        groups, stuck, merges = list(groups), set(), 0
-        while True:
-            for k, (a, b) in enumerate(groups):
-                if self._size(a, b) >= self.min_t or (a, b) in stuck:
-                    continue
-                nbrs = []
-                if k > 0 and (a - 1) not in forced and self._size(groups[k - 1][0], b) <= self.max_t:
-                    nbrs.append(k - 1)
-                if k + 1 < len(groups) and (b - 1) not in forced and self._size(a, groups[k + 1][1]) <= self.max_t:
-                    nbrs.append(k + 1)
-                if not nbrs:
-                    stuck.add((a, b))
-                    continue
-                if len(nbrs) == 2:
-                    me = self._chunk_vec(text, units, (a, b))
-                    j = max(nbrs, key=lambda j: float(me @ self._chunk_vec(text, units, groups[j])))
-                else:
-                    j = nbrs[0]
-                lo, hi = sorted((k, j))
-                groups[lo:hi + 1] = [(groups[lo][0], groups[hi][1])]
-                merges += 1
-                break
-            else:
-                return groups, merges
-
     # -- 진입점 -----------------------------------------------------------
+    def chunk_groups(self, text, groups):
+        """DP 전용. groups = [(units, forced)] 섹션 묶음 목록(문서 순서). 묶음끼리는 서로 독립이다(청크가 묶음을 가로지르지 않는다).
+        임계값 τ는 모든 묶음 안의 이웃 거리 전체에서 구한다(문서 기준) - 묶음 사이 경계는 거리 계산에서 뺀다.
+        묶음마다 size_dp.partition(순수 DP)을 부른다. forced 경계는 gain에 FORCED_BONUS를 더할 뿐이라 min 우선 목표를 깨지 않는다."""
+        if self.size_control != "dp":
+            raise ValueError("section groups need size_control='dp'")
+        groups = [(u, set(f)) for u, f in groups if u]
+        dists = [consecutive_distances(self.embed, [text[s:e] for s, e in u], self.buffer) if len(u) > 1 else [] for u, _ in groups]
+        flat = [x for d in dists for x in d]
+        tau = float(np.percentile(flat, self.pct)) if flat else float("inf")
+        spans, tot = [], {"units": 0, "chunks": 0, "forced_cuts": 0, "threshold_cuts": 0, "size_cuts": 0,
+                          "under_min": 0, "over_max": 0, "over_max_single_unit": 0}
+        shortfall = gain = 0
+        for (units, forced), d in zip(groups, dists):
+            n = len(units)
+            tot["units"] += n
+            if n == 1:                                           # 단위 하나뿐인 묶음(짧은 섹션 등): 그대로 한 청크, 크기 위반은 여전히 센다
+                spans.append(units[0])
+                size = self.count(text[units[0][0]:units[0][1]])
+                tot["chunks"] += 1
+                tot["under_min"] += size < self.min_t
+                tot["over_max_single_unit"] += size > self.max_t
+                continue
+            self._prepare_sizes(text, units)
+            gains = [d[i] - tau + (FORCED_BONUS if i in forced else 0.0) for i in range(n - 1)]
+            merged, (sf, gn) = partition(n, self._size, gains, self.min_t, self.max_t)
+            shortfall += sf
+            gain += gn
+            cuts = [a - 1 for a, _ in merged[1:]]
+            tot["chunks"] += len(merged)
+            tot["forced_cuts"] += sum(1 for i in cuts if i in forced)
+            tot["threshold_cuts"] += sum(1 for i in cuts if i not in forced and d[i] > tau)
+            tot["size_cuts"] += sum(1 for i in cuts if i not in forced and d[i] <= tau)       # 임계값 아래인데 크기 때문에 자른 곳
+            tot["under_min"] += sum(1 for a, b in merged if self._size(a, b) < self.min_t)
+            tot["over_max"] += sum(1 for a, b in merged if self._size(a, b) > self.max_t and b - a > 1)
+            tot["over_max_single_unit"] += sum(1 for a, b in merged if self._size(a, b) > self.max_t and b - a == 1)
+            spans += [(units[a][0], units[b - 1][1]) for a, b in merged]
+        tot.update(min_shortfall=int(shortfall), section_groups=len(groups))
+        self.stats = tot
+        return spans
+
     def chunk_spans(self, text, units, forced=()):
         """units: [(start, end)], forced: 반드시 자를 경계 번호(i = 단위 i와 i+1 사이). -> [(start, end)] 청크 구간."""
         n = len(units)
         if n <= 1:
             self.stats = {"units": n, "chunks": n, "under_min": 0, "over_max": 0}
             return list(units)
-        self._prepare_sizes(text, units)
         forced = set(forced)
-        groups, d, tau = self.breakpoint_groups(text, units, forced)
         if self.size_control == "dp":
-            dp, score = self._dp_groups(n, d, tau, forced)
-            merged, merges = self._merge_similar(dp, forced, text, units)
-            cuts = [a - 1 for a, _ in merged[1:]]
-            self.stats = {
-                "units": n, "chunks": len(merged),
-                "forced_cuts": sum(1 for i in cuts if i in forced),
-                "threshold_cuts": sum(1 for i in cuts if i not in forced and d[i] > tau),
-                "size_cuts": sum(1 for i in cuts if i not in forced and d[i] <= tau),      # 임계값 아래인데 크기 때문에 자른 곳
-                "merges": merges, "merges_across_forced": 0, "dp_score": round(score, 6),
-                "under_min": sum(1 for a, b in merged if self._size(a, b) < self.min_t),
-                "over_max": sum(1 for a, b in merged if self._size(a, b) > self.max_t and b - a > 1),
-                "over_max_single_unit": sum(1 for a, b in merged if self._size(a, b) > self.max_t and b - a == 1)}
-            return [(units[a][0], units[b - 1][1]) for a, b in merged]
+            return self.chunk_groups(text, [(units, forced)])
+        self._prepare_sizes(text, units)
+        groups, d, tau = self.breakpoint_groups(text, units, forced)
         split = self._split_oversized(groups, d)
         merged, across = self._merge_small(split, forced)
         self.stats = {

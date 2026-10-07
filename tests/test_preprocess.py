@@ -19,7 +19,7 @@ from preprocess._docling import build_blocks
 from preprocess.docx_prep import make_heading_level
 from preprocess import pdf_prep
 from preprocess.pdf_prep import PdfHeadingLevel
-from preprocess.srt_prep import normalize, parse_srt_text, to_sec
+from srt.prep import normalize, parse_srt_text, to_sec
 from preprocess.validate import validate_doc
 
 

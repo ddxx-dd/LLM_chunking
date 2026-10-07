@@ -1,52 +1,75 @@
-"""공통 JSON -> 청크 파일 (docs/restructure_plan.md 5절).
+"""공통 JSON -> 청크 파일 (pdf·docx 청커 7종). srt는 scripts/srt/chunk.py.
 
   source env.sh
-  .venv311/bin/python scripts/chunk.py --dataset vectara --chunker smart [--docs id1,id2] [--limit N] [--force]
-      [--chunk-size-chars N | --target-tokens N] [--overlap R] [--percentile P] [--min-tokens N --max-tokens N] [--buffer-size B]
+  .venv311/bin/python scripts/chunk.py --dataset vectara --chunker A --p 90
+  .venv311/bin/python scripts/chunk.py --dataset docx_corpus --chunker fixed --T 260
+  .venv311/bin/python scripts/chunk.py --dataset vectara --chunker all --p 90 --T 260 [--docs id1,id2] [--limit N] [--force]
 
-- 결과: data/chunks/<dataset>/<청커>__<설정>.jsonl (+ .meta.json). 파일이 있으면 건너뛴다(--force로 다시).
-- 크기 파라미터(min/max 토큰, 목표 토큰, percentile, buffer-size)를 안 주면 common/config.py의 시작값을 쓴다.
-  **실제 문서에 돌리기 전에는 사용자가 정한 값을 명시해서 실행할 것** - 쓰는 설정은 실행 첫 줄에 그대로 출력된다.
+- 청커: fixed, recursive, header, semantic, A, B, E (src/chunking/README.md). 크기 조절 값은 p(백분위) 또는 T(목표 토큰) 또는 --size-chars(글자).
+  **값에는 기본값이 없다**: 실제 문서에 돌리기 전에 사용자가 정한 값을 명시해서 실행할 것.
+- 결과: data/chunks/<dataset>/<태그>.jsonl (+ .meta.json). 태그 예: A__p90, fixed__T260, B__p90-beta0. 파일이 있으면 건너뛴다(--force로 다시).
+- 의미 분할 계열의 단위 임베딩은 data/cache/units/ 에 캐시한다(같은 문서를 다른 p로 다시 돌릴 때 임베딩을 다시 하지 않음, --no-cache로 끔).
 """
 import argparse
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
-from chunking.runner import CHUNKERS, chunk_dataset  # noqa: E402
+from chunking import CHUNKERS, REGISTRY  # noqa: E402
 from common.config import DATASETS  # noqa: E402
-from common.models import get_models  # noqa: E402
+
+# 청커마다 받는 값(chunker.chunk의 인자 이름)
+ALLOWED = {"fixed": ("T", "size_chars"), "recursive": ("T", "size_chars"), "header": ("T", "size_chars", "max_level"),
+           "semantic": ("p",), "A": ("p",), "B": ("p", "beta", "decay", "w"), "E": ("p", "delta", "delta_sigma", "decay")}
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", required=True, choices=sorted(DATASETS))
+def params_for(chunker, ns):
+    """argparse 결과 -> 그 청커에 넘길 값 dict. 필수 값(크기 조절 값)이 없으면 오류."""
+    p = {k: getattr(ns, k) for k in ALLOWED[chunker] if getattr(ns, k, None) is not None}
+    knob = REGISTRY[chunker].knob
+    if chunker == "header":
+        return p                                           # 값이 없으면 재분할 없는 header
+    if knob == "p" and "p" not in p:
+        raise SystemExit(f"{chunker}에는 --p(백분위)가 필요하다")
+    if knob == "T" and not ({"T", "size_chars"} & set(p)):
+        raise SystemExit(f"{chunker}에는 --T(목표 토큰) 또는 --size-chars(글자)가 필요하다")
+    return p
+
+
+def build_parser():
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--dataset", required=True, choices=sorted(k for k, v in DATASETS.items() if v["fmt"] != "srt"))
     ap.add_argument("--chunker", required=True, choices=list(CHUNKERS) + ["all"])
+    ap.add_argument("--p", type=float, help="semantic·A·B·E: 백분위(클수록 청크가 커진다)")
+    ap.add_argument("--T", type=int, help="fixed·recursive·header: 목표 토큰(글자 = T x 글자/토큰 비율, scripts/measure_ratio.py 먼저)")
+    ap.add_argument("--size-chars", dest="size_chars", type=int, help="fixed·recursive·header: 글자 수로 직접(--T보다 우선)")
+    ap.add_argument("--max-level", dest="max_level", type=int, help="header: 나눌 제목 수준(기본 3)")
+    ap.add_argument("--beta", type=float, help="B: 제목 앞 보너스 배수(기본 1)")
+    ap.add_argument("--decay", type=float, help="B·E: 제목 수준 감쇠(기본 0.5)")
+    ap.add_argument("--w", type=int, help="B: 경계 개선량을 재는 좌우 문장 수(기본 5)")
+    ap.add_argument("--delta", type=float, help="E: 제목 경계 감점 절대값(주면 --delta-sigma보다 우선)")
+    ap.add_argument("--delta-sigma", dest="delta_sigma", type=float, help="E: 감점 = 초기 이웃 코사인 표준편차의 몇 배(기본 1)")
     ap.add_argument("--docs", help="쉼표로 구분한 doc_id만 처리")
     ap.add_argument("--limit", type=int, help="매니페스트 앞에서 N개 문서만")
     ap.add_argument("--force", action="store_true")
-    ap.add_argument("--target-tokens", type=int, help="fixed: 목표 토큰 수 (글자 수는 측정한 비율로 환산)")
-    ap.add_argument("--chunk-size-chars", type=int, help="fixed: 글자 수로 직접 지정 (주면 --target-tokens보다 우선)")
-    ap.add_argument("--overlap", type=float, help="fixed: 겹침 비율 (예: 0.1). srt에서는 0으로 둘 것")
-    ap.add_argument("--percentile", type=float, help="semantic·smart: 의미 거리 percentile")
-    ap.add_argument("--min-tokens", type=int, help="semantic·smart")
-    ap.add_argument("--max-tokens", type=int, help="semantic·smart")
-    ap.add_argument("--buffer-size", type=int, help="semantic·smart: 이웃 결합 단위 수 (기본 0 = 결합 안 함, 1 = LangChain SemanticChunker 기본)")
-    ap.add_argument("--window", type=int, help="srt의 legacy smart 전용")
-    args = ap.parse_args()
+    ap.add_argument("--no-cache", action="store_true", help="단위 임베딩 캐시(data/cache/units)를 쓰지 않는다")
+    return ap
 
-    chunkers = list(CHUNKERS) if args.chunker == "all" else [args.chunker]
-    models = get_models(args.dataset, need_embeddings=any(c != "fixed" for c in chunkers))
-    per_chunker = {
-        "fixed": {"target_tokens": args.target_tokens, "chunk_size_chars": args.chunk_size_chars, "overlap_ratio": args.overlap},
-        "semantic": {"percentile": args.percentile, "min_tokens": args.min_tokens, "max_tokens": args.max_tokens, "buffer_size": args.buffer_size},
-        "smart": {"percentile": args.percentile, "min_tokens": args.min_tokens, "max_tokens": args.max_tokens,
-                  "buffer_size": args.buffer_size, "window": args.window},
-    }
-    ids = [d.strip() for d in args.docs.split(",")] if args.docs else None
-    for ch in chunkers:
-        chunk_dataset(args.dataset, ch, models, overrides=per_chunker[ch], doc_ids=ids, limit=args.limit, force=args.force)
+
+def main(argv=None):
+    ns = build_parser().parse_args(argv)
+    names = list(CHUNKERS) if ns.chunker == "all" else [ns.chunker]
+    plan = [(c, params_for(c, ns)) for c in names]            # 값이 빠졌으면 모델을 올리기 전에 여기서 끝낸다
+    from chunking import Runtime
+    from chunking.io import chunk_dataset
+
+    need_emb = any(REGISTRY[c].units_kind for c in names)
+    runtime = Runtime.load(cache_dir=None if ns.no_cache else ROOT / "data" / "cache" / "units", need_embeddings=need_emb)
+    ids = [d.strip() for d in ns.docs.split(",")] if ns.docs else None
+    for name, params in plan:
+        chunk_dataset(ns.dataset, name, params, runtime, doc_ids=ids, limit=ns.limit, force=ns.force)
 
 
 if __name__ == "__main__":

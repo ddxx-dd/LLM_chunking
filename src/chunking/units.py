@@ -1,59 +1,12 @@
-"""구조 제약 규칙 -> 의미 분할 엔진에 넘길 단위 (docs/restructure_plan.md 5절).
+"""의미 분할 계열(semantic, A, B, E)이 쓰는 단위 만들기와 구조 규칙.
 
-엔진(semantic_core)은 구조를 모른다. 제약은 "단위를 어떻게 만드느냐"와 "반드시 자를 경계(forced)"로만 표현한다.
-
-  규칙             켜면                                                              끄면
-  heading_forced   단위가 제목으로 시작하는 경계를 forced에 넣는다(제목 앞은 반드시 자름)      forced 없음
-  heading_glue     제목 조각을 뒤따르는 첫 단위에 붙인다(제목 뒤는 자르지 않음, 연속 제목은 함께)  제목도 평문의 한 문장
-  table_atomic     표 조각 전체를 단위 하나로 만든다(표는 쪼개지 않음)                       표 텍스트를 문장 정규식으로 쪼갠다(행마다 단위)
-  caption_glue     표와 캡션 사이 경계를 자르지 못하게 두 단위를 합친다                      따로 둔다
-
-  semantic = 모든 규칙 off (조각 정보를 아예 쓰지 않고 평문 전체를 문장 정규식으로 나눔 - LangChain과 같은 문장 나누기)
-  smart    = 모든 규칙 on
-일부 규칙만 켜는 실험(어블레이션)은 설정만 바꾸면 된다.
+구조 규칙은 3개뿐이다(옛 6개 중 이번 실험에서 쓰는 것만. 옛 규칙 전체는 chunking/v1/units.py에 보존):
+  heading_glue   제목 조각을 뒤따르는 첫 단위에 붙인다(제목 바로 뒤는 못 자름. 제목은 문장 정규식으로 쪼개지 않음, 연속 제목은 함께)
+  table_atomic   표 조각 전체를 단위 하나로 만든다(행마다 쪼개지 않음)
+  caption_glue   표와 캡션 사이 경계를 못 자르게 두 단위를 합친다
+kind "sent"는 규칙이 없고(평문 전체를 문장 정규식으로 나눔, semantic), kind "sentg"는 3개 규칙을 모두 적용한다(A, B, E).
 """
-from dataclasses import dataclass, fields
-
-from chunking.semantic_core import sentence_spans
-
-
-@dataclass(frozen=True)
-class Rules:
-    heading_forced: bool = False
-    heading_glue: bool = False
-    table_atomic: bool = False
-    caption_glue: bool = False
-
-    @classmethod
-    def from_dict(cls, d):
-        return cls(**{f.name: bool(d.get(f.name, False)) for f in fields(cls)})
-
-    def as_dict(self):
-        return {f.name: getattr(self, f.name) for f in fields(self)}
-
-    def any(self):
-        return any(self.as_dict().values())
-
-    def code(self):
-        """파일 이름용 약어: H=제목 앞 강제, G=제목 붙임, T=표 한 덩어리, C=캡션 붙임. 없으면 'none'."""
-        letters = [("heading_forced", "H"), ("heading_glue", "G"), ("table_atomic", "T"), ("caption_glue", "C")]
-        return "".join(k for name, k in letters if getattr(self, name)) or "none"
-
-
-NO_RULES = Rules()
-ALL_RULES = Rules(True, True, True, True)
-DEFAULT_RULES = {"semantic": NO_RULES, "smart": ALL_RULES}
-DEFAULT_SIZE_CONTROL = {"semantic": "greedy", "smart": "dp"}     # 크기(min/max) 제어 방식: semantic은 그리디, smart는 DP(semantic_core.py)
-
-
-def size_control_for(chunker, cfg):
-    """cfg["size_control"]이 있으면 그것, 없으면 청커의 기본(semantic=greedy, smart=dp)."""
-    return cfg.get("size_control", DEFAULT_SIZE_CONTROL[chunker])
-
-
-def rules_for(chunker, cfg):
-    """cfg["rules"]가 있으면 그것, 없으면 청커의 기본 규칙 세트(semantic=전부 off, smart=전부 on)."""
-    return Rules.from_dict(cfg["rules"]) if "rules" in cfg else DEFAULT_RULES[chunker]
+from chunking.base import sentence_spans
 
 
 def caption_glue(doc, pieces):
@@ -74,27 +27,24 @@ def caption_glue(doc, pieces):
     return glue
 
 
-def build_units(text, pieces, glue=(), rules=NO_RULES):
-    """-> (units [(start, end)], forced [경계 번호]). pieces: common.docjson.render(doc)의 Piece 목록,
-    glue: caption_glue(doc, pieces)가 돌려준 집합."""
-    if not rules.any():
-        return sentence_spans(text), []
-    glue = set(glue)
-    heading_starts = {p.start for p in pieces if p.kind == "heading"}
+def make_units(ctx, kind):
+    """DocContext -> 단위 구간 [(start, end)] (평문 안의 연속 구간, 겹침 없음)."""
+    if kind == "sent":
+        return sentence_spans(ctx.text)
+    if kind != "sentg":
+        raise ValueError(f"모르는 단위 종류: {kind!r} (sent | sentg)")
+    text, pieces, glue = ctx.text, ctx.pieces, ctx.glue
     units = []
     for k, p in enumerate(pieces):
-        if p.kind == "heading" and (rules.heading_glue or rules.heading_forced):
-            spans = [(p.start, p.end)]                           # 제목은 쪼개지 않는다("1. 서론"의 마침표에서 나뉘지 않게)
-        elif p.kind == "table" and rules.table_atomic:
-            spans = [(p.start, p.end)]
+        if p.kind in ("heading", "table"):
+            spans = [(p.start, p.end)]                          # 제목·표는 쪼개지 않는다
         else:
             spans = sentence_spans(text, p.start, p.end)
         if not spans:
             continue
-        stuck = k > 0 and ((rules.heading_glue and pieces[k - 1].kind == "heading") or (rules.caption_glue and p.start in glue))
+        stuck = k > 0 and (pieces[k - 1].kind == "heading" or p.start in glue)
         if stuck and units:                                      # 이 조각 앞 경계는 자를 수 없다 -> 앞 단위와 합친다
             units[-1] = (units[-1][0], spans[0][1])
             spans = spans[1:]
         units.extend(spans)
-    forced = [i for i in range(len(units) - 1) if rules.heading_forced and units[i + 1][0] in heading_starts]
-    return units, forced
+    return units

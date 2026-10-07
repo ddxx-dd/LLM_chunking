@@ -67,12 +67,31 @@ class Metrics(unittest.TestCase):
         no_ev = {"qid": "q", "doc_id": "A", "qtype": "t", "answer": ""}
         self.assertNotIn("section_hit", R.question_row(no_ev, [(CHUNKS[0], 1.0)], 5))
 
-    def test_page_hit(self):
+    def test_page_hit_is_no_longer_measured(self):
         qa = {"qid": "q", "doc_id": "A", "qtype": "t", "answer": "", "gold_page": 3}
-        self.assertTrue(R.question_row(qa, [(CHUNKS[1], 1.0)], 5)["page_hit"])      # 2~3쪽 청크가 3쪽을 포함
-        self.assertFalse(R.question_row(qa, [(CHUNKS[0], 1.0)], 5)["page_hit"])     # 1쪽
-        self.assertFalse(R.question_row({**qa, "gold_page": 1}, [(chunk("n", "A", "t"), 1.0)], 5)["page_hit"])   # 쪽 정보 없는 청크
-        self.assertNotIn("page_hit", R.question_row({**qa, "gold_page": None}, [(CHUNKS[1], 1.0)], 5))
+        self.assertNotIn("page_hit", R.question_row(qa, [(CHUNKS[1], 1.0)], 3))      # allganize 쪽 지표는 측정하지 않는다(결정 2026-10-06)
+        self.assertEqual(R.K_DEFAULT, 3)
+        self.assertNotIn("allganize", R.PRIMARY)
+
+    def test_span_coverage_counts_union_once_and_clips_to_the_evidence(self):
+        ch = lambda s, e: {"start": s, "end": e}
+        self.assertAlmostEqual(R.span_coverage([ch(0, 50)], 20, 60), 30 / 40)         # 근거 구간 밖은 세지 않는다
+        self.assertAlmostEqual(R.span_coverage([ch(0, 40), ch(30, 60)], 20, 60), 1.0)  # 겹침은 한 번만(합집합)
+        self.assertAlmostEqual(R.span_coverage([ch(0, 25), ch(40, 45)], 20, 60), 10 / 40)
+        self.assertEqual(R.span_coverage([ch(0, 10), ch(70, 80)], 20, 60), 0.0)
+        self.assertEqual(R.span_coverage([], 20, 60), 0.0)
+
+    def test_evidence_recall_only_counts_gold_doc_chunks_and_aggregates(self):
+        mk = lambda cid, doc, s, e: {**chunk(cid, doc, "t", 1, 1), "start": s, "end": e}
+        qa = {"qid": "q", "doc_id": "A", "qtype": "t", "answer": "", "evidence": {"kind": "span", "start": 100, "end": 200}}
+        hits = [(mk("a#0", "A", 0, 150), 1.0), (mk("b#0", "B", 0, 300), 0.9), (mk("a#1", "A", 150, 400), 0.8)]
+        r = R.question_row(qa, hits, 3)
+        self.assertAlmostEqual(r["evidence_recall"], 1.0)                                # 정답 문서의 두 청크가 구간을 덮음(다른 문서 청크는 제외)
+        self.assertAlmostEqual(R.question_row(qa, hits[:1], 3)["evidence_recall"], 0.5)
+        self.assertAlmostEqual(R.question_row(qa, hits[1:2], 3)["evidence_recall"], 0.0)  # 같은 위치라도 다른 문서면 0
+        self.assertNotIn("evidence_recall", R.question_row({k: v for k, v in qa.items() if k != "evidence"}, hits, 3))
+        agg = R.aggregate([r, R.question_row(qa, hits[:1], 3)])
+        self.assertAlmostEqual(agg["evidence_recall@k"], 0.75)
 
     def test_aggregate_and_by_qtype(self):
         idx = I.ChunkIndex(CHUNKS, fake_encode([c["text"] for c in CHUNKS]), fake_encode)
@@ -119,6 +138,20 @@ class Index(unittest.TestCase):
             got = I.load_chunks("ds", "t")
         self.assertEqual([c["chunk_id"] for c in got], ["n#0", "n#1"])
         self.assertEqual(got[0]["text"], "앞\x85뒤 and\u2028more")
+
+    def test_combined_index_equals_an_index_built_from_all_chunks(self):
+        x = [chunk("x#0", "X", "apple pie"), chunk("x#1", "X", "dog walks")]
+        y = [chunk("y#0", "Y", "banana split"), chunk("y#1", "Y", "cherry apple tart")]
+        ix, iy = I.build_index(x, fake_encode), I.build_index(y, fake_encode)
+        comb = I.combine_indexes([ix, iy], fake_encode)
+        whole = I.build_index(x + y, fake_encode)
+        self.assertEqual([c["chunk_id"] for c in comb.chunks], ["x#0", "x#1", "y#0", "y#1"])
+        for q in ("apple", "dog", "banana", "tart cherry"):
+            a, b = comb.search([q], k=3)[0], whole.search([q], k=3)[0]
+            self.assertEqual([c["chunk_id"] for c, _ in a], [c["chunk_id"] for c, _ in b])
+            self.assertTrue(np.allclose([s for _, s in a], [s for _, s in b]))
+        with self.assertRaises(ValueError):                                              # 청크 id가 겹치면 거부
+            I.combine_indexes([ix, ix], fake_encode)
 
     def test_faiss_flat_equals_exact_numpy_search(self):
         # FAISS IndexFlatIP는 정확 검색이므로 이전 numpy 구현(기준)과 상위 k의 id·점수가 같아야 한다

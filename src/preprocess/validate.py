@@ -31,17 +31,9 @@ def validate_doc(doc):
     stats = {"n_blocks": len(blocks), "by_type": dict(types), "total_chars": total_chars}
 
     if fmt == "srt":
-        expected = log.get("cues_found", 0) - log.get("dropped_empty", 0)
-        if types.get("cue", 0) != expected:
-            errors.append(f"큐 개수 불일치: 블록 {types.get('cue', 0)} vs 원본 {log.get('cues_found')} - 빈 큐 {log.get('dropped_empty')}")
-        if set(types) - {"cue"}:
-            errors.append("srt 문서에 cue가 아닌 블록이 있다")
-        starts = [b["start"] for b in blocks if b.get("type") == "cue"]
-        if any(b["end"] < b["start"] for b in blocks if b.get("type") == "cue"):
-            errors.append("끝 시각이 시작 시각보다 빠른 큐가 있다")
-        if any(a > b for a, b in zip(starts, starts[1:])):
-            warnings.append("큐 시작 시각이 시간 순서가 아니다")
-        stats["n_cues"] = types.get("cue", 0)
+        from srt.validate import validate_srt
+
+        validate_srt(blocks, types, log, errors, warnings, stats)
         return {"errors": errors, "warnings": warnings, "stats": stats}
 
     # --- pdf / docx

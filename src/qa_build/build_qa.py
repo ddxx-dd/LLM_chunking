@@ -1,6 +1,6 @@
 """raw/_meta 의 질문·정답 원본 -> data/qa/<dataset>.jsonl (docs/restructure_plan.md 3.3·7.1·7.2·8절).
 
-vectara   queries/answers/qrels.json + corpus/<doc>.json 의 정답 섹션 텍스트(evidence.text)
+vectara   queries/answers/qrels.json + corpus/<doc>.json 의 정답 섹션 텍스트(evidence.text). 원본 전체(문서 1000편, 질문 3045개) 중 source에 image가 든 질문은 excluded
 docx_corpus raw/docx_corpus/_meta 의 queries/answers/qrels.json (qa_build/docx_candidates.py -> Claude 생성 -> docx_filters.py 로 만든 것).
           근거는 청커와 무관하게 고른 구간 [start, end) 이고(evidence.kind="span"), 전처리를 바꾸면 위치가 틀어지므로 읽을 때마다
           그 구간 텍스트가 현재 to_text()와 맞는지 검사한다(어긋나면 문제로 보고).
@@ -62,12 +62,14 @@ def build_vectara(meta_dir=None):
         recs.append({"qid": qid, "dataset": "vectara", "question": q["query"], "answer": answers.get(qid, ""), "doc_id": doc,
                      "qtype": q["type"], "source": q["source"],
                      "evidence": {"kind": "section_text", "section_id": rel.get("section_id"), "text": sec_text},
-                     "gold_page": None, "excluded": False})
-    strata = {d: "table" if any(r["doc_id"] == d and r["source"] != "text" for r in recs) else "text" for d in manifest_ids}
-    split = assign_splits(strata)
+                     "gold_page": None, "excluded": "image" in q["source"]})        # 이미지 근거 질문은 이미지를 처리하지 않으므로 제외(allganize와 같은 정책)
+    usable = [r for r in recs if not r["excluded"]]
+    problems["이미지 질문 제외"] = len(recs) - len(usable)
+    strata = {d: "table" if any(r["doc_id"] == d and r["source"] != "text" for r in usable) else "text" for d in {r["doc_id"] for r in usable}}
+    split = assign_splits(strata)                                                  # 문서 단위 분할: 쓸 수 있는 질문이 있는 문서만(나머지 문서는 코퍼스의 방해 문서)
     for r in recs:
-        r["split"] = split[r["doc_id"]]
-    return recs, dict(problems)
+        r["split"] = None if r["excluded"] else split[r["doc_id"]]
+    return recs, {k: v for k, v in problems.items() if v}
 
 
 def build_allganize(meta_dir=None):

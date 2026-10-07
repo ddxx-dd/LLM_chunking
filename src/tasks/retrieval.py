@@ -1,19 +1,35 @@
 """검색 평가 지표 (docs/restructure_plan.md 6.2절). LLM 생성 없음 - 순수 검색 단계만 채점한다.
 
-기존 지표(문서 단위): hit@5, MRR, F1
-  hit@5   top-k 청크 중 정답 *문서*의 청크가 하나라도 있으면 1
+k는 3으로 고정해서 쓴다(기본값 K_DEFAULT, 2026-10-06 결정).
+기존 지표(문서 단위): hit@3, MRR, F1
+  hit@3   top-k 청크 중 정답 *문서*의 청크가 하나라도 있으면 1
   MRR     top-k에서 정답 문서 청크의 첫 순위의 역수 (없으면 0)
   F1      top-k 중 정답 문서 청크들과 정답(answer)의 SQuAD 단어 F1 최댓값 (정규화: 소문자·구두점 제거·공백 정리)
 추가 지표(근거 단위):
-  section_hit@5  (vectara)   정답 문서의 청크 중 '청크 단어 가운데 정답 섹션 텍스트에 들어 있는 비율' >= THRESH 인 것이 있으면 1
-  page_hit@5     (allganize) 정답 문서의 청크 중 [page_start, page_end]가 gold_page를 포함하는 것이 있으면 1
+  section_hit@3      (vectara)     정답 문서의 청크 중 '청크 단어 가운데 정답 섹션 텍스트에 들어 있는 비율' >= THRESH 인 것이 있으면 1
+  evidence_recall@3  (docx_corpus) 정답 문서의 top-k 청크를 합친 글자 범위가 근거 구간 [s, e)을 덮는 비율(0~1)
+  (allganize의 page_hit은 측정하지 않는다: 여러 쪽에 걸친 큰 청크가 유리하고 각주가 문서 끝에 모여 쪽 번호와 어긋나기 때문 - 결정 2026-10-06)
 크기 효과 해석용: 인덱스 청크의 평균 토큰 수, 질문별 top-k 총 토큰 수의 평균.
 """
 import re
 from collections import Counter, defaultdict
 
 SECTION_THRESH = 0.5
-PRIMARY = {"vectara": "section_hit", "allganize": "page_hit"}
+K_DEFAULT = 3
+PRIMARY = {"vectara": "section_hit", "docx_corpus": "evidence_recall"}      # allganize는 근거 단위 지표가 없어 hit·MRR·F1만 본다
+
+
+def span_coverage(chunks, start, end):
+    """청크들의 [start, end) 합집합이 근거 구간 [start, end)을 덮는 비율(0~1). 겹치는 청크는 한 번만 센다."""
+    if end <= start:
+        return 0.0
+    covered, cur = 0, start
+    for s, e in sorted((max(c["start"], start), min(c["end"], end)) for c in chunks if c["start"] < end and c["end"] > start):
+        s = max(s, cur)
+        if e > s:
+            covered += e - s
+            cur = e
+    return covered / (end - start)
 
 
 def normalize(text):
@@ -51,8 +67,8 @@ def question_row(qa, hits, k, ngram=1, thresh=SECTION_THRESH):
     ev = qa.get("evidence") or {}
     if ev.get("kind") == "section_text" and ev.get("text"):
         row["section_hit"] = any(containment(c["text"], ev["text"], ngram) >= thresh for _, c in gold)
-    if qa.get("gold_page") is not None:
-        row["page_hit"] = any(c.get("page_start") is not None and c["page_start"] <= qa["gold_page"] <= c["page_end"] for _, c in gold)
+    if ev.get("kind") == "span" and ev.get("end") is not None:
+        row["evidence_recall"] = span_coverage([c for _, c in gold], ev["start"], ev["end"])
     return row
 
 
@@ -62,7 +78,7 @@ def aggregate(rows):
         return None
     out = {"n": n, "hit@k": sum(r["hit"] for r in rows) / n, "mrr": sum(r["mrr"] for r in rows) / n,
            "f1": sum(r["f1"] for r in rows) / n, "top_k_tokens_mean": sum(r["top_k_tokens"] for r in rows) / n}
-    for key in ("section_hit", "page_hit"):
+    for key in ("section_hit", "evidence_recall"):
         vals = [r[key] for r in rows if key in r]
         if vals:
             out[key + "@k"] = sum(vals) / len(vals)
@@ -70,7 +86,7 @@ def aggregate(rows):
     return out
 
 
-def evaluate(index, qas, k=5, ngram=1, thresh=SECTION_THRESH):
+def evaluate(index, qas, k=K_DEFAULT, ngram=1, thresh=SECTION_THRESH):
     """index.search(질문 목록, k) -> 질문마다 [(청크, 점수)]. 결과: overall / by_qtype / 질문별 rows / 청크 통계."""
     hits = index.search([q["question"] for q in qas], k)
     rows = [question_row(q, h, k, ngram, thresh) for q, h in zip(qas, hits)]

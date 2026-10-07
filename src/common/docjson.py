@@ -21,7 +21,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 MD_SEP = "\n\n"
-SRT_SEP = "\n"
 
 MD_TYPES = ("paragraph", "formula", "code", "footnote", "list_item")
 
@@ -71,17 +70,9 @@ def render(doc):
     """doc -> (평문, [Piece]). 같은 doc이면 항상 같은 결과(결정적)."""
     blocks = doc["blocks"]
     if doc.get("fmt") == "srt":
-        parts, pieces, pos = [], [], 0
-        for b in blocks:
-            if b["type"] != "cue":
-                raise ValueError(f"srt 문서에 cue가 아닌 블록이 있다: {b['type']!r} (id={b.get('id')})")
-            text = b.get("text") or ""
-            if not text:
-                continue
-            pieces.append(Piece(pos, pos + len(text), "cue", (b["id"],)))
-            parts.append(text + SRT_SEP)
-            pos += len(text) + len(SRT_SEP)
-        return "".join(parts), pieces
+        from srt.render import render_srt          # srt는 큐 단위 렌더(srt/render.py)
+
+        return render_srt(doc)
 
     parts, pieces, pos = [], [], 0
     for k, (kind, text, ids) in enumerate(_md_items(blocks)):
@@ -96,27 +87,3 @@ def render(doc):
 
 def to_text(doc):
     return render(doc)[0]
-
-
-def block_spans(doc):
-    """조각마다 (start, end, kind) 목록. 옛 방식 legacy_smart.SmartChunker(srt 설정)가 입력으로 받는 모양이다.
-    새 청커(semantic·smart)는 render()의 Piece 목록과 units.build_units를 쓴다."""
-    return [(p.start, p.end, p.kind) for p in render(doc)[1]]
-
-
-def to_lc_document(doc):
-    """srt용 LangChain Document. 기존 mapper/timestamp_align이 읽는 metadata["units"] 형식 그대로:
-    units[j] = {"start", "end", "kind": "cue", "meta": {"index", "t_start", "t_end"}}."""
-    if doc.get("fmt") != "srt":
-        raise ValueError("to_lc_document는 srt 문서에만 쓴다")
-    from langchain_core.documents import Document
-
-    text, pieces = render(doc)
-    by_id = {b["id"]: b for b in doc["blocks"]}
-    units = []
-    for p in pieces:
-        b = by_id[p.block_ids[0]]
-        units.append({"start": p.start, "end": p.end, "kind": "cue",
-                      "meta": {"index": b.get("index"), "t_start": b["start"], "t_end": b["end"]}})
-    return Document(page_content=text,
-                    metadata={"name": f"{doc['doc_id']}.srt", "fmt": "srt", "units": units})

@@ -66,7 +66,7 @@ def converter_for(dataset, pdf_clean=True):
         from preprocess.docx_prep import convert_docx, get_converter
         conv = get_converter()
         return lambda e: convert_docx(e, conv)
-    from preprocess.srt_prep import convert_srt
+    from srt.prep import convert_srt
     return convert_srt
 
 

@@ -10,22 +10,25 @@ import unittest
 
 
 from support import HERE, FIX, FILES, count_words, models_for, cfg_for
-from chunking import splitters
-from chunking.meta import attach_meta
+from chunking.v1 import splitters
+from chunking.v1.meta import attach_meta
 from common.docjson import load_doc, render, to_text
 
 
 EXPECTED = {
     # 거리 계산은 buffer_size=0(단위 하나씩)이 기본이다.
-    # A: smart는 모든 "##" 제목이 청크의 시작이고(390, 939), 표는 제목 + 문단과 한 청크(390~602)에 통째로 들어간다.
-    #    마지막 청크(939~, 21단어)는 min 25 미달인데 앞 청크(49단어)와 합치면 max 60을 넘어 합치지 못하고 위반으로 남는다.
+    # A: smart는 최상위 섹션(## 수준, 3개)마다 독립으로 청킹하고 문장 단위(semantic과 같음)라서 어떤 청크도 섹션을 가로지르지 않는다.
+    #    "##" 제목이 청크의 시작이고(390, 939), 표는 제목 + 문단과 한 청크(390~602)에 통째로 들어간다.
+    #    마지막 섹션(939~, 21단어)은 min 25 미달인데 이웃 섹션과 합치면 max 60을 넘어 합치지 못하고 위반으로 남는다(보고됨).
     #    semantic은 제목을 모르므로 "## 2 Method"가 청크 끝(196~401)에 홀로 남는다.
+    #    semantic·smart 모두 사전식 DP(max 하드 > min 부족분 최소 > 의미 이득): semantic은 min을 모두 지키는 4청크(30/34/58/55단어)를 찾는다
+    #    (이전 가중치 방식은 마지막 21단어가 min 미달로 남았다). smart의 마지막 섹션(21단어)은 이웃과 합치면 max 초과라 불가피한 위반으로 남는다.
     "A": dict(fixed=[(0, 160), (160, 320), (320, 480), (480, 640), (640, 799), (800, 959), (960, 1069)],
-              semantic=[(0, 195), (196, 401), (403, 602), (604, 780), (781, 1069)],
+              semantic=[(0, 195), (196, 401), (403, 713), (714, 1069)],
               smart=[(0, 195), (196, 388), (390, 602), (604, 937), (939, 1069)]),
     # B(srt): smart는 아직 legacy 설정(큐 단위 경계 점수), semantic은 공유 엔진
     "B": dict(fixed=[(0, 200), (200, 400), (400, 600), (600, 691)],
-              semantic=[(0, 138), (139, 282), (283, 394), (395, 497), (498, 690)],
+              semantic=[(0, 138), (139, 282), (283, 394), (395, 497), (498, 690)],     # DP(min 우선)도 그리디와 같은 분할: 모든 청크가 min 15 이상
               smart=[(0, 138), (139, 282), (283, 394), (395, 601), (602, 690)]),
     # C: 제목 + 한 문단(주제 3개). 표·캡션이 없어서 semantic과 smart가 같다. 컷이 주제 전환 문장 경계에 정확히 생긴다.
     "C": dict(fixed=[(0, 160), (160, 320), (320, 480), (480, 586)],
@@ -119,7 +122,7 @@ class Metadata(unittest.TestCase):
 
     def test_pdf_smart_chunk_has_blocks_page_and_heading_path(self):
         doc, chunks, _ = run("A", "smart")
-        c = chunks[1]                                   # (18, 388): 문단 두 개
+        c = chunks[1]                                   # (196, 388): 첫 섹션의 둘째 청크(문장 단위라 b1의 뒷부분과 b2)
         self.assertEqual(c["block_ids"], ["b1", "b2"])
         self.assertEqual((c["page_start"], c["page_end"]), (1, 1))
         self.assertEqual(c["heading_path"], ["1 Introduction"])
