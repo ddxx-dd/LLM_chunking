@@ -8,7 +8,10 @@ k는 3으로 고정해서 쓴다(기본값 K_DEFAULT, 2026-10-06 결정).
 추가 지표(근거 단위):
   section_hit@3      (vectara)     정답 문서의 청크 중 '청크 단어 가운데 정답 섹션 텍스트에 들어 있는 비율' >= THRESH 인 것이 있으면 1
   evidence_recall@3  (docx_corpus) 정답 문서의 top-k 청크를 합친 글자 범위가 근거 구간 [s, e)을 덮는 비율(0~1)
-  (allganize의 page_hit은 측정하지 않는다: 여러 쪽에 걸친 큰 청크가 유리하고 각주가 문서 끝에 모여 쪽 번호와 어긋나기 때문 - 결정 2026-10-06)
+  page_hit@3         (allganize)   정답 문서의 청크 중 쪽 번호 집합에 gold_page가 들어 있는 것이 있으면 1
+                                   쪽 번호 집합은 청크 레코드의 `pages`(블록들의 쪽 번호). 옛 청크 파일에는 없어서 [page_start, page_end] 범위로 대신한다.
+                                   (2026-10-08 결정: 쪽 번호는 블록 메타데이터에 있으므로 쓴다. 각주는 문서 끝에 모이지만 자기 원래 쪽을 유지하고,
+                                    집합을 쓰면 끝쪽 청크의 쪽이 부풀려지지 않는다. 여러 쪽에 걸친 청크가 유리한 크기 편향은 남아 있다 - 나중에 다룬다)
 크기 효과 해석용: 인덱스 청크의 평균 토큰 수, 질문별 top-k 총 토큰 수의 평균.
 """
 import re
@@ -16,7 +19,8 @@ from collections import Counter, defaultdict
 
 SECTION_THRESH = 0.5
 K_DEFAULT = 3
-PRIMARY = {"vectara": "section_hit", "docx_corpus": "evidence_recall"}      # allganize는 근거 단위 지표가 없어 hit·MRR·F1만 본다
+PRIMARY = {"vectara": "section_hit", "docx_corpus": "evidence_recall"}      # 실험 1(옛 스크립트)용: allganize는 대표 지표가 없다 - 바꾸지 말 것
+PRIMARY_V2 = {**PRIMARY, "allganize": "page_hit"}                          # 새 실행(scripts/run.py)용
 
 
 def span_coverage(chunks, start, end):
@@ -30,6 +34,14 @@ def span_coverage(chunks, start, end):
             covered += e - s
             cur = e
     return covered / (end - start)
+
+
+def chunk_pages(chunk):
+    """청크가 걸친 쪽 번호 집합. `pages`(새 청크 파일)가 있으면 그것, 없으면 [page_start, page_end] 범위, 쪽 정보가 없으면 빈 집합."""
+    if chunk.get("pages") is not None:
+        return set(chunk["pages"])
+    p0, p1 = chunk.get("page_start"), chunk.get("page_end")
+    return set(range(p0, p1 + 1)) if p0 is not None and p1 is not None else set()
 
 
 def normalize(text):
@@ -69,6 +81,8 @@ def question_row(qa, hits, k, ngram=1, thresh=SECTION_THRESH):
         row["section_hit"] = any(containment(c["text"], ev["text"], ngram) >= thresh for _, c in gold)
     if ev.get("kind") == "span" and ev.get("end") is not None:
         row["evidence_recall"] = span_coverage([c for _, c in gold], ev["start"], ev["end"])
+    if qa.get("gold_page") is not None:
+        row["page_hit"] = any(qa["gold_page"] in chunk_pages(c) for _, c in gold)
     return row
 
 
@@ -78,7 +92,7 @@ def aggregate(rows):
         return None
     out = {"n": n, "hit@k": sum(r["hit"] for r in rows) / n, "mrr": sum(r["mrr"] for r in rows) / n,
            "f1": sum(r["f1"] for r in rows) / n, "top_k_tokens_mean": sum(r["top_k_tokens"] for r in rows) / n}
-    for key in ("section_hit", "evidence_recall"):
+    for key in ("section_hit", "evidence_recall", "page_hit"):
         vals = [r[key] for r in rows if key in r]
         if vals:
             out[key + "@k"] = sum(vals) / len(vals)

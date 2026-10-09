@@ -4,7 +4,7 @@
 
 | 파일 | 하는 일 |
 |---|---|
-| `prep.py` | srt 원문 → 공통 JSON(cue 블록). 영화 쌍 목록(`SRT_MOVIES`), 매니페스트(`manifests/srt.json`), 전처리 대상 목록(`srt_entries`) |
+| `prep.py` | srt 원문 → 공통 JSON(cue 블록). **Docling이 아니라 정규식 파서**(`parser: regex-srt`: 인코딩 순차 시도, 큐 정규식, 태그 제거, NFC·공백 정리). 영화 쌍 목록(`SRT_MOVIES`), 매니페스트(`manifests/srt.json`), 전처리 대상 목록(`srt_entries`) |
 | `validate.py` | 전처리 결과 점검(큐 개수, 시각). 공통 점검은 `preprocess/validate.py`가 먼저 한다 |
 | `render.py` | cue 블록 → 평문 + 조각표. `common.docjson.render`가 fmt가 srt이면 여기로 위임한다. `block_spans`, `to_lc_document` 포함 |
 | `smart.py` | srt용 smart 청커(옛 `legacy_smart.py`를 이름만 바꿔 이동. 내용 그대로) |

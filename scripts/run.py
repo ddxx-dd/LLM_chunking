@@ -59,9 +59,9 @@ def skip_existing(out, force, precision):
 
 
 def line(dataset, tag, res, k):
-    from tasks.retrieval import PRIMARY
+    from tasks.retrieval import PRIMARY_V2
 
-    o, prim = res["overall"], PRIMARY.get(dataset)
+    o, prim = res["overall"], PRIMARY_V2.get(dataset)
     return (f"[{dataset}/{tag}] 문서 {res['n_docs']} 질문 {res['n_questions']} 청크 {res['index']['n_chunks']} "
             f"(평균 {res['index']['chunk_tokens_mean']:.0f}토큰, 최대 {res['index']['chunk_tokens_max']}) | hit@{k} {o['hit@k']:.3f} MRR {o['mrr']:.3f} F1 {o['f1']:.3f}"
             + (f" {prim}@{k} {o[prim + '@k']:.3f}" if prim and prim + "@k" in o else "") + f" | top-{k} 평균 {o['top_k_tokens_mean']:.0f}토큰")

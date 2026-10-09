@@ -40,9 +40,21 @@ class TestRecords(unittest.TestCase):
             doc, ctx, spans = fixture_chunks(key)
             new = cio.attach_meta(doc, ctx.text, ctx.pieces, spans, lambda ts: [count_words(t) for t in ts], "semantic", {"p": 70})
             old = old_meta.attach_meta(doc, ctx.text, ctx.pieces, spans, count_words, "semantic", {"p": 70})
-            self.assertEqual(new, old)
+            self.assertEqual([{k: v for k, v in c.items() if k != "pages"} for c in new], old)      # pages는 새 필드, 나머지는 v1과 같다
             for c in new:
                 self.assertEqual(c["text"], ctx.text[c["start"]:c["end"]])
+                self.assertEqual((min(c["pages"]) if c["pages"] else None, max(c["pages"]) if c["pages"] else None),
+                                 (c["page_start"], c["page_end"]))
+
+    def test_pages_is_a_set_not_a_range(self):
+        """각주가 문서 끝에 모여 있어도 쪽 번호는 블록의 원래 쪽을 유지한다: 끝쪽 청크의 pages에 사이 쪽이 끼지 않는다."""
+        blocks = [{"id": "b0", "type": "paragraph", "text": "alpha beta gamma", "heading_path": [], "page": 9},
+                  {"id": "b1", "type": "footnote", "text": "note one", "heading_path": [], "page": 3}]
+        doc = {"doc_id": "d", "dataset": "ds", "fmt": "pdf", "lang": "en", "title": "t", "blocks": blocks}
+        text, pieces = render(doc)
+        chunks = cio.attach_meta(doc, text, pieces, [(0, len(text))], lambda ts: [count_words(t) for t in ts], "fixed", {})
+        self.assertEqual(chunks[0]["pages"], [3, 9])
+        self.assertEqual((chunks[0]["page_start"], chunks[0]["page_end"]), (3, 9))               # 범위는 사이 쪽(4~8)까지 부풀어 있다
 
     def test_stats_same_as_v1_on_shared_keys(self):
         doc, ctx, spans = fixture_chunks("A")

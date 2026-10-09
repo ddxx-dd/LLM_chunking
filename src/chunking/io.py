@@ -1,7 +1,7 @@
 """청크 파일 입출력: 데이터셋 하나를 청커 하나로 청킹해 data/chunks/<dataset>/<태그>.jsonl 로 저장한다.
 
-- 청크 한 줄 = dict 하나(chunk_id, doc_id, dataset, chunker, params, start, end, text, n_chars, n_tokens, block_ids, partial_start/end, page_*, heading_path).
-  옛 파일(chunking/v1)과 같은 모양이라 indexing/index.py, tasks/retrieval.py가 그대로 읽는다. 청크 텍스트는 항상 평문의 text[start:end].
+- 청크 한 줄 = dict 하나(chunk_id, doc_id, dataset, chunker, params, start, end, text, n_chars, n_tokens, block_ids, partial_start/end, page_start/page_end, pages, heading_path).
+  `pages`는 청크에 든 블록들의 쪽 번호 집합(정렬 목록)이고 새로 추가된 필드다(page_hit 평가에 쓴다). 나머지는 옛 파일(chunking/v1)과 같은 모양이라 indexing/index.py, tasks/retrieval.py가 그대로 읽는다. 청크 텍스트는 항상 평문의 text[start:end].
 - 태그: `<이름>__<조절값>[-추가값]` (예: `A__p90`, `fixed__T260`, `B__p90-beta0`). 정확한 값은 청크 줄의 params가 기준이다.
 - 파일이 있으면 건너뛴다(이어하기, force로 다시). 임시 파일에 쓴 뒤 이름을 바꾼다. 옆에 <태그>.meta.json(설정, 청크 수, 내용 보존 검사 실패 문서).
 - 내용 보존 검사(겹침 0): 청크들의 공백 아닌 글자를 이어 붙인 것 == 원문의 공백 아닌 글자. 어긋난 문서는 meta에 기록하고 계속한다.
@@ -103,7 +103,8 @@ def attach_meta(doc, text, pieces, spans, count_many, chunker, params):
             "chunk_id": f"{doc['doc_id']}#{i:04d}", "doc_id": doc["doc_id"], "dataset": doc["dataset"], "chunker": chunker, "params": params,
             "start": s, "end": e, "text": text[s:e], "n_chars": e - s, "n_tokens": int(ntok[i]), "block_ids": block_ids,
             "partial_start": bool(hit) and s > hit[0].start, "partial_end": bool(hit) and e < hit[-1].end,
-            "page_start": min(pages) if pages else None, "page_end": max(pages) if pages else None, "t_start": None, "t_end": None,
+            "page_start": min(pages) if pages else None, "page_end": max(pages) if pages else None, "pages": sorted(set(pages)),
+            "t_start": None, "t_end": None,
             "heading_path": list(blocks[0].get("heading_path") or []) if blocks else []})
     return out
 

@@ -67,11 +67,31 @@ class Metrics(unittest.TestCase):
         no_ev = {"qid": "q", "doc_id": "A", "qtype": "t", "answer": ""}
         self.assertNotIn("section_hit", R.question_row(no_ev, [(CHUNKS[0], 1.0)], 5))
 
-    def test_page_hit_is_no_longer_measured(self):
+    def test_page_hit(self):
         qa = {"qid": "q", "doc_id": "A", "qtype": "t", "answer": "", "gold_page": 3}
-        self.assertNotIn("page_hit", R.question_row(qa, [(CHUNKS[1], 1.0)], 3))      # allganize 쪽 지표는 측정하지 않는다(결정 2026-10-06)
+        self.assertTrue(R.question_row(qa, [(CHUNKS[1], 1.0)], 3)["page_hit"])                       # a#1은 2~3쪽(범위 대체)
+        self.assertFalse(R.question_row(qa, [(CHUNKS[0], 1.0)], 3)["page_hit"])                      # a#0은 1쪽
+        self.assertFalse(R.question_row({**qa, "doc_id": "B"}, [(CHUNKS[1], 1.0)], 3)["page_hit"])   # 다른 문서의 청크는 세지 않는다
+        self.assertFalse(R.question_row(qa, [], 3)["page_hit"])
+
+    def test_page_hit_uses_page_set_when_present(self):
+        qa = {"qid": "q", "doc_id": "A", "qtype": "t", "answer": "", "gold_page": 5}
+        c = {**chunk("a#9", "A", "x", 3, 9), "pages": [3, 9]}                                        # 범위는 3~9이지만 실제 쪽은 3, 9뿐
+        self.assertFalse(R.question_row(qa, [(c, 1.0)], 3)["page_hit"])
+        self.assertTrue(R.question_row(qa, [({**c, "pages": None}, 1.0)], 3)["page_hit"])             # pages가 없으면 범위로 대신
+        self.assertFalse(R.question_row({**qa, "gold_page": 9}, [({**chunk("z", "A", "x"), "pages": []}, 1.0)], 3)["page_hit"])
+
+    def test_page_hit_only_when_gold_page_given(self):
+        qa = {"qid": "q", "doc_id": "A", "qtype": "t", "answer": "", "gold_page": None}
+        self.assertNotIn("page_hit", R.question_row(qa, [(CHUNKS[1], 1.0)], 3))
+        rows = [{"hit": True, "mrr": 1.0, "f1": 0.0, "top_k_tokens": 1, "page_hit": True},
+                {"hit": True, "mrr": 1.0, "f1": 0.0, "top_k_tokens": 1, "page_hit": False}]
+        o = R.aggregate(rows)
+        self.assertEqual((o["page_hit@k"], o["page_hit_n"]), (0.5, 2))
         self.assertEqual(R.K_DEFAULT, 3)
-        self.assertNotIn("allganize", R.PRIMARY)
+        self.assertNotIn("allganize", R.PRIMARY)                                   # 실험 1(옛 스크립트)용 대표 지표는 바꾸지 않는다
+        self.assertEqual(R.PRIMARY_V2["allganize"], "page_hit")                       # 새 실행(scripts/run.py)은 allganize도 page_hit을 본다
+        self.assertEqual({k: R.PRIMARY_V2[k] for k in R.PRIMARY}, R.PRIMARY)
 
     def test_span_coverage_counts_union_once_and_clips_to_the_evidence(self):
         ch = lambda s, e: {"start": s, "end": e}
