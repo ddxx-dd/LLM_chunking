@@ -36,7 +36,9 @@
 
 ### 입력: 깨끗한 텍스트 (모든 청커 공통)
 
-`data/processed`의 전처리 JSON은 **그대로 두고**, 읽을 때 `rag/units.py`에서 깨끗한 텍스트로 바꾼다(정리 규칙도 파일이 아니라 변환 함수에 둔다).
+Docling 전처리 결과는 `data/meta_text`에 **그대로 두고**(2026-10-12 `data/processed`에서 이름만 변경), `scripts/build_units.py`가 `rag/units.py`의 변환 함수로 깨끗한 텍스트를 만들어 `data/processed_para`(문단), `data/processed_sen`(문장)에 저장한다. 정리 규칙은 변환 함수에 두고, 폴더마다 `_manifest.json`에 규칙·원본·시각·문서 수를 기록한다. 규칙을 바꾸면 다시 생성한다.
+
+단위 파일(`<폴더>/<데이터셋>/<doc_id>.json`): 문서 필드 `doc_id, dataset, lang, title, fmt, source, n_units, n_tokens, n_pages`; 단위 필드 `text, kind(para/table/list/code/formula/caption/footnote), n_tokens(bge-m3), block_ids, heading(붙인 제목), page, heading_path`, 문장 파일은 `para`(몇 번째 문단) 추가. 청커는 `text`(와 advanced_semantic_chunker는 `n_tokens`)만 쓰고 나머지는 분석·추적용이다.
 
 | 블록 | 변환 |
 |---|---|
@@ -92,7 +94,7 @@ s = 문서 시작 단위
 ### 트랙 A: 검색·생성 (`src/rag/`) — pdf, docx, LongBench
 
 ```
-원본 → 전처리(Docling, data/processed에 보존) → 깨끗한 텍스트 → 단위(문단/문장)
+원본 → 전처리(Docling, data/meta_text) → 깨끗한 텍스트·단위(data/processed_para, data/processed_sen)
      → advanced_semantic_chunker의 최적 θ 찾기(개발 문서) + 청커별 청킹
      → 임베딩(bge-m3 fp16) → FAISS 정확 검색 → top-k
      → 검색 품질 측정 + top-k를 넣은 생성(질의응답·요약) 품질 측정 → 지표화
@@ -129,7 +131,7 @@ srt → 전처리(큐 + 타임스탬프) → 청커별 청킹 → 청크 단위 
 
 | 단계 | 내용 |
 |---|---|
-| R0 | **완료(2026-10-12)**: 코드·문서·옛 산출물을 모두 지우고 빈 폴더 구조에서 다시 시작. 환경, `AGENTS.md`, `CLAUDE.md`, requirements, `data/raw·processed·qa·manifests`만 남김 |
+| R0 | **완료(2026-10-12)**: 코드·문서·옛 산출물을 모두 지우고 빈 폴더 구조에서 다시 시작. 환경, `AGENTS.md`, `CLAUDE.md`, requirements, `data/raw·processed(현 meta_text)·qa·manifests`만 남김 |
 | A1 | 모델 로딩: bge-m3 fp16, 토크나이저, Gemma 4비트 |
 | A2 | 입력 준비: A2-0 결정 문서화 → A2-1 데이터셋 등록·문서 읽기 → A2-2 깨끗한 텍스트(문단) → A2-3 문장 단위(도구 검증) → A2-4 LongBench(다운로드 허락 필요) → A2-5 전처리 코드 이식(pdf 대조는 cuDNN 수리 후) → A2-6 테스트 |
 | A3 | 청킹: fixed → recursive → semantic → advanced_semantic_chunker(파일럿) |
@@ -174,7 +176,7 @@ src/
 
 scripts/        실행 CLI (preprocess, build_qa, chunk, run, tune, srt/…)
 tests/          unittest (모델·GPU 없이 돈다)
-data/           raw·processed·chunks·index (git에는 qa·manifests만)
+data/           raw → meta_text(Docling) → processed_para·processed_sen(깨끗한 텍스트) → chunks → index (git에는 qa·manifests만)
 docs/ papers/   설계 문서 / 참고 논문 PDF(git에 올리지 않음)
 ```
 

@@ -1,7 +1,7 @@
 """모델 로딩 점검 (A1). 실제 모델로 임베딩·토큰 세기·LLM 생성이 되는지와 속도·GPU 메모리를 출력한다.
 
   source env.sh
-  .venv311/bin/python scripts/check_models.py [--no-llm] [--sample-doc data/processed/docx_corpus/<doc>.json]
+  .venv311/bin/python scripts/check_models.py [--no-llm] [--sample-doc data/meta_text/docx_corpus/<doc>.json]
 
 결과는 화면에 출력하고 results/check_models.json 에도 저장한다.
 """
@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import numpy as np  # noqa: E402
 
-from common.config import LLM_MODEL, PROCESSED_DIR, RESULTS_DIR  # noqa: E402
+from common.config import LLM_MODEL, META_DIR, RESULTS_DIR  # noqa: E402
 from common.models import generate, get_tokenizer, load_embedder, load_llm, make_encode, make_token_counter  # noqa: E402
 
 SENTENCES = [
@@ -41,7 +41,7 @@ def gib():
 def sample_texts(path, limit=400):
     """처리된 문서 JSON 하나에서 블록 글을 꺼낸다(속도 측정용)."""
     if path is None:
-        path = sorted((PROCESSED_DIR / "docx_corpus").glob("*.json"))[0]
+        path = sorted((META_DIR / "docx_corpus").glob("*.json"))[0]
     doc = json.loads(Path(path).read_text(encoding="utf-8"))
     texts = [b["text"] for b in doc.get("blocks", []) if b.get("text", "").strip()]
     return Path(path).name, texts[:limit]
