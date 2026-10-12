@@ -7,7 +7,8 @@
 긴 문서·자막을 어떻게 청킹하느냐가 **검색·생성(요약) 품질**과 **번역 품질**에 어떤 영향을 주는지 같은 조건에서 비교한다.
 비교 방식은 LumberChunker(Duarte et al., 2024, `papers/` 참고)를 따른다.
 
-- 비교 대상: LangChain 기준 청커 4종 + 우리가 만드는 `advanced_semantic_chunker`
+- 비교 대상: LangChain 기준 청커 3종(fixed, recursive, semantic) + 우리가 만드는 `advanced_semantic_chunker`
+- **모든 청커는 같은 깨끗한 텍스트를 입력으로 받는다**(3절 입력 규칙). 청커별 구조 규칙은 쓰지 않고 순수 분할 알고리즘만 비교한다.
 - `advanced_semantic_chunker`: LumberChunker의 틀을 그대로 쓰되, **"어디서 내용이 바뀌는가"를 LLM이 판단하던 부분을 코사인 유사도 기반 알고리즘으로 대체**한다.
 
 ## 2. 반드시 지킬 것
@@ -27,9 +28,30 @@
 |---|---|---|
 | `fixed` | LangChain `CharacterTextSplitter` | chunk size |
 | `recursive` | LangChain `RecursiveCharacterTextSplitter` | chunk size |
-| `header` | LangChain `MarkdownHeaderTextSplitter` | 제목 수준(필요하면 긴 절만 재분할) |
 | `semantic` | LangChain `SemanticChunker`(`langchain_experimental`) | 경계 백분위 |
 | `advanced_semantic_chunker` | 우리 구현 | **θ**(그룹 토큰 상한, LumberChunker의 θ) |
+
+- `header`(MarkdownHeaderTextSplitter)는 **제외**한다(2026-10-12): 제목 인식 품질이 고르지 않고(vectara 계층 오류, allganize는 모든 제목이 같은 수준, docx 소제목이 문단으로 들어감) LongBench에는 제목이 없다. 구조 기반 청킹과의 비교가 빠진다는 점은 한계로 적는다.
+- LumberChunker처럼 문단 단위 기준선(문단 하나 = 청크 하나)을 추가할지는 A3에서 정한다.
+
+### 입력: 깨끗한 텍스트 (모든 청커 공통)
+
+`data/processed`의 전처리 JSON은 **그대로 두고**, 읽을 때 `rag/units.py`에서 깨끗한 텍스트로 바꾼다(정리 규칙도 파일이 아니라 변환 함수에 둔다).
+
+| 블록 | 변환 |
+|---|---|
+| 문단, 목록 항목, 코드, 수식 | 블록 하나 = 문단 하나 |
+| 제목 | 다음 블록 앞에 줄바꿈으로 붙여 문단 하나로(`제목\n내용`). 제목이 연달아 오면 첫 비제목 블록까지 모두 붙인다. 문서 끝의 제목은 혼자 둔다. **1안: Docling이 제목으로 표시한 블록만** 대상(제목처럼 보이는 짧은 줄까지 붙이는 2안은 통계를 보고 결정) |
+| 표 | 표 전체가 문단 하나(마크다운 표 글 그대로) |
+| 캡션 | 원래 위치의 일반 문단 |
+| 각주 | 문서 맨 뒤 |
+| 빈 블록 | 제외 |
+
+- 텍스트 전체 = 문단을 빈 줄(`\n\n`)로 이은 것. fixed·recursive·semantic은 이것을 받는다.
+- 문단 단위 = 위 문단 목록. 문장 단위 = 블록별로 문장을 나눈 뒤 제목을 다음 블록의 첫 문장 앞에 붙인다. **표 문단은 문장으로 나누지 않는다.**
+- 문장 나누기 도구는 실제 데이터의 어려운 문장(약어, 숫자, 인용 번호, 한국어 등)으로 후보를 비교해 정한다(A2-3).
+- 이 규칙은 텍스트를 만드는 단계의 규칙이라 모든 청커에 똑같이 적용된다.
+- LongBench는 줄바꿈 기준 문단으로 같은 형식의 문서 JSON을 만든다.
 
 ### LumberChunker 원본 동작 (논문 3.1절, 그림 1, 부록 B 프롬프트)
 
@@ -62,7 +84,7 @@ s = 문서 시작 단위
 | 청크 초반 오판으로 생기는 아주 작은 청크 | 나중에 다룬다(파일럿에서 실제로 문제인지 먼저 확인) |
 
 - θ는 개발용 문서에서 격자로 찾는다. 처음 변화에서 자르므로 청크 크기는 θ보다 '분명한 변화' 기준이 더 크게 좌우하고, θ는 사실상 상한이다.
-- 단위(`unit`): 문단이면 pdf·docx는 전처리 블록, LongBench는 줄바꿈 문단. 문장이면 문단을 문장으로 나눈다(공용 문장 나누기 함수). θ보다 큰 문단은 문단 단위에서도 문장으로 나눈다. pdf·docx는 메타데이터로 구조를 어느 정도 지킨다(예: 제목은 다음 단위에 붙임, 표는 한 단위). 구조 반영은 있음/없음 어블레이션으로 본다.
+- 단위(`unit`): 위 '깨끗한 텍스트'의 문단 또는 문장. θ보다 큰 문단은 문단 단위에서도 문장으로 나눈다(표는 예외로 그대로 한 단위). 구조 규칙(제목 가산점 등)은 쓰지 않는다.
 - 검증 후보: 같은 θ로 원본 LumberChunker(Gemma, 논문 프롬프트)를 몇 편 돌려 절단 위치 일치도를 재는 방법이 있다(선택).
 
 ## 4. 파이프라인
@@ -70,7 +92,7 @@ s = 문서 시작 단위
 ### 트랙 A: 검색·생성 (`src/rag/`) — pdf, docx, LongBench
 
 ```
-원본 → 전처리(텍스트 + 필요한 메타데이터) → 단위(문단/문장)
+원본 → 전처리(Docling, data/processed에 보존) → 깨끗한 텍스트 → 단위(문단/문장)
      → advanced_semantic_chunker의 최적 θ 찾기(개발 문서) + 청커별 청킹
      → 임베딩(bge-m3 fp16) → FAISS 정확 검색 → top-k
      → 검색 품질 측정 + top-k를 넣은 생성(질의응답·요약) 품질 측정 → 지표화
@@ -96,7 +118,7 @@ srt → 전처리(큐 + 타임스탬프) → 청커별 청킹 → 청크 단위 
 
 ## 5. 공정한 비교 원칙
 
-- 모든 청커는 같은 전처리 결과, 같은 임베딩(bge-m3 fp16), 같은 검색기(FAISS 정확 검색), 같은 k, 같은 생성 모델·프롬프트를 쓴다.
+- 모든 청커는 같은 깨끗한 텍스트, 같은 임베딩(bge-m3 fp16), 같은 검색기(FAISS 정확 검색), 같은 k, 같은 생성 모델·프롬프트를 쓴다.
 - θ는 **개발 문서**에서만 고르고, 평가는 겹치지 않는 문서로 한다. 통계는 문서 단위 부트스트랩.
 - 청크 크기가 결과에 영향을 주므로 평균 청크 토큰과 top-k 총 토큰을 항상 함께 보고한다.
 - 자체 설계 값(근거 논문이 없는 상수)은 그렇다고 명시한다.
@@ -109,8 +131,8 @@ srt → 전처리(큐 + 타임스탬프) → 청커별 청킹 → 청크 단위 
 |---|---|
 | R0 | **완료(2026-10-12)**: 코드·문서·옛 산출물을 모두 지우고 빈 폴더 구조에서 다시 시작. 환경, `AGENTS.md`, `CLAUDE.md`, requirements, `data/raw·processed·qa·manifests`만 남김 |
 | A1 | 모델 로딩: bge-m3 fp16, 토크나이저, Gemma 4비트 |
-| A2 | 전처리·메타데이터: 문서 JSON → 단위, LongBench를 같은 형식으로 |
-| A3 | 청킹: fixed → recursive → header → semantic → advanced_semantic_chunker(파일럿) |
+| A2 | 입력 준비: A2-0 결정 문서화 → A2-1 데이터셋 등록·문서 읽기 → A2-2 깨끗한 텍스트(문단) → A2-3 문장 단위(도구 검증) → A2-4 LongBench(다운로드 허락 필요) → A2-5 전처리 코드 이식(pdf 대조는 cuDNN 수리 후) → A2-6 테스트 |
+| A3 | 청킹: fixed → recursive → semantic → advanced_semantic_chunker(파일럿) |
 | A4 | 인덱싱: 청크 → 임베딩 → FAISS, 캐시 |
 | A5 | QA 세트(docx는 Claude 생성 + Gemma 검증) → 지표를 하나씩 추가 |
 | A6 | θ 튜닝 → 평가 실행 → 분석 |
@@ -125,13 +147,13 @@ src/
   preprocess/                   Docling pdf·docx 전처리 → 공통 JSON(블록 + 메타데이터) (옛 코드에서 필요한 것만 이식)
 
   chunking/                     ── 공용 청커 알고리즘 (오프셋을 모른다)
-    langchain_baselines.py        fixed/recursive/header/semantic 래퍼
+    langchain_baselines.py        fixed/recursive/semantic 래퍼
                                     → 문자열 목록, 요청 시 시작 위치도 함께(add_start_index)
     advanced_semantic.py          LumberChunker 틀 + 코사인 판단 → 단위 번호 범위 [(i, j)]
     sizectl/                      srt 원본 min/max 엔진 → 단위 번호 범위 (옛 코드 이식, 수정 없이)
 
   rag/                          ── 트랙 A: 오프셋 없음
-    units.py                      문서 JSON/LongBench → 단위(문단·문장) + 메타데이터
+    units.py                      문서 JSON/LongBench → 깨끗한 텍스트 → 단위(문단·문장)
     chunks.py                     단위 범위 → 청크 문자열 (LangChain 결과는 문자열 그대로)
     index.py                      청크 → 임베딩 → FAISS 정확 검색, 캐시
     metrics.py                    검색 지표 (단계별로 하나씩 추가)
@@ -163,7 +185,7 @@ docs/ papers/   설계 문서 / 참고 논문 PDF(git에 올리지 않음)
 | rag | `{chunk_id, doc_id, text, n_tokens}` |
 | srt | `{chunk_id, movie, text, start, end, cue_from, cue_to}` — `start/end`는 렌더된 자막 글 기준 글자 위치 |
 
-- LangChain 4종 모두 `add_start_index`로 시작 위치를 받을 수 있다(`SemanticChunker`도 지원, `langchain_experimental` 0.4.2에서 확인).
+- LangChain 청커는 모두 `add_start_index`로 시작 위치를 받을 수 있다(`SemanticChunker`도 지원, `langchain_experimental` 0.4.2에서 확인). 트랙 B에서만 쓴다.
 지금은 폴더와 빈 `__init__.py`만 있다. 파일은 단계마다 하나씩 추가하고, 추가할 때 이 절을 실제 구조에 맞춘다.
 
 ## 8. 실행·테스트
@@ -175,6 +197,7 @@ source env.sh                                   # HF 캐시·PYTHONPATH 고정, 
 - GPU: RTX A5000 24GB. Gemma 4 12B는 `transformers` + `bitsandbytes` 4비트로 약 7.7GiB.
 - 오래 걸리는 작업은 로그 파일로 남기고 백그라운드로 돌린다. CUDA 정리 단계에서 프로세스가 오래 매달린 적이 있어 GPU 스크립트는 끝에 `os._exit(0)`을 쓴다(이때 출력 버퍼가 비워지지 않으므로 결과는 파일로 저장).
 - CometKiwi는 `transformers` 버전 충돌 때문에 별도 환경 `.venv-eval`에서만 돌린다. **`.venv-eval`은 현재 실행되지 않는다**(2026-10-12 확인): `bin/python`이 이전 서버 경로(`/root/.local/share/uv/python/...`)를 가리킨다. 패키지(`unbabel-comet` 2.2.7 등)는 남아 있다. B5에서 사용자 확인 후 복구한다(파이썬 연결을 `.python/cpython-3.11.17`로 바꾸거나 `requirements-eval.txt`로 재생성). CometKiwi 모델도 아직 캐시에 없다.
+- **GPU 합성곱(cuDNN) 불가**(2026-10-12 확인): torch 2.7.1+cu118이 요구하는 `nvidia-cudnn-cu11` 9.1과, `cuda-toolkit 13` 묶음으로 들어온 `nvidia-cudnn-cu13` 9.24가 **같은 파일**(`nvidia/cudnn/lib/libcudnn.so.9`)에 설치되어 9.24가 덮어썼다. 작은 `conv2d`도 `CUDNN_STATUS_NOT_INITIALIZED`로 실패한다. bge-m3·Gemma는 영향 없음. Docling pdf(레이아웃·표·OCR 모델)는 GPU에서 실패하고, CPU 변환 시도도 오류 없이 중단됐다(원인 미확인). docx 변환은 정상. A2-5에서 사용자 허락 후 `nvidia-cudnn-cu11==9.1.0.70` 재설치로 수리한다(CUDA 13 묶음을 쓰는 패키지 영향 확인 후).
 - `.venv311` 점검(2026-10-12): 주요 패키지 import, CUDA(A5000, cu118), 오프라인 bge-m3 fp16 인코딩, Gemma 토크나이저, Docling 모델 캐시 정상. `pip check` 경고 4건(`unstructured`·`pdfplumber`·`pi-heif`·`nab-project`의 버전 요구)은 우리가 쓰지 않는 패키지라 그대로 둔다.
 
 ## 9. 옛 코드와 보존 위치
@@ -195,7 +218,9 @@ source env.sh                                   # HF 캐시·PYTHONPATH 고정, 
 - advanced_semantic_chunker의 '분명한 변화' 기준(논문 조사와 함께 개발)과 θ 격자
 - advanced_semantic_chunker의 단위: 문단 vs 문장(파일럿 비교)
 - 청크 초반 오판으로 생기는 작은 청크 대책(필요할 때)
-- 기준 청커의 크기 값(공통 기본값으로 둘지, 같은 튜닝 예산을 줄지)
+- 기준 청커의 크기 값(공통 기본값으로 둘지, 같은 튜닝 예산을 줄지), 문단 단위 기준선 추가 여부(A3)
+- 제목처럼 보이는 짧은 줄까지 붙일지(2안, A2-2 통계 후), 문장 나누기 도구(A2-3 검증 후)
+- pdf 재변환 대조와 cuDNN 수리(A2-5, 가상환경 변경 허락 필요)
 - 검색·생성(요약) 지표 집합과 k
 - LongBench 평가 방식(샘플별 검색 / 합친 인덱스), 다운로드 허용
 - docx QA v2의 창 길이·문서당 질문 수·근거 형식
