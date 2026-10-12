@@ -1,0 +1,201 @@
+# AGENTS.md — LLM_chunking
+
+이 저장소에서 일하는 코딩 에이전트(사람 포함)를 위한 작업 지침이다. 프로젝트 배경은 `CLAUDE.md`, 실행 방법은 `README.md`.
+
+## 1. 목표
+
+긴 문서·자막을 어떻게 청킹하느냐가 **검색·생성(요약) 품질**과 **번역 품질**에 어떤 영향을 주는지 같은 조건에서 비교한다.
+비교 방식은 LumberChunker(Duarte et al., 2024, `papers/` 참고)를 따른다.
+
+- 비교 대상: LangChain 기준 청커 4종 + 우리가 만드는 `advanced_semantic_chunker`
+- `advanced_semantic_chunker`: LumberChunker의 틀을 그대로 쓰되, **"어디서 내용이 바뀌는가"를 LLM이 판단하던 부분을 코사인 유사도 기반 알고리즘으로 대체**한다.
+
+## 2. 반드시 지킬 것
+
+1. **가상환경 `.venv311` 안에서만** 실행한다. 서버 전역 환경(시스템 파이썬, 전역 pip, 시스템 서비스)은 건드리지 않는다.
+2. 새 패키지가 필요하면 **설치 전에 사용자에게 묻는다**(설치는 `.venv311` 안에만).
+3. `env.sh`는 `HF_HUB_OFFLINE=1`이다. 모델·데이터를 새로 받을 때만 사용자 허락을 받고 잠시 연다.
+4. **실제 데이터에 청킹을 돌리기 전에 크기 값(θ, chunk size, min/max 토큰)을 사용자에게 확인받는다.**
+5. 파이프라인 단계마다 **실제 출력을 보여 주고 검수받은 뒤** 다음 단계로 간다(아래 6절). 여러 단계를 한꺼번에 구현하지 않는다.
+6. 삭제·덮어쓰기는 대상을 먼저 보여 주고 승인받는다. 옛 코드는 지우기 전에 보존 위치를 확인한다(9절).
+7. git: 개발 브랜치는 `v3`. **원격 푸시는 사용자가 한다**(이 환경에는 GitHub 인증이 없다). 강제 푸시 금지.
+8. 추정치는 추정이라고 밝히고, 실패·건너뛴 단계는 그대로 보고한다.
+
+## 3. 비교할 청커
+
+| 이름 | 구현 | 크기 조절 |
+|---|---|---|
+| `fixed` | LangChain `CharacterTextSplitter` | chunk size |
+| `recursive` | LangChain `RecursiveCharacterTextSplitter` | chunk size |
+| `header` | LangChain `MarkdownHeaderTextSplitter` | 제목 수준(필요하면 긴 절만 재분할) |
+| `semantic` | LangChain `SemanticChunker`(`langchain_experimental`) | 경계 백분위 |
+| `advanced_semantic_chunker` | 우리 구현 | **θ**(그룹 토큰 상한, LumberChunker의 θ) |
+
+### LumberChunker 원본 동작 (논문 3.1절, 그림 1, 부록 B 프롬프트)
+
+1. 문서를 문단 단위로 나누고 번호(ID)를 붙인다.
+2. 시작 문단부터 이어 붙여 토큰 수가 θ를 넘는 순간까지 그룹 Gᵢ를 만든다(θ를 넘게 만든 문단 포함).
+3. LLM에게 묻는다: "**첫 문단을 제외하고**, 내용이 **앞 문단들과 비교해** 분명히 바뀌는 **첫 번째** 문단의 ID". 프롬프트는 그룹을 너무 길게 만들지 말라고도 지시한다.
+4. 그 ID 앞까지가 청크, 그 ID가 다음 그룹의 시작. 문서 끝까지 반복한다.
+- θ ∈ [450, 1000] 중 550이 가장 좋았고, 이때 평균 청크는 334토큰(θ보다 약 40% 작음, 표 9)이었다.
+
+### `advanced_semantic_chunker`: LLM 판단만 코사인 유사도 알고리즘으로 대체
+
+```
+s = 문서 시작 단위
+반복:
+  G = s부터 단위를 더해 토큰 합이 θ를 넘을 때까지                     ← 그룹 길이는 θ로 통제
+  for j = s+1 … G의 끝:                                              ← 첫 단위는 후보에서 제외
+      sim_j = cos( 현재 청크 [s, j)의 중심 벡터 , 단위 j )             ← 바로 앞 하나가 아니라 앞 단위 전체와 비교
+      if '분명한 변화' 기준을 만족: c = j; break                       ← 처음 변화가 나타나는 곳에서 자름
+  변화가 없으면: c = θ를 넘게 만든 단위 (그 앞까지가 청크, 그 단위부터 재시작)
+  청크 = [s, c),  s = c                                              ← 자른 곳에서 다시 시작
+```
+
+| 요소 | 결정 |
+|---|---|
+| 단위 | **문단 또는 문장(옵션 `unit`)**. 어느 쪽이 나은지는 파일럿에서 비교해 정한다 |
+| 비교 대상 | 현재 청크 전체의 중심 벡터(토큰 가중 평균) |
+| 자르는 곳 | 기준을 처음 만족하는 단위 |
+| 그룹 길이 | θ로 통제. 변화가 없으면 그룹 끝(θ를 넘게 만든 단위 앞)에서 절단 → 청크는 θ를 넘지 않는다(θ보다 큰 단일 문단은 문장으로 나눈다) |
+| '분명한 변화' 기준 | **연구 대상.** 관련 논문의 식을 살펴보면서 개발한다(아직 정하지 않음). 기준에 값이 있으면 θ 튜닝과 분리해 고정값으로 두고 자체 설계 값임을 밝힌다 |
+| 청크 초반 오판으로 생기는 아주 작은 청크 | 나중에 다룬다(파일럿에서 실제로 문제인지 먼저 확인) |
+
+- θ는 개발용 문서에서 격자로 찾는다. 처음 변화에서 자르므로 청크 크기는 θ보다 '분명한 변화' 기준이 더 크게 좌우하고, θ는 사실상 상한이다.
+- 단위(`unit`): 문단이면 pdf·docx는 전처리 블록, LongBench는 줄바꿈 문단. 문장이면 문단을 문장으로 나눈다(공용 문장 나누기 함수). θ보다 큰 문단은 문단 단위에서도 문장으로 나눈다. pdf·docx는 메타데이터로 구조를 어느 정도 지킨다(예: 제목은 다음 단위에 붙임, 표는 한 단위). 구조 반영은 있음/없음 어블레이션으로 본다.
+- 검증 후보: 같은 θ로 원본 LumberChunker(Gemma, 논문 프롬프트)를 몇 편 돌려 절단 위치 일치도를 재는 방법이 있다(선택).
+
+## 4. 파이프라인
+
+### 트랙 A: 검색·생성 (`src/rag/`) — pdf, docx, LongBench
+
+```
+원본 → 전처리(텍스트 + 필요한 메타데이터) → 단위(문단/문장)
+     → advanced_semantic_chunker의 최적 θ 찾기(개발 문서) + 청커별 청킹
+     → 임베딩(bge-m3 fp16) → FAISS 정확 검색 → top-k
+     → 검색 품질 측정 + top-k를 넣은 생성(질의응답·요약) 품질 측정 → 지표화
+```
+- 청크는 **문자열**로 다룬다. 오프셋(`start/end`)은 쓰지 않는다.
+- 검색 지표 후보: Recall@k, DCG@k(LumberChunker와 같은 정의), MRR. 생성 지표 후보: Gemma 판정, F1/ROUGE 등. **지표는 단계별 검수로 하나씩 확정한다.**
+
+### 트랙 B: 자막 번역 (`src/srt/`) — srt(영화 5편, EN/KO 쌍)
+
+```
+srt → 전처리(큐 + 타임스탬프) → 청커별 청킹 → 청크 단위 번역(Gemma)
+    → 원래 큐·타임스탬프로 재병합 → EN/KO 시간 정렬 → 큐 단위 번역 품질 평가
+```
+- **오프셋은 트랙 B에서만 쓴다.** 필요한 곳은 "청크 → 큐 조각" 계산 한 단계다(legacy `mapper.fragments`).
+  1. 큐를 이어 붙인 자막 글과 큐별 글자 구간을 만든다(`srt/render.py`).
+  2. 청크마다 자막 글 기준 글자 구간 [시작, 끝)을 구한다(`srt/spans.py`): 글자 단위 청커(fixed, recursive)는 LangChain `add_start_index=True`의 시작 위치, 단위(큐) 범위를 돌려주는 청커는 큐 구간을 이어서 계산.
+  3. 청크 구간과 겹치는 큐 조각을 찾아 `[1] … [2] …` 번호를 붙여 번역하고, 번호로 다시 나눠 큐별로 합친다(잘린 큐는 앞뒤 조각 번역을 이어 붙인다). 원래 타임스탬프로 SRT를 저장한다.
+  4. 참조 KO 큐를 시간 겹침(Jaccard)으로 정렬해 큐 단위로 채점한다.
+- 큐가 실제로 잘리는 것은 글자 단위 청커뿐이다. 큐 단위로 묶는 청커(advanced_semantic_chunker, 원본 min/max 엔진)는 경계가 항상 큐 경계라 조각이 큐 전체지만 같은 매핑 코드로 처리한다.
+- 원본 알고리즘(min/max 의미 분할 DP, smart)은 **수정하지 않고** 가져다 쓴다. min/max 토큰은 LLM 입력 상한·부하 분산 용도다.
+- 옛 코드는 `/root/jupyter/LLM_chunking_legacy/`에서 읽고 `src/`로 옮겨 온다(import하지 않는다): srt 전처리·렌더·원본 알고리즘은 `src/srt/`, `src/chunking/sizectl/`, `src/chunking/v1/`; 번역·매핑·정렬·채점은 `legacy/src/srt/mapper.py`, `subtitle_translate.py`, `timestamp_align.py`, `legacy/src/comet_score.py`.
+- 평가 후보: chrF, BLEU, BERTScore(참조 KO 자막), Gemma 판정, CometKiwi(`.venv-eval`, 모델 확보 시).
+
+## 5. 공정한 비교 원칙
+
+- 모든 청커는 같은 전처리 결과, 같은 임베딩(bge-m3 fp16), 같은 검색기(FAISS 정확 검색), 같은 k, 같은 생성 모델·프롬프트를 쓴다.
+- θ는 **개발 문서**에서만 고르고, 평가는 겹치지 않는 문서로 한다. 통계는 문서 단위 부트스트랩.
+- 청크 크기가 결과에 영향을 주므로 평균 청크 토큰과 top-k 총 토큰을 항상 함께 보고한다.
+- 자체 설계 값(근거 논문이 없는 상수)은 그렇다고 명시한다.
+
+## 6. 개발 방식 (단계별 검수)
+
+각 단계: 작은 코드 작성 → **실제 데이터로 출력 확인(사용자 검수)** → 테스트 추가 → 커밋 → 다음 단계.
+
+| 단계 | 내용 |
+|---|---|
+| R0 | **완료(2026-10-12)**: 코드·문서·옛 산출물을 모두 지우고 빈 폴더 구조에서 다시 시작. 환경, `AGENTS.md`, `CLAUDE.md`, requirements, `data/raw·processed·qa·manifests`만 남김 |
+| A1 | 모델 로딩: bge-m3 fp16, 토크나이저, Gemma 4비트 |
+| A2 | 전처리·메타데이터: 문서 JSON → 단위, LongBench를 같은 형식으로 |
+| A3 | 청킹: fixed → recursive → header → semantic → advanced_semantic_chunker(파일럿) |
+| A4 | 인덱싱: 청크 → 임베딩 → FAISS, 캐시 |
+| A5 | QA 세트(docx는 Claude 생성 + Gemma 검증) → 지표를 하나씩 추가 |
+| A6 | θ 튜닝 → 평가 실행 → 분석 |
+| B1–B6 | srt: 점검 → 청킹 → 번역 → 재병합·정렬 → 평가 → 실험 (A4 이후 시작) |
+| Z | README(설치·실행·재현), 지표 정의서, 트러블슈팅, 한계 |
+
+## 7. 폴더 구조 (목표, `v3`)
+
+```
+src/
+  common/                       설정, 모델 로딩(bge-m3·Gemma), 공용 텍스트 함수(문장 나누기 등)
+  preprocess/                   Docling pdf·docx 전처리 → 공통 JSON(블록 + 메타데이터) (옛 코드에서 필요한 것만 이식)
+
+  chunking/                     ── 공용 청커 알고리즘 (오프셋을 모른다)
+    langchain_baselines.py        fixed/recursive/header/semantic 래퍼
+                                    → 문자열 목록, 요청 시 시작 위치도 함께(add_start_index)
+    advanced_semantic.py          LumberChunker 틀 + 코사인 판단 → 단위 번호 범위 [(i, j)]
+    sizectl/                      srt 원본 min/max 엔진 → 단위 번호 범위 (옛 코드 이식, 수정 없이)
+
+  rag/                          ── 트랙 A: 오프셋 없음
+    units.py                      문서 JSON/LongBench → 단위(문단·문장) + 메타데이터
+    chunks.py                     단위 범위 → 청크 문자열 (LangChain 결과는 문자열 그대로)
+    index.py                      청크 → 임베딩 → FAISS 정확 검색, 캐시
+    metrics.py                    검색 지표 (단계별로 하나씩 추가)
+    judge.py                      Gemma 판정, 생성(질의응답·요약) 품질
+    tune.py                       θ 격자 튜닝, 문서 단위 부트스트랩
+    datasets/                     docx, vectara, allganize, LongBench 로더
+
+  srt/                          ── 트랙 B: 오프셋은 여기에만
+    prep.py, validate.py          srt → 큐 JSON (옛 코드 이식)
+    render.py                     큐 → 자막 글 + 큐별 글자 구간 (옛 코드 이식)
+    spans.py                      어떤 청커 결과든 → 청크의 글자 구간 [시작, 끝)
+    mapper.py                     청크 구간 → 큐 조각 → 번호 프롬프트 → 번역 분리 → 큐별 병합 → SRT 저장 (legacy 이식)
+    translate.py                  Gemma 청크 번역, 배치 (legacy 이식)
+    align.py                      EN/KO 시간 겹침 정렬 (legacy 이식)
+    eval.py                       chrF/BLEU/BERTScore, 타임스탬프 무결성, CometKiwi(.venv-eval) (legacy 이식)
+
+  qa_build/                     docx QA 구축 도구
+
+scripts/        실행 CLI (preprocess, build_qa, chunk, run, tune, srt/…)
+tests/          unittest (모델·GPU 없이 돈다)
+data/           raw·processed·chunks·index (git에는 qa·manifests만)
+docs/ papers/   설계 문서 / 참고 논문 PDF(git에 올리지 않음)
+```
+
+청크 기록의 형태:
+
+| 트랙 | 청크 기록 |
+|---|---|
+| rag | `{chunk_id, doc_id, text, n_tokens}` |
+| srt | `{chunk_id, movie, text, start, end, cue_from, cue_to}` — `start/end`는 렌더된 자막 글 기준 글자 위치 |
+
+- LangChain `SemanticChunker`가 `add_start_index`를 지원하는지는 확인 전이다. 지원하지 않으면 srt용 시작 위치는 원문에서 순서대로 찾아(`str.find`) 구한다(청크가 원문의 연속 조각이므로 가능).
+지금은 폴더와 빈 `__init__.py`만 있다. 파일은 단계마다 하나씩 추가하고, 추가할 때 이 절을 실제 구조에 맞춘다.
+
+## 8. 실행·테스트
+
+```bash
+source env.sh                                   # HF 캐시·PYTHONPATH 고정, 오프라인
+.venv311/bin/python -W ignore -m unittest discover -s tests   # pytest는 설치되어 있지 않다
+```
+- GPU: RTX A5000 24GB. Gemma 4 12B는 `transformers` + `bitsandbytes` 4비트로 약 7.7GiB.
+- 오래 걸리는 작업은 로그 파일로 남기고 백그라운드로 돌린다. CUDA 정리 단계에서 프로세스가 오래 매달린 적이 있어 GPU 스크립트는 끝에 `os._exit(0)`을 쓴다(이때 출력 버퍼가 비워지지 않으므로 결과는 파일로 저장).
+- CometKiwi는 `transformers` 버전 충돌 때문에 별도 환경 `.venv-eval`에서만 돌린다.
+
+## 9. 옛 코드와 보존 위치
+
+- 태그 `exp1-offset-chunking`(원격 브랜치 `v2-restructure`와 같은 커밋 `07a8722`): 오프셋 기반 청커 7종(A/B/E 포함), 실험 1 파이프라인.
+- `/root/jupyter/LLM_chunking_legacy/`: 위 시점의 코드 전체 + 추적되지 않던 산출물(`results`, `data/chunks`, `data/index`) + 당시 패키지 목록(`requirements-freeze-venv311.txt`). 그 안의 `legacy/`는 구조 개편 이전 코드(srt 번역·재병합·시간 정렬·CometKiwi).
+- `data/raw`는 git과 legacy 폴더 어디에도 사본이 없다. **삭제 금지.**
+- 원격 `v2` 브랜치는 로컬과 갈라져 있다(srt 다운로더 등 4개 커밋). srt 트랙 시작 때 병합을 검토한다.
+
+## 10. 코드 규칙
+
+- 주변 코드의 문체를 따른다: 한국어 docstring·주석, 짧은 순수 함수, 설정값은 `common/config.py`.
+- 새 기능에는 모델·GPU 없이 도는 단위 테스트를 붙인다(가짜 임베딩 사용).
+- 데이터: `data/qa`, `data/manifests`만 git 추적. `papers/`의 PDF는 커밋하지 않는다.
+
+## 11. 미결정 사항
+
+- advanced_semantic_chunker의 '분명한 변화' 기준(논문 조사와 함께 개발)과 θ 격자
+- advanced_semantic_chunker의 단위: 문단 vs 문장(파일럿 비교)
+- 청크 초반 오판으로 생기는 작은 청크 대책(필요할 때)
+- 기준 청커의 크기 값(공통 기본값으로 둘지, 같은 튜닝 예산을 줄지)
+- 검색·생성(요약) 지표 집합과 k
+- LongBench 평가 방식(샘플별 검색 / 합친 인덱스), 다운로드 허용
+- docx QA v2의 창 길이·문서당 질문 수·근거 형식
+- srt 번역 평가에서 CometKiwi 사용 가능 여부
