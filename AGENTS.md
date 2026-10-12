@@ -163,7 +163,7 @@ docs/ papers/   설계 문서 / 참고 논문 PDF(git에 올리지 않음)
 | rag | `{chunk_id, doc_id, text, n_tokens}` |
 | srt | `{chunk_id, movie, text, start, end, cue_from, cue_to}` — `start/end`는 렌더된 자막 글 기준 글자 위치 |
 
-- LangChain `SemanticChunker`가 `add_start_index`를 지원하는지는 확인 전이다. 지원하지 않으면 srt용 시작 위치는 원문에서 순서대로 찾아(`str.find`) 구한다(청크가 원문의 연속 조각이므로 가능).
+- LangChain 4종 모두 `add_start_index`로 시작 위치를 받을 수 있다(`SemanticChunker`도 지원, `langchain_experimental` 0.4.2에서 확인).
 지금은 폴더와 빈 `__init__.py`만 있다. 파일은 단계마다 하나씩 추가하고, 추가할 때 이 절을 실제 구조에 맞춘다.
 
 ## 8. 실행·테스트
@@ -174,7 +174,8 @@ source env.sh                                   # HF 캐시·PYTHONPATH 고정, 
 ```
 - GPU: RTX A5000 24GB. Gemma 4 12B는 `transformers` + `bitsandbytes` 4비트로 약 7.7GiB.
 - 오래 걸리는 작업은 로그 파일로 남기고 백그라운드로 돌린다. CUDA 정리 단계에서 프로세스가 오래 매달린 적이 있어 GPU 스크립트는 끝에 `os._exit(0)`을 쓴다(이때 출력 버퍼가 비워지지 않으므로 결과는 파일로 저장).
-- CometKiwi는 `transformers` 버전 충돌 때문에 별도 환경 `.venv-eval`에서만 돌린다.
+- CometKiwi는 `transformers` 버전 충돌 때문에 별도 환경 `.venv-eval`에서만 돌린다. **`.venv-eval`은 현재 실행되지 않는다**(2026-10-12 확인): `bin/python`이 이전 서버 경로(`/root/.local/share/uv/python/...`)를 가리킨다. 패키지(`unbabel-comet` 2.2.7 등)는 남아 있다. B5에서 사용자 확인 후 복구한다(파이썬 연결을 `.python/cpython-3.11.17`로 바꾸거나 `requirements-eval.txt`로 재생성). CometKiwi 모델도 아직 캐시에 없다.
+- `.venv311` 점검(2026-10-12): 주요 패키지 import, CUDA(A5000, cu118), 오프라인 bge-m3 fp16 인코딩, Gemma 토크나이저, Docling 모델 캐시 정상. `pip check` 경고 4건(`unstructured`·`pdfplumber`·`pi-heif`·`nab-project`의 버전 요구)은 우리가 쓰지 않는 패키지라 그대로 둔다.
 
 ## 9. 옛 코드와 보존 위치
 
