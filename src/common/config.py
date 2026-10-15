@@ -9,7 +9,7 @@ META_DIR = DATA_DIR / "meta_text"         # 옛 Docling 전처리 결과(v2 확�
 DOCLING_DIR = DATA_DIR / "docling_json"   # 1차: Docling 변환 결과(<id>.docling.json)와 변환 기록(<id>.convert.json). src/preprocess/stage1.py
 META2_DIR = DATA_DIR / "meta_text_v2"     # 1차: 블록 + 위치·줄 정보(문서 1개 = JSON 1개). src/preprocess/stage1.py
 PARA_DIR = DATA_DIR / "processed_para"    # 2차: 깨끗한 텍스트, 문단 단위. src/preprocess/stage2.py
-SENT_DIR = DATA_DIR / "processed_sen"     # 깨끗한 텍스트, 문장 단위 (scripts/build_units.py로 생성)
+SENT_DIR = DATA_DIR / "processed_sen"     # 깨끗한 텍스트, 문장 단위. pdf·docx는 src/preprocess/sentences.py, LongBench는 src/preprocess/longbench.py
 QA_DIR = DATA_DIR / "qa"                  # 질문·정답·근거 (git 추적)
 MANIFEST_DIR = DATA_DIR / "manifests"     # 문서 목록 (git 추적)
 CHUNKS_DIR = DATA_DIR / "chunks"          # 청크 파일 (A3)
@@ -27,4 +27,10 @@ DATASETS = {
     "allganize": {"fmt": "pdf", "lang": "ko", "raw": "allganize_pdf"},
     "docx_corpus": {"fmt": "docx", "lang": "en", "raw": "docx_corpus"},
 }
-REPORT_FILE = "_report.json"              # 전처리 폴더 안의 실행 보고서(문서가 아님). doc_id가 '_'로 시작하는 문서도 있으니 이름 전체로 거른다
+# 트랙 A LongBench 데이터셋(원본 data/raw/longbench/<이름>.jsonl). pdf·docx와 따로 src/preprocess/longbench.py가 단위를 만든다
+LONGBENCH = {
+    "hotpotqa": {"task": "qa", "lang": "en"},
+    "narrativeqa": {"task": "qa", "lang": "en"},
+    "gov_report": {"task": "summary", "lang": "en"},
+}
+REPORT_FILE = "_report.json"             # 전처리 폴더 안의 실행 보고서(문서가 아님). doc_id가 '_'로 시작하는 문서도 있으니 이름 전체로 거른다
