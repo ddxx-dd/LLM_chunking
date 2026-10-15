@@ -101,5 +101,46 @@ class TestTableCaption(unittest.TestCase):
         self.assertTrue(tables[1].startswith("<표 2>"))
 
 
+class TestSentences(unittest.TestCase):
+    """preprocess.sentences: 문장 나누기(영어 nltk, 한국어 Kiwi + 구조 표시)."""
+
+    def setUp(self):
+        from preprocess import sentences
+        self.s = sentences
+
+    def test_english_abbreviations(self):
+        out = self.s.split("Smith et al. (2020) showed this in Fig. 3 and Table 2. The value was 3.5 percent. It works.", "en")
+        self.assertEqual(len(out), 3)
+
+    def test_english_label_and_abbreviation(self):
+        # 라벨만 남은 문장('Proof.', 'Lemma 2.1.')과 약어 뒤 소문자 시작('i.i.d. samples')이 따로 떨어졌다
+        out = self.s.split("Lemma 2.1. Let X be finite. Proof. We use induction. Let U be i.i.d. samples from P.", "en")
+        self.assertEqual(out, ["Lemma 2.1. Let X be finite.", "Proof. We use induction.", "Let U be i.i.d. samples from P."])
+
+    def test_korean_structure_marks(self):
+        out = self.s.split("□ 기술개발 지원 강화 * 도전적 문제 해결 과제 신설 ㅇ 인력 운영 효율화 추진", "ko")
+        self.assertEqual(out, ["□ 기술개발 지원 강화", "* 도전적 문제 해결 과제 신설", "ㅇ 인력 운영 효율화 추진"])
+
+    def test_korean_inline_footnote_mark_kept(self):
+        # 문장 안 각주 표시('감축인력 * 의')는 자르지 않는다(판정 실측)
+        self.assertEqual(len(self.s.split("비효율 분야 감축인력 * 의 국정과제 재배치", "ko")), 1)
+
+    def test_table_and_heading_kept(self):
+        rec = {"lang": "en", "units": [
+            {"text": "| a | b |\n| - | - |\n| 1. x | 2. y |", "kind": "table", "heading": "", "pages": [1]},
+            {"text": "2 Methods\nWe first do step A. Then we do step B.", "kind": "para", "heading": "2 Methods", "pages": [1]}]}
+        units = self.s.to_sentences(rec)
+        self.assertEqual(units[0]["text"], rec["units"][0]["text"])
+        self.assertEqual([u["text"] for u in units[1:]], ["2 Methods\nWe first do step A.", "Then we do step B."])
+        self.assertEqual([u["para"] for u in units], [0, 1, 1])
+
+    def test_formula_not_split(self):
+        # 수식 안의 '. '(예: 'x . y')에서 자르면 수식이 두 문장으로 갈린다
+        t = "The loss is L = a . Then b = c . We stop the procedure here."
+        f = "L = a . Then b = c ."
+        rec = {"lang": "en", "units": [{"text": t, "kind": "para", "heading": "", "pages": [1], "formulas": [[t.find(f), t.find(f) + len(f)]]}]}
+        self.assertEqual([u["text"] for u in self.s.to_sentences(rec)], ["The loss is L = a . Then b = c .", "We stop the procedure here."])
+
+
 if __name__ == "__main__":
     unittest.main()

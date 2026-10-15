@@ -4,7 +4,7 @@
   PYTHONPATH=src .venv311/bin/python -m preprocess.stage2 --dataset all [--worker 0 --workers 4]
 
 입력: <out>/meta_text_v2/<데이터셋>/<doc_id>.json (--out 기본 data/)
-출력: <out>/processed_para/<데이터셋>/<doc_id>.json          문서 필드 + units[{text, kind, heading, pages, block_ids, n_tokens}] + log(규칙별 적용 수)
+출력: <out>/processed_para/<데이터셋>/<doc_id>.json          문서 필드 + units[{text, kind, heading, pages, block_ids, formulas(수식 글자 위치), n_tokens}] + log(규칙별 적용 수)
       <out>/processed_para/<데이터셋>/<doc_id>.dropped.json  지운 블록과 규칙 이름(확인용)
 
 적용 순서
@@ -751,6 +751,7 @@ def build_units(doc, count_many, dropped=None):
             else:
                 last = {**_unit(b), "text": f, "kind": "para"}
                 units.append(last)
+            last.setdefault("_formulas", []).append(f)
             last["after_formula"] = True
             continue
         how = continues(last, b, c, col_w) if last is not None else None
@@ -774,7 +775,8 @@ def build_units(doc, count_many, dropped=None):
             continue
         if pending and u["kind"] != "footnote":
             head = "\n".join(h["text"] for h in pending)
-            u = {**u, "text": head + "\n" + u["text"], "heading": head, "block_ids": sum((h["block_ids"] for h in pending), []) + u["block_ids"]}
+            u = {**u, "text": head + "\n" + u["text"], "heading": head, "block_ids": sum((h["block_ids"] for h in pending), []) + u["block_ids"],
+                 "_formulas": sum((h.get("_formulas", []) for h in pending), []) + u.get("_formulas", [])}
             pending = []
         elif pending:
             glued.extend(pending)
@@ -794,7 +796,8 @@ def build_units(doc, count_many, dropped=None):
             c["S2 양식 항목 붙이기"] += 1
             continue
         if carry and u["kind"] != "footnote":
-            u = {**u, "text": "\n".join(x["text"] for x in carry) + "\n" + u["text"], "block_ids": sum((x["block_ids"] for x in carry), []) + u["block_ids"]}
+            u = {**u, "text": "\n".join(x["text"] for x in carry) + "\n" + u["text"], "block_ids": sum((x["block_ids"] for x in carry), []) + u["block_ids"],
+                 "_formulas": sum((x.get("_formulas", []) for x in carry), []) + u.get("_formulas", [])}
             carry = []
         out.extend(carry)
         carry = []
@@ -802,8 +805,20 @@ def build_units(doc, count_many, dropped=None):
     out.extend(carry)
     final = []
     for u, n in zip(out, count_many([u["text"] for u in out])):
-        final.append({"text": u["text"], "kind": u["kind"], "heading": u["heading"], "pages": u["pages"], "block_ids": u["block_ids"], "n_tokens": n})
+        final.append({"text": u["text"], "kind": u["kind"], "heading": u["heading"], "pages": u["pages"], "block_ids": u["block_ids"],
+                      "formulas": formula_spans(u["text"], u.get("_formulas", [])), "n_tokens": n})
     return final, c
+
+
+def formula_spans(text, formulas):
+    """단위 글 안에서 수식(Q1로 문장 안에 넣은 것)의 글자 위치 [[시작, 끝], …]. 앞에서부터 차례로 찾고, 못 찾으면 뺀다."""
+    spans, pos = [], 0
+    for f in formulas:
+        k = text.find(f, pos) if f else -1
+        if k >= 0:
+            spans.append([k, k + len(f)])
+            pos = k + len(f)
+    return spans
 
 
 def process(doc_id, ds, out, count_many):
