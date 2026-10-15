@@ -35,3 +35,6 @@ _data_in/
 *.zip
 *.bundle
 .DS_Store
+
+# 시험용 산출물(전처리 결과, 검토 페이지, 로그 등)
+tests/*/out/

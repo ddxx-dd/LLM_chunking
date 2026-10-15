@@ -5,8 +5,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 DATA_DIR = ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"                # 원본 (git 추적 안 함, 사본 없음 - 삭제 금지)
-META_DIR = DATA_DIR / "meta_text"         # Docling 전처리 결과: 블록 + 메타데이터 (문서 1개 = JSON 1개, 수정하지 않음)
-PARA_DIR = DATA_DIR / "processed_para"    # 깨끗한 텍스트, 문단 단위 (scripts/build_units.py로 생성)
+META_DIR = DATA_DIR / "meta_text"         # 옛 Docling 전처리 결과(v2 확정 후 지울 예정)
+DOCLING_DIR = DATA_DIR / "docling_json"   # 1차: Docling 변환 결과(<id>.docling.json)와 변환 기록(<id>.convert.json). src/preprocess/stage1.py
+META2_DIR = DATA_DIR / "meta_text_v2"     # 1차: 블록 + 위치·줄 정보(문서 1개 = JSON 1개). src/preprocess/stage1.py
+PARA_DIR = DATA_DIR / "processed_para"    # 2차: 깨끗한 텍스트, 문단 단위. src/preprocess/stage2.py
 SENT_DIR = DATA_DIR / "processed_sen"     # 깨끗한 텍스트, 문장 단위 (scripts/build_units.py로 생성)
 QA_DIR = DATA_DIR / "qa"                  # 질문·정답·근거 (git 추적)
 MANIFEST_DIR = DATA_DIR / "manifests"     # 문서 목록 (git 추적)

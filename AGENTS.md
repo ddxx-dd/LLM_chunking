@@ -36,9 +36,9 @@
 
 ### 입력: 깨끗한 텍스트 (모든 청커 공통)
 
-Docling 전처리 결과는 `data/meta_text`에 **그대로 두고**(2026-10-12 `data/processed`에서 이름만 변경), `scripts/build_units.py`가 `rag/units.py`의 변환 함수로 깨끗한 텍스트를 만들어 `data/processed_para`(문단), `data/processed_sen`(문장)에 저장한다. 정리 규칙은 변환 함수에 두고, 폴더마다 `_manifest.json`에 규칙·원본·시각·문서 수를 기록한다. 규칙을 바꾸면 다시 생성한다.
+전처리는 `src/preprocess/`(2026-10-15 v2 이식): 1차 `stage1`이 원본 → Docling 변환(`data/docling_json`) → 블록 + 위치·줄 정보(`data/meta_text_v2`), 2차 `stage2`가 정리 규칙으로 깨끗한 문단 단위(`data/processed_para`)를 만든다. 규칙을 바꾸면 Docling은 다시 돌리지 않고 `stage1 --build-only`와 `stage2`만 다시 돌린다. 규칙 검증 도구(Vectara 원문 대조, 순서·끼어듦·삭제 검사)는 `tests/stage1_v2/`에 둔다. 문장 단위(`data/processed_sen`)는 문장 나누기 도구를 정한 뒤 추가한다. 옛 `data/meta_text`는 v2 확정 후 지운다.
 
-단위 파일(`<폴더>/<데이터셋>/<doc_id>.json`): 문서 필드 `doc_id, dataset, lang, title, fmt, source, n_units, n_tokens, n_pages`; 단위 필드 `text, kind(para/table/list/code/formula/caption/footnote), n_tokens(bge-m3), block_ids, heading(붙인 제목), page, heading_path`, 문장 파일은 `para`(몇 번째 문단) 추가. 청커는 `text`(와 advanced_semantic_chunker는 `n_tokens`)만 쓰고 나머지는 분석·추적용이다.
+단위 파일(`<폴더>/<데이터셋>/<doc_id>.json`): 문서 필드 `doc_id, dataset, lang, title, fmt, source, n_pages, n_units, n_tokens, log`; 단위 필드 `text, kind(para/list/table/code/caption/footnote/heading), heading(붙인 제목), pages, block_ids, n_tokens(bge-m3)`. 지운 블록은 `<doc_id>.dropped.json`. 문장 파일은 `para`(몇 번째 문단) 추가 예정. 청커는 `text`(와 advanced_semantic_chunker는 `n_tokens`)만 쓰고 나머지는 분석·추적용이다.
 
 | 블록 | 변환 |
 |---|---|
@@ -146,7 +146,7 @@ srt → 전처리(큐 + 타임스탬프) → 청커별 청킹 → 청크 단위 
 ```
 src/
   common/                       설정, 모델 로딩(bge-m3·Gemma), 공용 텍스트 함수(문장 나누기 등)
-  preprocess/                   Docling pdf·docx 전처리 → 공통 JSON(블록 + 메타데이터) (옛 코드에서 필요한 것만 이식)
+  preprocess/                   전처리: sources(문서 목록), docling_blocks(Docling 변환·블록), stage1(1차), stage2(2차)
 
   chunking/                     ── 공용 청커 알고리즘 (오프셋을 모른다)
     langchain_baselines.py        fixed/recursive/semantic 래퍼
@@ -155,7 +155,7 @@ src/
     sizectl/                      srt 원본 min/max 엔진 → 단위 번호 범위 (옛 코드 이식, 수정 없이)
 
   rag/                          ── 트랙 A: 오프셋 없음
-    units.py                      문서 JSON/LongBench → 깨끗한 텍스트 → 단위(문단·문장)
+    units.py                      LongBench → 깨끗한 텍스트 → 단위(문단·문장) (pdf·docx는 preprocess)
     chunks.py                     단위 범위 → 청크 문자열 (LangChain 결과는 문자열 그대로)
     index.py                      청크 → 임베딩 → FAISS 정확 검색, 캐시
     metrics.py                    검색 지표 (단계별로 하나씩 추가)
@@ -176,7 +176,7 @@ src/
 
 scripts/        실행 CLI (preprocess, build_qa, chunk, run, tune, srt/…)
 tests/          unittest (모델·GPU 없이 돈다)
-data/           raw → meta_text(Docling) → processed_para·processed_sen(깨끗한 텍스트) → chunks → index (git에는 qa·manifests만)
+data/           raw → docling_json → meta_text_v2 → processed_para·processed_sen(깨끗한 텍스트) → chunks → index (git에는 qa·manifests만)
 docs/ papers/   설계 문서 / 참고 논문 PDF(git에 올리지 않음)
 ```
 
