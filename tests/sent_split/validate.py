@@ -3,7 +3,7 @@
   source env.sh && .venv311/bin/python tests/sent_split/validate.py            # 후보 경계 만들기 → out/v2_candidates.jsonl
   .venv311/bin/python tests/sent_split/validate.py --score                     # 판정(out/v2_labels.json)으로 정밀도·재현율
 
-표본(시드 7, compare.py 표본과 겹치지 않게): 영어 80문단(vectara 30, docx 20, GovReport 15, NarrativeQA 15), 한국어 allganize 60(개조식 30)
+표본(시드 7, compare.py 표본과 겹치지 않게): 영어 80문단(vectara 30, docx 20, GovReport 15(2026-10-17 원본 삭제로 이제 뽑지 않음), NarrativeQA 15), 한국어 allganize 60(개조식 30)
 후보 경계: 비교 대상 + 보조 도구(영어 regex·pysbd·nltk, 한국어 regex·Kiwi 기본)가 자른 위치의 합집합. 사람이 후보마다 진짜 경계인지 판정한다.
 지표: 정밀도 = 자른 곳 중 진짜 경계, 재현율 = 진짜 경계 중 자른 곳(진짜 경계는 후보 안에서 판정된 것).
 """
@@ -31,11 +31,6 @@ def samples():
     S += [("en", "vectara", d, t) for d, t in pick(v, 30)]
     dx = [x for x in load_units("docx_corpus") if 20 <= len(x[1].split()) <= 200]
     S += [("en", "docx", d, t) for d, t in pick(dx, 20)]
-    gov = [json.loads(x) for x in (LB / "gov_report.jsonl").read_text(encoding="utf-8").splitlines()]
-    for r in rnd.sample(gov, 15):
-        w = r["context"].split()
-        s = rnd.randrange(0, max(1, len(w) - 220))
-        S.append(("en", "gov_report", r["_id"][:12], " ".join(w[s:s + 150])))
     nq = [json.loads(x) for x in (LB / "narrativeqa.jsonl").read_text(encoding="utf-8").splitlines()]
     paras = [(r["_id"][:12], " ".join(p.split())) for r in nq for p in re.split(r"\n\s*\n", r["context"]) if 40 <= len(p.split()) <= 150]
     S += [("en", "narrativeqa", d, t) for d, t in pick(paras, 15)]

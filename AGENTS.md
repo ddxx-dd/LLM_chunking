@@ -53,7 +53,7 @@
 | 그림 캡션 | 남김(원래 위치). 그림 안 글자는 지움 |
 | 각주 | 문서 끝 |
 
-파일: `{doc_id, dataset, lang, title, fmt, source, n_pages, n_paras, n_tokens, text, paras[{kind, pages, block_ids}], log}`, 지운 블록은 `<doc_id>.dropped.json`. `paras`는 `text`를 빈 줄로 나눈 문단과 순서대로 대응하고 평가·추적용이다. **청커는 `text`만 쓴다.** 문장이 필요한 청커(semantic, advanced_semantic_chunker)는 같은 공용 문장 함수로 `text`를 나눈다(`src/preprocess/sentences.py`의 함수: 영어 nltk + 학술 약어 + 보정, 한국어 Kiwi + 구조 표시; 청커 쪽 공용 함수는 A3에서 만든다). LongBench(`src/preprocess/longbench.py`)는 아직 `processed_para`·`processed_sen` 형식이며 나중에 clean_text로 바꾼다.
+파일: `{doc_id, dataset, lang, title, fmt, source, n_pages, n_paras, n_tokens, text, paras[{kind, pages, block_ids}], log}`, 지운 블록은 `<doc_id>.dropped.json`. `paras`는 `text`를 빈 줄로 나눈 문단과 순서대로 대응하고 평가·추적용이다. **청커는 `text`만 쓴다.** 문장이 필요한 청커(semantic, advanced_semantic_chunker)는 같은 공용 문장 함수로 `text`를 나눈다(`src/preprocess/sentences.py`의 함수: 영어 nltk + 학술 약어 + 보정, 한국어 Kiwi + 구조 표시; 청커 쪽 공용 함수는 A3에서 만든다). LongBench(HotpotQA·NarrativeQA 책 14편)는 clean_text를 만들지 않고 `src/preprocess/longbench.py`가 원본 jsonl의 context를 그대로 청커 입력으로, input·answers를 질문·정답으로 읽는다(GovReport는 2026-10-17 삭제).
 
 ### LumberChunker 원본 동작 (논문 3.1절, 그림 1, 부록 B 프롬프트)
 
@@ -147,7 +147,7 @@ srt → 전처리(큐 + 타임스탬프) → 청커별 청킹 → 청크 단위 
 src/
   common/                       설정, 모델 로딩(bge-m3·Gemma), 공용 텍스트 함수(문장 나누기 등)
   preprocess/                   전처리: sources(문서 목록), docling_blocks(Docling 변환·블록), stage1(1차), stage2(2차 → clean_text),
-                                clean_text(clean_text 형식 정리), sentences(문장 나누기 함수), longbench(LongBench 단위)
+                                clean_text(clean_text 형식 정리), sentences(문장 나누기 함수), longbench(LongBench 원본 읽기)
 
   chunking/                     ── 청커 (오프셋을 모른다). 청커마다 파일 하나(2026-10-16 결정), 입력은 clean_text의 text, 크기는 bge-m3 토큰
     fixed.py                      LangChain 토큰 창(TokenTextSplitter, 방식은 A3에서 확정)
@@ -176,8 +176,8 @@ src/
   qa_build/                     docx QA 구축 도구
 
 scripts/        실행 CLI (preprocess, build_qa, chunk, run, tune, srt/…)
-tests/          unittest(모델·GPU 없이 돈다) + 검증 도구: clean_text/ref_compare.py(Vectara 정답 비교), sent_split/(문장 도구 판정), longbench/(LongBench 검사)
-data/           raw → docling_json → meta_text_v2 → clean_text(청커 입력) → chunks → index (git에는 qa·manifests만; LongBench는 아직 processed_para·processed_sen)
+tests/          unittest(모델·GPU 없이 돈다) + 검증 도구: clean_text/ref_compare.py(Vectara 정답 비교), sent_split/(문장 도구 판정 자료)
+data/           raw → docling_json → meta_text_v2 → clean_text(청커 입력) → chunks → index (git에는 qa·manifests만; LongBench는 raw를 그대로 읽음)
 docs/ papers/   설계 문서 / 참고 논문 PDF(git에 올리지 않음)
 ```
 

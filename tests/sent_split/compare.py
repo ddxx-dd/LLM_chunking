@@ -1,8 +1,8 @@
-"""문장 나누기 도구 비교(tests 전용, A2-3).
+"""문장 나누기 도구 비교(tests 전용, A2-3). 2026-10-15 비교에 썼다. 지금은 boundaries()만 validate.py가 쓴다(표본 원천 processed_para·SaT 등은 삭제돼 main은 다시 못 돈다).
 
   source env.sh && .venv311/bin/python tests/sent_split/compare.py
 
-표본(고정 시드): 영어 = vectara 논문 60(약어·번호가 있는 문단 절반), docx 30, GovReport 30(줄바꿈 없는 원문에서 약 200낱말 창),
+표본(고정 시드): 영어 = vectara 논문 60(약어·번호가 있는 문단 절반), docx 30, GovReport 30(2026-10-17 원본 삭제로 이제 뽑지 않음),
   NarrativeQA 30(빈 줄로 문단 복원), 한국어 = allganize 80(개조식 문단 절반). 우리 문단은 data/processed_para.
 도구: 영어 regex(LangChain SemanticChunker 기본 '(?<=[.?!])\\s+'), pysbd, nltk punkt, spaCy(en_core_web_sm), SaT(sat-3l-sm, sat-3l)
       한국어 regex, Kiwi(kiwipiepy), kss(pecab), SaT(sat-3l-sm, sat-3l)
@@ -48,11 +48,6 @@ def samples():
     S += [("en", "vectara", d, t) for d, t in rnd.sample(hard, 30) + rnd.sample(v, 30)]
     dx = [x for x in load_units("docx_corpus") if 20 <= len(x[1].split()) <= 200]
     S += [("en", "docx", d, t) for d, t in rnd.sample(dx, 30)]
-    gov = [json.loads(x) for x in (LB / "gov_report.jsonl").read_text(encoding="utf-8").splitlines()]
-    for r in rnd.sample(gov, 30):
-        w = r["context"].split()
-        s = rnd.randrange(0, max(1, len(w) - 220))
-        S.append(("en", "gov_report", r["_id"][:12], " ".join(w[s:s + 200])))
     nq = [json.loads(x) for x in (LB / "narrativeqa.jsonl").read_text(encoding="utf-8").splitlines()]
     paras = []
     for r in nq:

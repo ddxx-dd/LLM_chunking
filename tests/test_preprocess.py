@@ -189,31 +189,12 @@ class TestSentences(unittest.TestCase):
         self.assertEqual(len(self.s.split("비효율 분야 감축인력 * 의 국정과제 재배치", "ko")), 1)
 
 class TestLongBench(unittest.TestCase):
-    """preprocess.longbench: LongBench 전용 규칙(pdf·docx 문장 나누기와 따로)."""
+    """preprocess.longbench: 원본을 그대로 읽는다(데이터 없이 도는 부분만)."""
 
-    def setUp(self):
+    def test_script_detection(self):
         from preprocess import longbench
-        self.lb = longbench
-
-    def test_missing_space_fixed_but_dotted_abbrev_kept(self):
-        # HotpotQA 원문의 'inmates.It'(공백 빠짐)은 고치고, 'D.Ed.Min.'·'H.Con.Res.' 같은 약어는 그대로
-        t, n = self.lb.fix_space("given to inmates.It was made in 1993.Following that, D.Ed.Min. holders and H.Con.Res. 27 passed.")
-        self.assertEqual(n, 2)
-        self.assertIn("inmates. It", t)
-        self.assertIn("1993. Following", t)
-        self.assertIn("D.Ed.Min. holders", t)
-
-    def test_bill_numbers_and_question_lowercase(self):
-        # GovReport 법안 번호('H.R. 2451', 'P.L. 104-1')와 '? and'(제목 속 물음표) 뒤에서 자르지 않는다
-        out = self.lb.split("Congress passed H.R. 2451 and P.L. 104-1 last year. He wrote Coffee, Tea or Me? and Monte Walsh. It sold well.")
-        self.assertEqual(len(out), 3)
-
-    def test_pdf_docx_splitter_untouched(self):
-        # LongBench용 약어가 pdf·docx 쪽 토크나이저에 섞이지 않는다
-        from preprocess import sentences
-        self.lb.split("warm up.")
-        sentences.split_en("warm up.")
-        self.assertNotIn("h.r", sentences._PUNKT._params.abbrev_types)
+        self.assertTrue(longbench.is_script('<b>VENKMAN</b>\n<b>INT. ROOM</b>\n<P ID="dia">Hi</P><P>x</P>'))
+        self.assertFalse(longbench.is_script("Produced by David Brannan.\n\nThe Adventure of the Devil's Foot"))
 
 
 if __name__ == "__main__":
