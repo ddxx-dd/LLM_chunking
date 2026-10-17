@@ -34,26 +34,26 @@
 - `header`(MarkdownHeaderTextSplitter)는 **제외**한다(2026-10-12): 제목 인식 품질이 고르지 않고(vectara 계층 오류, allganize는 모든 제목이 같은 수준, docx 소제목이 문단으로 들어감) LongBench에는 제목이 없다. 구조 기반 청킹과의 비교가 빠진다는 점은 한계로 적는다.
 - LumberChunker처럼 문단 단위 기준선(문단 하나 = 청크 하나)을 추가할지는 A3에서 정한다.
 
-### 입력: 깨끗한 텍스트 (모든 청커 공통)
+### 입력: clean_text (모든 청커 공통)
 
-전처리는 `src/preprocess/`(2026-10-15 v2 이식): 1차 `stage1`이 원본 → Docling 변환(`data/docling_json`) → 블록 + 위치·줄 정보(`data/meta_text_v2`), 2차 `stage2`가 정리 규칙으로 깨끗한 문단 단위(`data/processed_para`)를 만든다. 규칙을 바꾸면 Docling은 다시 돌리지 않고 `stage1 --build-only`와 `stage2`만 다시 돌린다. 규칙 검증 도구(Vectara 원문 대조, 순서·끼어듦·삭제 검사)는 `tests/stage1_v2/`에 둔다. 문장 단위(`data/processed_sen`)는 문장 나누기 도구를 정한 뒤 추가한다. 옛 `data/meta_text`는 v2 확정 후 지운다.
+전처리는 `src/preprocess/`: 1차 `stage1`이 원본 → Docling 변환(`data/docling_json`) → 블록 + 위치·줄 정보(`data/meta_text_v2`), 2차 `stage2`가 정리 규칙으로 단위를 만든 뒤 `clean_text.build`로 **문서 하나 = 긴 텍스트 하나**인 `data/clean_text/<데이터셋>/<doc_id>.json`을 만든다(2026-10-17 합침; 옛 `processed_para`·`processed_sen`은 지움). 규칙을 바꾸면 Docling은 다시 돌리지 않고 `stage1 --build-only`와 `stage2`만 다시 돌린다.
 
-단위 파일(`<폴더>/<데이터셋>/<doc_id>.json`): 문서 필드 `doc_id, dataset, lang, title, fmt, source, n_pages, n_units, n_tokens, log`; 단위 필드 `text, kind(para/list/table/code/caption/footnote/heading), heading(붙인 제목), pages, block_ids, n_tokens(bge-m3)`. 지운 블록은 `<doc_id>.dropped.json`. 문장 파일은 `para`(몇 번째 문단) 추가 예정. 청커는 `text`(와 advanced_semantic_chunker는 `n_tokens`)만 쓰고 나머지는 분석·추적용이다.
+형식(v4, Vectara 공식 코퍼스 = Open RAG Benchmark의 Mistral OCR 텍스트와 비교해 정함; 비교 도구 `tests/clean_text/ref_compare.py`: 본문 재현 98.4%, 잡음 2.0%, 순서 98.2%):
 
-| 블록 | 변환 |
+| 항목 | 형식 |
 |---|---|
-| 문단, 목록 항목, 코드, 수식 | 블록 하나 = 문단 하나 |
-| 제목 | 다음 블록 앞에 줄바꿈으로 붙여 문단 하나로(`제목\n내용`). 제목이 연달아 오면 첫 비제목 블록까지 모두 붙인다. 문서 끝의 제목은 혼자 둔다. **1안: Docling이 제목으로 표시한 블록만** 대상(제목처럼 보이는 짧은 줄까지 붙이는 2안은 통계를 보고 결정) |
-| 표 | 표 전체가 문단 하나(마크다운 표 글 그대로) |
-| 캡션 | 원래 위치의 일반 문단 |
-| 각주 | 문서 맨 뒤 |
-| 빈 블록 | 제외 |
+| 문단(블록) 사이 | 빈 줄 `\n\n` |
+| 제목과 본문 사이 | `\n`(마크다운 표시 없음, 제목은 다음 블록 앞에 붙임) |
+| 짧은 조각을 붙인 자리 | 공백 |
+| 원문 줄바꿈(표 행, Docling 블록 안) | 유지 |
+| 논문 제목·저자 | 본문 앞 |
+| 참고문헌 | 남김. 연속된 항목을 `\n`으로 이은 한 문단 + Docling 목록 표지(`[12]`) |
+| 디스플레이 수식 | `$$ LaTeX $$`, 자기 문단(Q3 고장 난 수식은 원본 글자 층) |
+| 표 | 본문 안 마크다운, 캡션과 한 블록. 참고문헌 영역의 참고문헌 모양 표는 항목 줄로 폄 |
+| 그림 캡션 | 남김(원래 위치). 그림 안 글자는 지움 |
+| 각주 | 문서 끝 |
 
-- 텍스트 전체 = 문단을 빈 줄(`\n\n`)로 이은 것. fixed·recursive·semantic은 이것을 받는다.
-- 문단 단위 = 위 문단 목록. 문장 단위 = 블록별로 문장을 나눈 뒤 제목을 다음 블록의 첫 문장 앞에 붙인다. **표 문단은 문장으로 나누지 않는다.**
-- 문장 나누기 도구는 실제 데이터의 어려운 문장(약어, 숫자, 인용 번호, 한국어 등)으로 후보를 비교해 정한다(A2-3).
-- 이 규칙은 텍스트를 만드는 단계의 규칙이라 모든 청커에 똑같이 적용된다.
-- LongBench는 줄바꿈 기준 문단으로 같은 형식의 문서 JSON을 만든다.
+파일: `{doc_id, dataset, lang, title, fmt, source, n_pages, n_paras, n_tokens, text, paras[{kind, pages, block_ids}], log}`, 지운 블록은 `<doc_id>.dropped.json`. `paras`는 `text`를 빈 줄로 나눈 문단과 순서대로 대응하고 평가·추적용이다. **청커는 `text`만 쓴다.** 문장이 필요한 청커(semantic, advanced_semantic_chunker)는 같은 공용 문장 함수로 `text`를 나눈다(`src/preprocess/sentences.py`의 함수: 영어 nltk + 학술 약어 + 보정, 한국어 Kiwi + 구조 표시; 청커 쪽 공용 함수는 A3에서 만든다). LongBench(`src/preprocess/longbench.py`)는 아직 `processed_para`·`processed_sen` 형식이며 나중에 clean_text로 바꾼다.
 
 ### LumberChunker 원본 동작 (논문 3.1절, 그림 1, 부록 B 프롬프트)
 
@@ -94,7 +94,7 @@ s = 문서 시작 단위
 ### 트랙 A: 검색·생성 (`src/rag/`) — pdf, docx, LongBench
 
 ```
-원본 → 전처리(Docling, data/meta_text) → 깨끗한 텍스트·단위(data/processed_para, data/processed_sen)
+원본 → 전처리(Docling → data/meta_text_v2 → data/clean_text: 문서 하나 = 긴 텍스트 하나)
      → advanced_semantic_chunker의 최적 θ 찾기(개발 문서) + 청커별 청킹
      → 임베딩(bge-m3 fp16) → FAISS 정확 검색 → top-k
      → 검색 품질 측정 + top-k를 넣은 생성(질의응답·요약) 품질 측정 → 지표화
@@ -133,7 +133,7 @@ srt → 전처리(큐 + 타임스탬프) → 청커별 청킹 → 청크 단위 
 |---|---|
 | R0 | **완료(2026-10-12)**: 코드·문서·옛 산출물을 모두 지우고 빈 폴더 구조에서 다시 시작. 환경, `AGENTS.md`, `CLAUDE.md`, requirements, `data/raw·processed(현 meta_text)·qa·manifests`만 남김 |
 | A1 | 모델 로딩: bge-m3 fp16, 토크나이저, Gemma 4비트 |
-| A2 | 입력 준비: A2-0 결정 문서화 → A2-1 데이터셋 등록·문서 읽기 → A2-2 깨끗한 텍스트(문단) → A2-3 문장 단위(도구 검증) → A2-4 LongBench(다운로드 허락 필요) → A2-5 전처리 코드 이식(pdf 대조는 cuDNN 수리 후) → A2-6 테스트 |
+| A2 | **완료(2026-10-17)**: 데이터셋 등록, 전처리 v2 이식, 문장 나누기 도구 결정(A2-3), LongBench 단위(A2-4), clean_text v4 형식(stage2에 합침). 남은 것: LongBench clean_text 형식 |
 | A3 | 청킹: fixed → recursive → semantic → advanced_semantic_chunker(파일럿) |
 | A4 | 인덱싱: 청크 → 임베딩 → FAISS, 캐시 |
 | A5 | QA 세트(docx는 Claude 생성 + Gemma 검증) → 지표를 하나씩 추가 |
@@ -146,16 +146,17 @@ srt → 전처리(큐 + 타임스탬프) → 청커별 청킹 → 청크 단위 
 ```
 src/
   common/                       설정, 모델 로딩(bge-m3·Gemma), 공용 텍스트 함수(문장 나누기 등)
-  preprocess/                   전처리: sources(문서 목록), docling_blocks(Docling 변환·블록), stage1(1차), stage2(2차)
+  preprocess/                   전처리: sources(문서 목록), docling_blocks(Docling 변환·블록), stage1(1차), stage2(2차 → clean_text),
+                                clean_text(clean_text 형식 정리), sentences(문장 나누기 함수), longbench(LongBench 단위)
 
-  chunking/                     ── 공용 청커 알고리즘 (오프셋을 모른다)
-    langchain_baselines.py        fixed/recursive/semantic 래퍼
-                                    → 문자열 목록, 요청 시 시작 위치도 함께(add_start_index)
+  chunking/                     ── 청커 (오프셋을 모른다). 청커마다 파일 하나(2026-10-16 결정), 입력은 clean_text의 text, 크기는 bge-m3 토큰
+    fixed.py                      LangChain 토큰 창(TokenTextSplitter, 방식은 A3에서 확정)
+    semantic.py                   LangChain SemanticChunker(문장은 advanced_semantic_chunker와 같은 공용 문장 함수, 나머지는 원래 알고리즘)
+    recursive.py                  LangChain RecursiveCharacterTextSplitter
     advanced_semantic.py          LumberChunker 틀 + 코사인 판단 → 단위 번호 범위 [(i, j)]
     sizectl/                      srt 원본 min/max 엔진 → 단위 번호 범위 (옛 코드 이식, 수정 없이)
 
   rag/                          ── 트랙 A: 오프셋 없음
-    units.py                      LongBench → 깨끗한 텍스트 → 단위(문단·문장) (pdf·docx는 preprocess)
     chunks.py                     단위 범위 → 청크 문자열 (LangChain 결과는 문자열 그대로)
     index.py                      청크 → 임베딩 → FAISS 정확 검색, 캐시
     metrics.py                    검색 지표 (단계별로 하나씩 추가)
@@ -175,8 +176,8 @@ src/
   qa_build/                     docx QA 구축 도구
 
 scripts/        실행 CLI (preprocess, build_qa, chunk, run, tune, srt/…)
-tests/          unittest (모델·GPU 없이 돈다)
-data/           raw → docling_json → meta_text_v2 → processed_para·processed_sen(깨끗한 텍스트) → chunks → index (git에는 qa·manifests만)
+tests/          unittest(모델·GPU 없이 돈다) + 검증 도구: clean_text/ref_compare.py(Vectara 정답 비교), sent_split/(문장 도구 판정), longbench/(LongBench 검사)
+data/           raw → docling_json → meta_text_v2 → clean_text(청커 입력) → chunks → index (git에는 qa·manifests만; LongBench는 아직 processed_para·processed_sen)
 docs/ papers/   설계 문서 / 참고 논문 PDF(git에 올리지 않음)
 ```
 

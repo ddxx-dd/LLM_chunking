@@ -67,7 +67,7 @@ class TestTokenCounter(unittest.TestCase):
 
 class TestConfig(unittest.TestCase):
     def test_paths_under_root(self):
-        for p in (config.RAW_DIR, config.META_DIR, config.PARA_DIR, config.SENT_DIR, config.QA_DIR, config.CHUNKS_DIR, config.INDEX_DIR, config.RESULTS_DIR):
+        for p in (config.RAW_DIR, config.META_DIR, config.META2_DIR, config.CLEAN_DIR, config.PARA_DIR, config.SENT_DIR, config.QA_DIR, config.CHUNKS_DIR, config.INDEX_DIR, config.RESULTS_DIR):
             self.assertTrue(str(p).startswith(str(config.ROOT)))
         self.assertTrue((config.ROOT / "AGENTS.md").exists())
 

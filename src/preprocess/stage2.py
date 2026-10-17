@@ -1,25 +1,28 @@
-"""2차 전처리: meta_text_v2(1차 결과) → processed_para(청커 입력, 문단 단위의 깨끗한 텍스트).
+"""2차 전처리: meta_text_v2(1차 결과) → clean_text(모든 청커의 입력: 문서 하나 = 긴 텍스트 하나, 문단은 빈 줄로 구분).
 
   source env.sh
   PYTHONPATH=src .venv311/bin/python -m preprocess.stage2 --dataset all [--worker 0 --workers 4]
 
 입력: <out>/meta_text_v2/<데이터셋>/<doc_id>.json (--out 기본 data/)
-출력: <out>/processed_para/<데이터셋>/<doc_id>.json          문서 필드 + units[{text, kind, heading, pages, block_ids, formulas(수식 글자 위치), n_tokens}] + log(규칙별 적용 수)
-      <out>/processed_para/<데이터셋>/<doc_id>.dropped.json  지운 블록과 규칙 이름(확인용)
+출력: <out>/clean_text/<데이터셋>/<doc_id>.json          {doc_id, dataset, lang, title, fmt, source, n_pages, n_paras, n_tokens, text,
+                                                        paras[{kind, pages, block_ids}], log(규칙별 적용 수)}. 형식은 preprocess/clean_text.py
+      <out>/clean_text/<데이터셋>/<doc_id>.dropped.json  지운 블록과 규칙 이름(확인용)
+      단위 만들기 = 아래 규칙(build_units), 마지막 정리 = clean_text.build(참고문헌 한 문단·번호, 수식 자기 문단, 참고문헌 모양 표 펴기 등)
 
 적용 순서
   K1 한국어 가짜 띄어쓰기 지움(1차 fake_spaces) / C3 글꼴 글리프 이름 쓰레기 / 1 문자 정리(제어·PUA·대체 문자, NBSP, 폭 없는 문자,
      소프트 하이픈, 합자·수학 문자 NFKC, 연속 공백) / T7 칸이 하나뿐인 표 → 본문 / G1 깨진 글 블록이 30% 이상이면 문서 제외
   B1 1차가 찾은 숨은 문단 경계(para_breaks)에서 블록 나눔 / G3 블록 앞 그림 낱글자 떼기
-  블록 제거  R1 참고문헌 영역(제목 또는 'References' 한 줄부터, 본문 단락 2개 연속·수식·다른 제목에서 끝) / N1 줄 번호 사슬 /
+  2026-10-17 v4 형식(Vectara 공식 코퍼스와 맞춤): 참고문헌(R1·R2)과 그림 캡션(F1)은 지우지 않고 남기며, 수식은 LaTeX('$$ … $$').
+  블록 제거  R1 참고문헌 영역 표시(제목 또는 'References' 한 줄부터, 본문 단락 2개 연속·수식·다른 제목에서 끝; 지우지 않고 ref 표시) / N1 줄 번호 사슬 /
              D3 여러 쪽 반복 짧은 블록 / H2 반복 머리말·바닥글(Marker 기본값 + 2쪽 간격) / T1·T2 목차 /
-             F1 그림 캡션(캡션 모양, 축 숫자 떼고 판정) / G4 그림 영역 안 글(그림 안에서 살린 글은 본문보다 작은 글자일 때만) /
+             F1 그림 캡션(캡션 모양, 축 숫자 떼고 판정; 지우지 않고 남김) / G4 그림 영역 안 글(그림 안에서 살린 글은 본문보다 작은 글자일 때만) /
              G2 그림 속 글자 조각 / G5 글자가 흩어진 그림 글 / N2 본문 사이 쪽 번호 / N3 arXiv 세로 도장·저작권·라이선스·
-             첫 쪽 접수·교신·소속·연구비 문구·이메일/URL 줄 / R2 제목 없는 끝 참고문헌
+             첫 쪽 접수·교신·소속·연구비 문구·이메일/URL 줄 / R2 제목 없는 끝 참고문헌(표시)
   D1 단어가 두 번씩 반복된 블록 반으로 / F2 본문으로 분류된 각주를 문서 끝으로
   표         T6 표 캡션을 표 앞에 / T8 표 바로 뒤 주석('Note:', '*** p <')을 표 뒤에 / T9 짝 없는 표 캡션·번호 줄은 뒤쪽 표에, 없으면 제거
-  문단 잇기  Q1 수식을 앞 문단 안으로(읽기 쉬운 글자, Q3 고장 난 수식은 원본 글자 층, Q4 식 번호 뒤 덧붙은 글 자르기,
-             Q5 \text{} 낱글자 붙이기, Q6 수식 앞뒤에 반복된 이웃 문장 자르기) / Q2 수식 뒤 소문자 문장 이어 붙임 /
+  문단 잇기  Q1 수식을 앞 문단 안으로('$$ LaTeX $$', Q3 고장 난 수식은 원본 글자 층, Q6 수식 안에 반복된 이웃 문장 자르기와 남은 괄호 조각 정리)
+             / Q2 수식 뒤 소문자 문장 이어 붙임 /
              P1·P2 영어 소문자 이어짐 / P5 하이픈 / P3 한국어 쪽 바뀜 / L1 줄 위치
   제목 붙이기(제목을 바로 아래 단위 앞에) / S 글자 없거나 2토큰 이하 조각을 다음 단위 앞에 / S2 양식 항목('…:')을 다음 단위 앞에
 """
@@ -31,6 +34,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from common.config import DATA_DIR, DATASETS
+from preprocess import clean_text
 from preprocess.sources import documents
 
 LETTER = re.compile(r"[A-Za-z0-9가-힣\u3131-\u318E\u4E00-\u9FFF]")
@@ -263,24 +267,22 @@ def remove_blocks(blocks, c, doc, dropped=None):
 
     for i, b in enumerate(blocks):
         s = b["text"].strip()
+        is_ref = False                            # R1 참고문헌 영역: 지우지 않고 표시만(2026-10-17 v4 형식, Vectara 공식 코퍼스처럼 참고문헌을 남긴다)
         if is_refs_head(b):
             in_refs, nonref = True, 0
-            drop("R1 참고문헌 제거", b)
-            continue
-        if b["type"] == "heading":
+            is_ref = True
+        elif b["type"] == "heading":
             in_refs = False
         elif in_refs and b["type"] == "footnote":
             # 참고문헌 영역의 각주: 참고문헌 모양이 뚜렷할 때만 지우고('저자, 이니셜'로 시작 + 연도 + 표지 2개 이상), 아니면 남기되 영역은 끝내지 않는다.
             # (코드로 분류된 참고문헌 묶음은 아래 일반 판정: 여러 항목이 한 블록이라 길다)
             # 옛: 각주가 나오면 영역 끝 → '[1] Adak, …' 각주가 남음. 모두 지우면 문서 끝으로 옮긴 본문 각주까지 지움(실측 2403.15810v1)
             if REF_START.match(s) and YEAR.search(s) and len(REF_STRICT.findall(s)) >= 2 and len(s.split()) <= 120:
-                drop("R1 참고문헌 제거", b)
-                continue
+                is_ref = True
         elif in_refs:
             if b["type"] == "paragraph" and CAP_SHAPE.match(s):
-                drop("F1 그림 캡션 제거", b)
-                continue
-            if b["type"] == "table" or b.get("role") == "caption":
+                pass                              # 참고문헌 쪽의 그림 캡션: 아래 F1(캡션 남김)으로
+            elif b["type"] == "table" or b.get("role") == "caption":
                 pass                              # 참고문헌 쪽에 떠 온 표·캡션: 영역을 끝내지 않고 아래 규칙으로 넘김
             elif b["type"] == "formula":
                 in_refs = False                   # 수식 = 참고문헌 뒤에 제목 없이 붙은 부록(실측 2410.02927v1 보충 자료)
@@ -289,13 +291,15 @@ def remove_blocks(blocks, c, doc, dropped=None):
                       and not REF_START.match(s) and not re.match(r"^\s*(\[\d+\]|\d+\.\s)", s)):
                 nonref = 0                        # 참고문헌 영역 안에서 본문 단락(30낱말 이상, 연도 없음, 인용 표지 1개 이하('… in [26].'), 항목 번호·저자로 시작 안 함)이
                                                   # 아닌 블록 = 항목·잘린 조각. (연도 1개까지 허용하면 항목 하나가 본문으로 판정되어 영역이 일찍 끝나는 실측)
-                drop("R1 참고문헌 제거", b)
-                continue
+                is_ref = True
             else:
                 nonref += 1                       # 본문 단락이 2개 연속이면 영역 끝(제목 없이 이어지는 부록 등).
                 if nonref >= 2:                   # 옛: '참고문헌답지 않은 블록 3개'로 끝내 쪽·단 경계에서 잘린 항목 조각 3개에 영역이 일찍 끝남(실측 약 2만 낱말이 남음)
                     in_refs = False
                     c["R1 참고문헌 영역 끝(본문 단락 2개 연속)"] += 1
+        if is_ref:
+            b = {**b, "ref": True}
+            c["R1 참고문헌 표시"] += 1
         if i in lines:
             drop("N1 줄 번호 제거", b)
             continue
@@ -315,7 +319,8 @@ def remove_blocks(blocks, c, doc, dropped=None):
         if ((b.get("role") == "caption" and not b.get("for") and FIG_CAP.match(s_cap))
                 or (b["type"] in ("paragraph", "list_item", "footnote", "code") and CAP_SHAPE.match(s_cap))
                 or (b["type"] == "heading" and CAP_SHAPE.match(s_cap) and len(s.split()) <= 40)):   # 목록·각주·코드·제목으로 분류된 그림 캡션도(실측 'fig. S2.', 'Figure 8:' 각주)
-            drop("F1 그림 캡션 제거", b)
+            keep.append({**b, "caption": True})   # F1 그림 캡션: 지우지 않고 원래 위치에 남김(2026-10-17 v4 형식). 뒤의 그림 글자 규칙은 건너뜀
+            c["F1 그림 캡션 남김"] += 1
             continue
         if b.get("from_picture"):                 # 1차가 그림 영역에서 살린 글(25낱말 이상 문장)
             f = (b.get("geom") or {}).get("font")
@@ -389,21 +394,22 @@ def remove_blocks(blocks, c, doc, dropped=None):
         def piece(b):                               # 쪽 넘김 등으로 잘린 항목 조각(짧거나 소문자 시작): 연속을 끊지 않는다
             t = b["text"].strip()
             return bool(b["type"] in ("paragraph", "list_item", "code") and (len(t.split()) < 25 or re.match(r"^[a-z(]", t)))
+        scan = [b for b in out if not b.get("caption")]   # 판정은 캡션을 뺀 순서로(캡션을 지우던 때와 같은 판정)
         run, kill, gap = [], set(), []
-        for k, b in enumerate(out + [{"type": "end", "text": ""}]):
-            if k >= len(out) // 2 and k < len(out) and refy(b):
+        for k, b in enumerate(scan + [{"type": "end", "text": ""}]):
+            if k >= len(scan) // 2 and k < len(scan) and refy(b):
                 run += gap + [k]
                 gap = []
                 continue
-            if run and k < len(out) and piece(b) and len(gap) < 2:
+            if run and k < len(scan) and piece(b) and len(gap) < 2:
                 gap.append(k)
                 continue
-            if sum(refy(out[x]) for x in run) >= 5:
+            if sum(refy(scan[x]) for x in run) >= 5:
                 kill.update(run)
             run, gap = [], []
-        for k in kill:
-            drop("R2 제목 없는 끝 참고문헌 제거", out[k])
-        out = [b for k, b in enumerate(out) if k not in kill]
+        ids = {scan[k]["id"] for k in kill}
+        c["R2 제목 없는 끝 참고문헌 표시"] += len(ids)
+        out = [{**b, "ref": True} if b["id"] in ids else b for b in out]
     return out
 
 
@@ -489,48 +495,53 @@ def halve_duplicates(b, c):
 
 
 # ---------------------------------------------------------------- 수식
-MATH_OP = re.compile(r"\s*([=<>≤≥≠≈∼∈∉⊂⊆⊃⊇→←↦⇒⇔±×∪∩∞∑∏∫√])\s*")
-MATH_FUNC = re.compile(r"\\(deg|det|dim|ker|max|min|sup|inf|log|ln|exp|sin|cos|tan|arg|lim|Pr|gcd|mod|tr|var|Var|Tr)\b")
-MATH_NAME = re.compile(r"\\(operatorname|mathrm|text|textrm|mathit|mathbf|boldsymbol|mathsf)\s*\*?\s*\{([^{}]*)\}")
-REPEAT_RUN = re.compile(r"((?:\S+\s+){1,6}?)\1{4,}")
 BROKEN_RUN = re.compile(r"((?:\S+\s+){3,40}?)\1{3,}")
-_L2T = None
-
-
-def readable_formula(latex):
-    """LaTeX → 원문 PDF 글자 층과 비슷한 읽기 쉬운 글자(∑, ∞, ≤; 첨자는 띄어쓰기). 실패하면 LaTeX 그대로."""
-    global _L2T
-    if _L2T is None:
-        from pylatexenc.latex2text import LatexNodes2Text
-        _L2T = LatexNodes2Text(math_mode="text")
-    s = re.sub(r"\\\\|&", " ", latex)
-    s = MATH_NAME.sub(lambda m: " " + re.sub(r"(?<=\b\w) (?=\w\b)", "", " ".join(m.group(2).split())) + " ", s)   # Q5 \text{w h e r e}→where
-    s = MATH_FUNC.sub(lambda m: " " + m.group(1) + " ", s)
-    try:
-        s = _L2T.latex_to_text(s)
-    except Exception:
-        pass
-    s = re.sub(r"\s*[_^]\s*", " ", s)
-    s = " ".join(s.split()) + " "
-    s = REPEAT_RUN.sub(r"\1", s)
-    s = MATH_OP.sub(r" \1 ", s)
-    return " ".join(s.split())
+TAIL_CMD = re.compile(r"(\s|\\\\|\\(?:text|quad|qquad|mathrm|mbox|hbox)\b|&)+$")
+HEAD_CMD = re.compile(r"^(\s|\\\\|&|\})+")
 
 
 def formula_text(b, c):
-    """수식 블록의 글: 인식이 고장 난 것으로 보이면 원본 글자 층, 아니면 읽기 쉬운 글자로 바꾼 LaTeX."""
+    """수식 블록의 글: 인식이 고장 난 것으로 보이면(Q3) 원본 글자 층, 아니면 Docling 수식 모델의 LaTeX를 '$$ … $$'로 감싼 것
+    (2026-10-17 v4 형식: Vectara 공식 코퍼스처럼 LaTeX. 읽기 쉬운 글자로 바꾸면 's . t .'처럼 띄어 쓴 점에서 문장 분리기가 수식의 12.6%를 갈랐다)."""
     latex, layer = b["text"], b.get("text_layer", "")
     if layer and (BROKEN_RUN.search(latex + " ") or len(latex) > 6 * len(layer) + 80):
         c["Q3 고장 난 수식을 원본 글자 층으로"] += 1
         return layer
-    f = readable_formula(latex)
-    tag = re.search(r"\((\d{1,3}(?:\.\d{1,3})?[a-z]?)\)\s*$", layer)     # 원본이 식 번호 '(1)'로 끝나면, 변환 글에서 첫 '( 1 )' 뒤는 모델이 덧붙인 것
-    if tag:
-        m = re.search(r"\(\s*" + r"\s*".join(map(re.escape, tag.group(1))) + r"\s*\)", f)
-        if m and re.search(r"[A-Za-z]", f[m.end():]):
-            c["Q4 식 번호 뒤 덧붙은 글 자르기"] += 1
-            f = f[:m.end()]
-    return f
+    return "$$ " + " ".join(latex.split()) + " $$"
+
+
+def tidy_cut(t, c):
+    """Q6이 자른 수식의 끝·앞에 남은 짝 없는 괄호 조각('\\\\ \\text {', '} \\\\')을 지운다(끝·앞 40자 안만)."""
+    stack, bad_close = [], []
+    for i, ch in enumerate(t):
+        if ch == "{" and (i == 0 or t[i - 1] != "\\"):
+            stack.append(i)
+        elif ch == "}" and (i == 0 or t[i - 1] != "\\"):
+            if stack:
+                stack.pop()
+            else:
+                bad_close.append(i)
+    out = t
+    if stack and stack[-1] >= len(t) - 40:
+        out = TAIL_CMD.sub("", t[:stack[-1]].rstrip()).rstrip()
+        out = re.sub(r"\\[a-zA-Z]+\s*$", "", out).rstrip()
+        c["Q6 뒤 끝 조각 정리"] += 1
+    if bad_close and bad_close[0] <= 40:
+        k = bad_close[-1] if bad_close[-1] <= 40 else bad_close[0]
+        out = HEAD_CMD.sub("", out[k + 1:]).lstrip()
+        c["Q6 뒤 앞 조각 정리"] += 1
+    return out
+
+
+def trim_formula(f, prev_text, next_text, c):
+    """Q6을 '$$' 안쪽에만 적용하고(구분 기호를 자르지 않게), 자른 경우 남은 괄호 조각을 정리한다. 빈 수식이면 ''."""
+    if f.startswith("$$ ") and f.endswith(" $$"):
+        before = f[3:-3]
+        inner = trim_neighbor_dup(before, prev_text, next_text, c).strip()
+        if inner != before.strip():
+            inner = tidy_cut(inner, c)
+        return "$$ " + inner + " $$" if inner else ""
+    return trim_neighbor_dup(f, prev_text, next_text, c)
 
 
 _WT = re.compile(r"[A-Za-z]{2,}")
@@ -657,6 +668,7 @@ def build_units(doc, count_many, dropped=None):
         return None, c
     blocks = [strip_lead_letters(b, c) for b in split_blocks(blocks, c)]       # 그림 낱글자를 먼저 떼야 참고문헌·이어짐 판단이 맞다
     blocks = [halve_duplicates(b, c) for b in remove_blocks(blocks, c, doc, dropped)]
+    ref_ids = {b["id"] for b in blocks if b.get("ref")}                       # R1·R2가 참고문헌으로 표시한 블록
     blocks = move_footnote_like(blocks, c)
 
     tables = {b["id"] for b in blocks if b["type"] == "table"}
@@ -743,7 +755,7 @@ def build_units(doc, count_many, dropped=None):
         if k == "formula":
             f = formula_text(b, c)
             nb = next((x for x in blocks[bi + 1:] if x["type"] != "formula"), None)
-            f = trim_neighbor_dup(f, last["text"] if last is not None else "", nb["text"] if nb else "", c)
+            f = trim_formula(f, last["text"] if last is not None else "", nb["text"] if nb else "", c)
             c["Q1 수식을 문장 안으로"] += 1
             if last is not None:
                 last["text"] = last["text"].rstrip() + " " + f
@@ -806,7 +818,8 @@ def build_units(doc, count_many, dropped=None):
     final = []
     for u, n in zip(out, count_many([u["text"] for u in out])):
         final.append({"text": u["text"], "kind": u["kind"], "heading": u["heading"], "pages": u["pages"], "block_ids": u["block_ids"],
-                      "formulas": formula_spans(u["text"], u.get("_formulas", [])), "n_tokens": n})
+                      "formulas": formula_spans(u["text"], u.get("_formulas", [])), "ref": bool(u["block_ids"]) and all(i in ref_ids for i in u["block_ids"]),
+                      "n_tokens": n})
     return final, c
 
 
@@ -822,17 +835,24 @@ def formula_spans(text, formulas):
 
 
 def process(doc_id, ds, out, count_many):
-    """문서 하나: meta_text_v2 → processed_para. 제외된 문서(G1)는 None."""
+    """문서 하나: meta_text_v2 → clean_text(단위를 만든 뒤 clean_text.build로 정리). 제외된 문서(G1)는 None."""
     doc = json.loads((out / "meta_text_v2" / ds / f"{doc_id}.json").read_text(encoding="utf-8"))
     dropped = []
     units, c = build_units(doc, count_many, dropped)
     if units is None:
         return None, c
+    blocks = {b["id"]: b.get("text", "") for b in doc["blocks"]}
+    markers = clean_text.list_markers(out / "docling_json" / ds / f"{doc_id}.docling.json")
+    text, paras, log, ok = clean_text.build(units, blocks, markers)
+    c.update(log)
+    bad = [k for k, v in ok.items() if not v]
+    if bad:
+        raise AssertionError(f"{ds}:{doc_id} clean_text 검사 실패 {bad}")
     rec = {"doc_id": doc["doc_id"], "dataset": ds, "lang": doc.get("lang"), "title": doc.get("title"), "fmt": doc.get("fmt"),
-           "source": f"meta_text_v2/{ds}", "n_pages": doc.get("n_pages"), "n_units": len(units),
-           "n_tokens": sum(u["n_tokens"] for u in units),
-           "log": {k: v for k, v in sorted(c.items()) if not k.startswith("words:")}, "units": units}
-    out_dir = out / "processed_para" / ds
+           "source": f"meta_text_v2/{ds}", "n_pages": doc.get("n_pages"), "n_paras": len(paras),
+           "n_tokens": count_many([text])[0], "text": text, "paras": paras,
+           "log": {k: v for k, v in sorted(c.items()) if not k.startswith("words:")}}
+    out_dir = out / "clean_text" / ds
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / f"{doc_id}.dropped.json").write_text(json.dumps(dropped, ensure_ascii=False, indent=1), encoding="utf-8")
     (out_dir / f"{doc_id}.json").write_text(json.dumps(rec, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -859,7 +879,7 @@ def main():
         if rec is None:
             print(f"{d['dataset']}:{d['doc_id']}: 제외됨 {dict(c)}", flush=True)
         else:
-            print(f"{d['dataset']}:{d['doc_id'][:40]}: 단위 {rec['n_units']}, 토큰 {rec['n_tokens']:,}", flush=True)
+            print(f"{d['dataset']}:{d['doc_id'][:40]}: 문단 {rec['n_paras']}, 토큰 {rec['n_tokens']:,}", flush=True)
 
 
 if __name__ == "__main__":

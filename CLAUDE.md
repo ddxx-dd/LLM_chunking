@@ -50,4 +50,4 @@ LLM은 한 번에 받는 토큰 수에 한계가 있다. 흩어진 수십 개 .d
 - 2026-10-12: `v3` 브랜치에서 빈 폴더 구조로 다시 시작했다. **계획·규칙·폴더 구조는 `AGENTS.md`가 기준**이다(작업 전에 읽을 것).
 - 옛 코드(오프셋 기반 청커 7종, 실험 1 파이프라인, srt 원본 알고리즘, 구조 개편 이전 `legacy/`)는
   태그 `exp1-offset-chunking`(= 원격 `v2-restructure`)과 `/root/jupyter/LLM_chunking_legacy/`(코드 + 옛 산출물 + 패키지 목록)에 있다.
-- `data/raw`, `data/meta_text`(Docling 전처리 결과, 옛 `data/processed`), `data/qa`, `data/manifests`는 그대로 쓴다. 깨끗한 텍스트는 `data/processed_para`, `data/processed_sen`에 만든다. `data/raw`는 git과 legacy 폴더 어디에도 사본이 없다(삭제 금지).
+- `data/raw`, `data/qa`, `data/manifests`는 그대로 쓴다. 전처리는 `data/docling_json` → `data/meta_text_v2` → **`data/clean_text`(모든 청커의 입력, 2026-10-17 v4 형식)**. 옛 Docling 결과 `data/meta_text`는 아직 남겨 둠. `data/raw`는 git과 legacy 폴더 어디에도 사본이 없다(삭제 금지).

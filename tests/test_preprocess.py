@@ -58,19 +58,30 @@ class TestFirstPageNote(unittest.TestCase):
 
 
 class TestReferences(unittest.TestCase):
-    def test_body_footnote_after_refs_kept(self):
-        # 문서 끝으로 옮긴 본문 각주가 참고문헌 영역 뒤에 놓여 함께 지워졌다
+    """참고문헌은 지우지 않고 ref로 표시한다(v4 형식). 표시 범위는 옛 삭제 범위와 같다."""
+
+    def refs(self, bs):
+        kept = stage2.remove_blocks(bs, Counter(), {"n_pages": 5, "pictures": []})
+        return [b["id"] for b in kept], [b["id"] for b in kept if b.get("ref")]
+
+    def test_body_footnote_after_refs_not_marked(self):
+        # 문서 끝으로 옮긴 본문 각주가 참고문헌 영역 뒤에 놓여 함께 지워지던 실측 → 각주는 참고문헌이 아님
         bs = [blk(0, "References", "heading"), blk(1, "Meyer, A., Ante, L., 2020. Effects of coin offerings. J. Finance 2, 259-283."),
               blk(2, "13 We excluded draws from the models, consistent with literature (Edmans et al., 2007; Palomino et al., 2009).", "footnote")]
-        kept = stage2.remove_blocks(bs, Counter(), {"n_pages": 5, "pictures": []})
-        self.assertEqual([b["id"] for b in kept], ["b2"])
+        kept, refs = self.refs(bs)
+        self.assertEqual(kept, ["b0", "b1", "b2"])
+        self.assertEqual(refs, ["b0", "b1"])
 
-    def test_appendix_after_refs_kept(self):
-        # 제목 없이 참고문헌 뒤에 붙은 부록(수식)이 참고문헌으로 지워졌다
+    def test_appendix_after_refs_not_marked(self):
+        # 제목 없이 참고문헌 뒤에 붙은 부록(수식)이 참고문헌으로 지워지던 실측
         bs = [blk(0, "References", "heading"), blk(1, "[1] A. Smith, Some paper, Phys. Rev. Lett. 1, 2 (2020)."),
               blk(2, "u_t = f(u)", "formula"), blk(3, "On the one hand, for D = 1, this PDE is the one presented in [26].")]
-        kept = stage2.remove_blocks(bs, Counter(), {"n_pages": 5, "pictures": []})
-        self.assertEqual([b["id"] for b in kept], ["b2", "b3"])
+        kept, refs = self.refs(bs)
+        self.assertEqual(refs, ["b0", "b1"])
+
+    def test_figure_caption_kept(self):
+        kept, _ = self.refs([blk(0, "Figure 3: Results on the test set."), blk(1, "We now discuss the results in detail.")])
+        self.assertEqual(kept, ["b0", "b1"])
 
 
 class TestFormula(unittest.TestCase):
@@ -85,6 +96,58 @@ class TestFormula(unittest.TestCase):
     def test_plain_formula_untouched(self):
         self.assertEqual(stage2.trim_neighbor_dup("f(x) = max { 0 , x } for all x", "We define the function", "where x is real.", Counter()),
                          "f(x) = max { 0 , x } for all x")
+
+
+class TestFormulaLatex(unittest.TestCase):
+    def test_latex_wrapped(self):
+        self.assertEqual(stage2.formula_text({"text": "x =  \\frac { a } { b }", "text_layer": "x = a/b"}, Counter()), "$$ x = \\frac { a } { b } $$")
+
+    def test_trim_keeps_delimiters_and_tidies(self):
+        # Q6이 수식 안에 반복된 다음 문장을 자르고 남은 '\\ \text {' 조각을 지운다(실측 2410.16441v2 Definition 1)
+        f = "$$ J = \\frac { 1 } { 2 } x , ( 1 ) \\\\ \\text {and players follow a joint linear dynamical system} $$"
+        out = stage2.trim_formula(f, "seeks to optimize a cost function:", "and players follow a joint linear dynamical system: x = A x", Counter())
+        self.assertTrue(out.startswith("$$ ") and out.endswith(" $$"))
+        self.assertNotIn("players", out)
+        self.assertNotIn("\\text {", out)
+
+
+class TestCleanText(unittest.TestCase):
+    """preprocess.clean_text: v4 형식."""
+
+    def setUp(self):
+        from preprocess import clean_text
+        self.ct = clean_text
+
+    def u(self, text, kind="para", heading="", ids=("b0",), ref=False, formulas=()):
+        return {"text": text, "kind": kind, "heading": heading, "block_ids": list(ids), "ref": ref, "formulas": [list(x) for x in formulas]}
+
+    def test_references_one_paragraph_with_markers(self):
+        units = [self.u("Intro text ends here."),
+                 self.u("REFERENCES\nT. Basar, Game theory. SIAM, 1998.", heading="REFERENCES", ids=("b1", "b2"), ref=True),
+                 self.u("D. Bertsekas, Dynamic programming. 2012.", "list", ids=("b3",), ref=True)]
+        mk = {"T. Basar, Game theory. SIAM, 1998.": "[1]", "D. Bertsekas, Dynamic programming. 2012.": "[2]"}
+        text, paras, _, ok = self.ct.build(units, {}, mk)
+        self.assertEqual(text, "Intro text ends here.\n\nREFERENCES\n[1] T. Basar, Game theory. SIAM, 1998.\n[2] D. Bertsekas, Dynamic programming. 2012.")
+        self.assertEqual(paras[1]["block_ids"], ["b1", "b2", "b3"])
+        self.assertTrue(all(ok.values()))
+
+    def test_formula_own_paragraph(self):
+        t = "the cost function: $$ J = x $$ and players follow it."
+        a = t.find("$$")
+        text, paras, _, _ = self.ct.build([self.u(t, formulas=[(a, t.rfind("$$") + 2)])], {}, {})
+        self.assertEqual(text, "the cost function:\n\n$$ J = x $$\n\nand players follow it.")
+        self.assertEqual([m["kind"] for m in paras], ["para", "formula", "para"])
+
+    def test_reference_table_unfolded_but_normal_table_kept(self):
+        ref_tab = "References\n| [ACR19] | G. Azzi and L. Ribeiro. On the essence of conflicts. J. Log. Algebr. Methods, 2019. |\n| - | - |\n" \
+                  "| [BHK22] | N. Behr and J. Krivine. Fundamentals of compositional rewriting theory, 2022. |\n| [McL92] | C. McLarty. Elementary categories, elementary toposes, 1992. |"
+        normal = "Table B1. Known AGNs.\n| Fields | Sample |\n| - | - |\n| UDS | X-ray sources classified as AGNs in Chen et al. (2018) and others |\n" \
+                 "| GOODS-S | all sources in Lyu et al. (2022) that meet the AGN criteria in one band |\n| GOODS-N | X-ray sources classified as AGNs in Xue et al. (2016) |"
+        units = [self.u("Body text here.", ids=("b0",)), self.u(normal, "table", ids=("b1",)), self.u(ref_tab, "table", ids=("b2",))]
+        text, paras, _, _ = self.ct.build(units, {}, {})
+        self.assertEqual([m["kind"] for m in paras], ["para", "table", "references"])
+        self.assertIn("[ACR19] G. Azzi", text)
+        self.assertIn("| GOODS-S |", text)
 
 
 class TestTableCaption(unittest.TestCase):
@@ -102,7 +165,7 @@ class TestTableCaption(unittest.TestCase):
 
 
 class TestSentences(unittest.TestCase):
-    """preprocess.sentences: 문장 나누기(영어 nltk, 한국어 Kiwi + 구조 표시)."""
+    """preprocess.sentences: 문장 나누기 함수(영어 nltk, 한국어 Kiwi + 구조 표시)."""
 
     def setUp(self):
         from preprocess import sentences
@@ -124,23 +187,6 @@ class TestSentences(unittest.TestCase):
     def test_korean_inline_footnote_mark_kept(self):
         # 문장 안 각주 표시('감축인력 * 의')는 자르지 않는다(판정 실측)
         self.assertEqual(len(self.s.split("비효율 분야 감축인력 * 의 국정과제 재배치", "ko")), 1)
-
-    def test_table_and_heading_kept(self):
-        rec = {"lang": "en", "units": [
-            {"text": "| a | b |\n| - | - |\n| 1. x | 2. y |", "kind": "table", "heading": "", "pages": [1]},
-            {"text": "2 Methods\nWe first do step A. Then we do step B.", "kind": "para", "heading": "2 Methods", "pages": [1]}]}
-        units = self.s.to_sentences(rec)
-        self.assertEqual(units[0]["text"], rec["units"][0]["text"])
-        self.assertEqual([u["text"] for u in units[1:]], ["2 Methods\nWe first do step A.", "Then we do step B."])
-        self.assertEqual([u["para"] for u in units], [0, 1, 1])
-
-    def test_formula_not_split(self):
-        # 수식 안의 '. '(예: 'x . y')에서 자르면 수식이 두 문장으로 갈린다
-        t = "The loss is L = a . Then b = c . We stop the procedure here."
-        f = "L = a . Then b = c ."
-        rec = {"lang": "en", "units": [{"text": t, "kind": "para", "heading": "", "pages": [1], "formulas": [[t.find(f), t.find(f) + len(f)]]}]}
-        self.assertEqual([u["text"] for u in self.s.to_sentences(rec)], ["The loss is L = a . Then b = c .", "We stop the procedure here."])
-
 
 class TestLongBench(unittest.TestCase):
     """preprocess.longbench: LongBench 전용 규칙(pdf·docx 문장 나누기와 따로)."""
