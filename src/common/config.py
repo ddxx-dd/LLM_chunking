@@ -5,7 +5,6 @@ ROOT = Path(__file__).resolve().parents[2]
 
 DATA_DIR = ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"                # 원본 (git 추적 안 함, 사본 없음 - 삭제 금지)
-META_DIR = DATA_DIR / "meta_text"         # 옛 Docling 전처리 결과(v2 확정 후 지울 예정)
 DOCLING_DIR = DATA_DIR / "docling_json"   # 1차: Docling 변환 결과(<id>.docling.json)와 변환 기록(<id>.convert.json). src/preprocess/stage1.py
 META2_DIR = DATA_DIR / "meta_text_v2"     # 1차: 블록 + 위치·줄 정보(문서 1개 = JSON 1개). src/preprocess/stage1.py
 CLEAN_DIR = DATA_DIR / "clean_text"       # 2차: 모든 청커의 입력(문서 하나 = 긴 텍스트 하나, 문단은 빈 줄). src/preprocess/stage2.py
