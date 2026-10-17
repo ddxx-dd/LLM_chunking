@@ -47,8 +47,8 @@ def split_ko(text):
     return [p for s in _KIWI.split_into_sents(text) for p in KO_MARK.split(s.text) if p and p.strip()]
 
 
-# 영어 보정 1: 문장 전체가 정리·절 라벨('Proof.', 'Lemma 2.1.', 'Theorem 5 (Main).', '4.2.')이면 다음 문장 앞에 붙인다.
-EN_LABEL = re.compile(r"^(?:\(?[A-Z]?\d{1,3}(?:\.\d{1,3})*\.?\)?|(?:Proof|Lemma|Theorem|Proposition|Corollary|Definition|Remark|Example|Assumption|Claim"
+# 영어 보정 1: 문장 전체가 정리·절 라벨('Proof.', 'Lemma 2.1.', 'Theorem 5 (Main).', '4.2.', 로마 숫자 'IV.')이면 다음 문장 앞에 붙인다.
+EN_LABEL = re.compile(r"^(?:[IVXLC]{1,6}\.|\(?[A-Z]?\d{1,3}(?:\.\d{1,3})*\.?\)?|(?:Proof|Lemma|Theorem|Proposition|Corollary|Definition|Remark|Example|Assumption|Claim"
                       r"|Conjecture|Fact|Note|Step|Case|Problem|Exercise|Algorithm|Observation|Hypothesis|Notation|Condition|Property)"
                       r"(?: [A-Z]?\d{1,3}(?:\.\d{1,3})*[a-z]?)?(?: \([^)]{1,40}\))? ?[.:])$")
 # 영어 보정 2: 앞 문장이 짧은 약어('etc.', 's.t.', 'a.k.a.', 'r.h.s.', 'e.g.', 한 글자+점)로 끝나고 다음 문장이 소문자로 시작하면 합친다.

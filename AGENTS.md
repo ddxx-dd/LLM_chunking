@@ -82,7 +82,7 @@ s = 문서 시작 단위
 | 비교 대상 | 현재 청크 전체의 중심 벡터(토큰 가중 평균) |
 | 자르는 곳 | 기준을 처음 만족하는 단위 |
 | 그룹 길이 | θ로 통제. 변화가 없으면 그룹 끝(θ를 넘게 만든 단위 앞)에서 절단 → 청크는 θ를 넘지 않는다(θ보다 큰 단일 문단은 문장으로 나눈다) |
-| '분명한 변화' 기준 | **연구 대상.** 관련 논문의 식을 살펴보면서 개발한다(아직 정하지 않음). 기준에 값이 있으면 θ 튜닝과 분리해 고정값으로 두고 자체 설계 값임을 밝힌다 |
+| '분명한 변화' 기준 | 세 가지를 구현해 파일럿에서 고른다(2026-10-17): `advanced_semantic` = Max–Min(Kiss et al. 2025, 새 단위의 청크 내 최대 유사도 > max(c·청크 내 최소 쌍 유사도·sigmoid(크기), hard_thr)), `advanced_semantic1` = 중심 벡터 유사도 < 청크 응집도 평균 μ_C(자기를 뺀 중심과의 유사도), `advanced_semantic2` = 중심 벡터 유사도 < μ_C − k·σ_C(k=0.5, TextTiling). 단위 하나일 때는 문서 이웃 유사도 분포에 같은 식. 값은 정답 경계(HotpotQA 패시지, vectara 절)로 고른다 |
 | 청크 초반 오판으로 생기는 아주 작은 청크 | 나중에 다룬다(파일럿에서 실제로 문제인지 먼저 확인) |
 
 - θ는 개발용 문서에서 격자로 찾는다. 처음 변화에서 자르므로 청크 크기는 θ보다 '분명한 변화' 기준이 더 크게 좌우하고, θ는 사실상 상한이다.
@@ -149,11 +149,13 @@ src/
   preprocess/                   전처리: sources(문서 목록), docling_blocks(Docling 변환·블록), stage1(1차), stage2(2차 → clean_text),
                                 clean_text(clean_text 형식 정리), sentences(문장 나누기 함수), longbench(LongBench 원본 읽기)
 
-  chunking/                     ── 청커 (오프셋을 모른다). 청커마다 파일 하나(2026-10-16 결정), 입력은 clean_text의 text, 크기는 bge-m3 토큰
-    fixed.py                      LangChain 토큰 창(TokenTextSplitter, 방식은 A3에서 확정)
-    semantic.py                   LangChain SemanticChunker(문장은 advanced_semantic_chunker와 같은 공용 문장 함수, 나머지는 원래 알고리즘)
-    recursive.py                  LangChain RecursiveCharacterTextSplitter
-    advanced_semantic.py          LumberChunker 틀 + 코사인 판단 → 단위 번호 범위 [(i, j)]
+  chunking/                     ── 청커 (오프셋을 모른다). 청커마다 파일 하나, 입력은 문서 텍스트(pdf·docx는 clean_text의 text, LongBench는 원본 context)
+    sentences.py                  공용 문장 분리(semantic·advanced_semantic만): 빈 줄 = 문단, 표·수식은 한 단위, 줄(접힌 줄은 이음) → preprocess.sentences.split
+    fixed.py                      LangChain CharacterTextSplitter, 글자 수(기본 separator='' = 순수 고정 길이)
+    recursive.py                  LangChain RecursiveCharacterTextSplitter 기본 그대로(글자 수)
+    semantic.py                   LangChain SemanticChunker 기본 그대로, 문장 분리만 sentences.split_text
+    advanced_semantic.py          LumberChunker 틀 + 판단식 3종(advanced_semantic = Max–Min, advanced_semantic1·2 = 중심 벡터 후보 1·2) → 단위 범위 [(i, j)], θ는 bge-m3 토큰
+    embeddings.py                 bge-m3 encode, LangChain Embeddings 감싸기
     sizectl/                      srt 원본 min/max 엔진 → 단위 번호 범위 (옛 코드 이식, 수정 없이)
 
   rag/                          ── 트랙 A: 오프셋 없음
