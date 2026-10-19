@@ -13,6 +13,7 @@
   그 밖(2차 그대로)             표는 캡션과 한 블록의 마크다운, 그림 캡션 남김, 각주 문서 끝, 논문 제목·저자는 본문 앞
 결과의 paras는 text를 빈 줄로 나눈 문단과 순서대로 대응한다: {kind(para/list/caption/footnote/table/code/heading/formula/references), pages, block_ids}.
 청커는 text만 쓰고, paras는 평가·분석·추적용이다.
+2026-10-19부터 stage2.process가 이 결과(v4)를 preprocess.paragraphs.tidy로 한 번 더 묶어 v5를 저장한다(수식·코드는 문장 안으로, 목록·목차·참고문헌 한 문단 등).
 """
 import json
 import re

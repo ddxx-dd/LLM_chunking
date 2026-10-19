@@ -197,5 +197,48 @@ class TestLongBench(unittest.TestCase):
         self.assertFalse(longbench.is_script("Produced by David Brannan.\n\nThe Adventure of the Devil's Foot"))
 
 
+class TestParagraphsV5(unittest.TestCase):
+    """preprocess.paragraphs(v5 문단 정리): 규칙마다 작은 예."""
+
+    @staticmethod
+    def run_(items, fmt="pdf"):
+        from preprocess import paragraphs as P
+        out, _ = P.tidy([{"text": t, "kind": k, "pages": [1], "block_ids": [f"b{i}"]} for i, (t, k) in enumerate(items)], fmt)
+        return [(p["text"], p["kind"]) for p in out], out
+
+    def test_formula_joins_sentence(self):
+        got, out = self.run_([("The flux is given by", "para"), ("$$ v = 1 $$", "formula"), ("where v is the speed.", "para"),
+                              ("Next we show results.", "para")])
+        self.assertEqual(got, [("The flux is given by $$ v = 1 $$ where v is the speed.", "para"), ("Next we show results.", "para")])
+        self.assertEqual(out[0]["block_ids"], ["b0", "b1", "b2"])
+
+    def test_list_with_lead(self):
+        got, _ = self.run_([("The following may be specified:", "para"), ("recycled metal", "list"), ("low VOC finish", "list"), ("Refer to TR 01.", "para")])
+        self.assertEqual(got[0], ("The following may be specified:\nrecycled metal\nlow VOC finish", "list"))
+
+    def test_toc_lines(self):
+        got, _ = self.run_([("A.1. General. 3-47", "para"), ("A.2. Scope. 3-47", "para"), ("A.3. Terms. 3-48", "para"), ("Body text here.", "para")])
+        self.assertEqual(got[0], ("A.1. General. 3-47\nA.2. Scope. 3-47\nA.3. Terms. 3-48", "toc"))
+
+    def test_heading_attached(self):
+        got, _ = self.run_([("4. Discussion", "para"), ("The main purpose of this study was to establish a platform.", "para")])
+        self.assertEqual(got, [("4. Discussion\nThe main purpose of this study was to establish a platform.", "para")])
+
+    def test_broken_skips_caption(self):
+        got, _ = self.run_([("They are computed by running the files", "para"), ("Fig. 1. A plot.", "caption"), ("(which contain the functions) and more.", "para")])
+        self.assertEqual(got, [("They are computed by running the files (which contain the functions) and more.", "para"), ("Fig. 1. A plot.", "caption")])
+
+    def test_interleaved_refs_move_to_end_pdf_only(self):
+        body = [("Intro body sentence number %d that is long enough to count as body text here." % i, "para") for i in range(4)]
+        refs = [("T. D. Lee and C.-N. Yang, Parity, Phys. Rev. 104, 254 (1956).", "list"), ("C. S. Wu, E. Ambler, Test, Phys. Rev. 105, 1413 (1957).", "list"),
+                ("M. Kobayashi and T. Maskawa, CP violation, Phys. Rev. D 49, 652 (1973).", "list")]
+        items = body + [("The estimator is limited because the noise in each", "para")] + refs + [("redshift bin could be subtracted.", "para"), ("Conclusion - We built it.", "para")]
+        got, _ = self.run_(items, "pdf")
+        self.assertEqual(got[-1][1], "references")
+        self.assertIn("each redshift bin could be subtracted.", got[-3][0])
+        got_docx, _ = self.run_(items, "docx")
+        self.assertNotEqual(got_docx[-1][1], "references")
+
+
 if __name__ == "__main__":
     unittest.main()

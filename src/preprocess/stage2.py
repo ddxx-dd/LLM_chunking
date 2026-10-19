@@ -8,6 +8,7 @@
                                                         paras[{kind, pages, block_ids}], log(규칙별 적용 수)}. 형식은 preprocess/clean_text.py
       <out>/clean_text/<데이터셋>/<doc_id>.dropped.json  지운 블록과 규칙 이름(확인용)
       단위 만들기 = 아래 규칙(build_units), 마지막 정리 = clean_text.build(참고문헌 한 문단·번호, 수식 자기 문단, 참고문헌 모양 표 펴기 등)
+      → 문단 정리 v5 = paragraphs.tidy(수식·코드를 문장 안으로, 목록·목차·참고문헌 묶기, 단독 제목·끊긴 문단 잇기; 2026-10-19)
 
 적용 순서
   K1 한국어 가짜 띄어쓰기 지움(1차 fake_spaces) / C3 글꼴 글리프 이름 쓰레기 / 1 문자 정리(제어·PUA·대체 문자, NBSP, 폭 없는 문자,
@@ -848,6 +849,15 @@ def process(doc_id, ds, out, count_many):
     bad = [k for k, v in ok.items() if not v]
     if bad:
         raise AssertionError(f"{ds}:{doc_id} clean_text 검사 실패 {bad}")
+    from preprocess import paragraphs as P                    # v5 문단 정리(2026-10-19): 수식·목록·목차·참고문헌·제목·끊긴 문단
+    items = text.split("\n\n")
+    assert len(items) == len(paras), f"{ds}:{doc_id} 문단 수 불일치"
+    tidy, plog = P.tidy([{"text": t, **m} for t, m in zip(items, paras)], doc.get("fmt"))
+    c.update(plog)
+    new_text = "\n\n".join(p["text"] for p in tidy)
+    if Counter("".join(new_text.split())) != Counter("".join(text.split())):
+        raise AssertionError(f"{ds}:{doc_id} 문단 정리 뒤 글자 구성이 바뀜")
+    text, paras = new_text, [{k: v for k, v in p.items() if k != "text"} for p in tidy]
     rec = {"doc_id": doc["doc_id"], "dataset": ds, "lang": doc.get("lang"), "title": doc.get("title"), "fmt": doc.get("fmt"),
            "source": f"meta_text_v2/{ds}", "n_pages": doc.get("n_pages"), "n_paras": len(paras),
            "n_tokens": count_many([text])[0], "text": text, "paras": paras,

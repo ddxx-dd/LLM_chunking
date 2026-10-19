@@ -1,153 +1,89 @@
-"""advanced_semantic_chunker: LumberChunker(Duarte et al., 2024)의 틀에서 'LLM이 내용 변화 지점을 고르는 부분'만 코사인 유사도 판단으로 바꾼다.
+"""advanced_semantic_chunker: 문서 전체 최적 분할(Embed-KCPD 코사인 비용) + 문단 경계 보너스 + 크기 제약 + 제목 규칙.
 
-틀(LumberChunker 3.1절 그대로)
-  s = 문서 시작 단위
-  반복: G = s부터 단위를 더해 토큰 합이 θ를 넘을 때까지(θ를 넘게 만든 단위 포함)
-        G 안에서 첫 단위를 빼고 앞에서부터 보며, 처음으로 '분명한 변화'가 나타나는 단위 j에서 자른다(청크 = [s, j), s = j)
-        변화가 없으면 θ를 넘게 만든 단위 앞에서 자른다(그 단위부터 다시 시작). θ보다 큰 단위 하나는 혼자 청크가 된다.
-'분명한 변화' 판단(criterion)
-  maxmin  Max–Min semantic chunking(Kiss, Nagy, Szilágyi, Discover Computing 28:117, 2025)의 넣기 조건을 그대로 쓴다.
-          C = 현재 청크 [s, j), min_sim(C) = C 안 단위 쌍의 최소 코사인, max_sim(j, C) = 단위 j와 C 단위들의 최대 코사인
-          |C| = 1:  init_const · cos(j-1, j) > hard_thr 이면 이어짐
-          |C| ≥ 2:  max_sim(j, C) > max(c · min_sim(C) · sigmoid(|C|), hard_thr) 이면 이어짐
-          이어지지 않으면 = 분명한 변화. 기본값 c=0.9, init_const=1.5, hard_thr=0.6은 논문 권장값(BGE-base-en v1.5 기준)으로
-          bge-m3에 맞춘 값이 아니다(파일럿에서 정한다).
-  centroid_mean / centroid_std  AGENTS.md의 원래 구상(2026-10-12): 현재 청크 C의 중심 벡터(토큰 가중 평균, 길이 1) c와 단위 j를 비교한다.
-          sim_j = cos(c, e_j)  (= j와 앞 단위 각각의 유사도의 가중 평균 / ‖가중 평균 벡터‖)
-          청크 응집도: C의 각 단위 i를 '자기를 뺀 나머지'의 중심과 비교한 코사인 l_i(j도 중심에 들어가지 않았으니 같은 조건),
-          μ_C·σ_C = l_i의 토큰 가중 평균·표준편차
-          centroid_mean(후보 1):  sim_j < μ_C 이면 분명한 변화(파라미터 없음)
-          centroid_std(후보 2):   sim_j < μ_C − k·σ_C 이면 분명한 변화(k 기본 0.5 = TextTiling(Hearst 1997)의 μ − σ/2, Solbiati et al. 2021은 k=1)
-          |C| = 1이면 l_i가 없으므로 같은 식을 문서 안 이웃 단위 코사인 분포(평균 μ_adj, 표준편차 σ_adj)에 적용한다:
-          cos(e_s, e_j) < μ_adj − k·σ_adj 이면 분명한 변화(후보 1은 k=0). 중앙값을 쓰면 첫 단계의 절반이 무조건 잘려서 평균·표준편차로 맞췄다.
-이름: advanced_semantic = maxmin, advanced_semantic1 = centroid_mean, advanced_semantic2 = centroid_std (VARIANTS).
-단위(unit): 'sentence' = chunking.sentences.split_text(표·수식은 한 단위), 'para' = 빈 줄로 나눈 문단(θ보다 큰 문단은 그 문단의 문장들로).
-크기 θ는 bge-m3 토큰(count_tokens), 임베딩은 encode(길이 1 벡터, 코사인 = 내적).
+2026-10-17 파일럿(tests/chunking/out/compare_v2.md)에서 앞에서부터 판단하던 옛 판(LumberChunker 틀 + Max–Min / 중심 벡터)보다
+HotpotQA 패시지 경계·문서 안 검색이 나아서 이것으로 바꿨다(옛 판은 git 기록에 있다).
+
+단위: chunking.sentences.split_structured(문장, 표·수식은 한 단위) + 단위마다 앞 구분('\\n\\n' 문단 시작 / '\\n' 새 줄 / ' ')과 제목 여부
+점수(작을수록 좋음, 동적 계획법으로 문서 전체에서 최소인 자르기를 찾는다)
+  Σ_청크 흩어짐(청크) + β·(청크 수) − b·(문단 시작 자리에서 자른 수)
+  흩어짐([i, j)) = n·(1 − ‖평균 벡터‖²) = n − ‖Σe‖²/n   (n = 단위 수, e = 길이 1 임베딩, = 청크 안 Σ‖e − m‖²)
+      Embed-KCPD(arXiv 2601.18788)의 구간 비용(코사인 커널). 청크 안 모든 단위 쌍의 코사인이 높을수록 작다.
+  β: 자르기 한 번의 가격. 잘라서 줄어드는 흩어짐이 β보다 클 때만 자른다.
+  b = bonus_frac·β: 빈 줄 문단 경계에서 자르면 깎아 주는 값(0이면 순수 의미 분할, 절제 실험용)
+제약(어기면 큰 벌점 BIG): 청크 토큰 ≤ θ(θ보다 큰 단위 하나는 혼자 허용), 청크 토큰 ≥ min_tokens(가능한 한), heading_rule이면 제목 줄 바로 뒤에서 자르지 않음
+β 정하기: beta를 주면 그 값, 주지 않으면 평균 청크 토큰이 target에 가장 가까운 β를 문서마다 이분 탐색(라벨 없이 크기만 맞춘다)
+청크 글: 단위를 원래 앞 구분으로 다시 잇는다(문단·제목 줄 형식 유지). 크기 θ·target·min_tokens는 bge-m3 토큰(count_tokens).
 """
-import math
-
 import numpy as np
 
-from chunking.sentences import paragraphs, split_text
+from chunking.sentences import split_structured
 
-MAXMIN_DEFAULTS = {"c": 0.9, "init_const": 1.5, "hard_thr": 0.6}     # Kiss et al. 2025 권장값(확정 아님)
-EPS = 1e-6                                                              # 부동소수 오차 여유
-CENTROID_STD_K = 0.5                                                    # Hearst 1997 TextTiling의 μ − σ/2
-VARIANTS = {"advanced_semantic": "maxmin", "advanced_semantic1": "centroid_mean", "advanced_semantic2": "centroid_std"}
+BIG = 1e6
 
 
-def make_units(text, lang, unit, count_tokens, theta):
-    if unit == "sentence":
-        return split_text(text, lang)
-    if unit != "para":
-        raise ValueError(f"unit은 'sentence' 또는 'para': {unit!r}")
-    out = []
-    paras = paragraphs(text)
-    for p, n in zip(paras, count_tokens(paras)):
-        out.extend(split_text(p, lang) if n > theta else [p])
-    return out
+def segment(tokens, emb, beta, theta, min_tokens=0, para_start=None, bonus=0.0, heading=None):
+    """단위별 토큰 수·임베딩 → 청크 범위 [(i, j)] (j 미포함)."""
+    n = len(tokens)
+    tok = np.concatenate([[0], np.cumsum(tokens)]).astype(np.float64)
+    S = np.concatenate([np.zeros((1, emb.shape[1])), np.cumsum(emb.astype(np.float64), axis=0)])
+    best = np.full(n + 1, np.inf)
+    best[0] = 0.0
+    frm = np.zeros(n + 1, dtype=np.int64)
+    ps = np.zeros(n + 1) if para_start is None else np.concatenate([np.asarray(para_start, float), [1.0]])
+    hd = np.zeros(n + 1, bool) if heading is None else np.concatenate([[False], np.asarray(heading, bool)])  # hd[i]: 단위 i-1이 제목
+    lo = 0
+    for j in range(1, n + 1):
+        while tok[j] - tok[lo] > theta and lo < j - 1:   # θ 안에 드는 시작점만(단위 하나는 θ보다 커도 허용)
+            lo += 1
+        i = np.arange(lo, j)
+        cnt = j - i
+        v = S[j] - S[i]
+        cost = cnt - np.einsum("ij,ij->i", v, v) / cnt
+        pen = np.where(tok[j] - tok[i] < min_tokens, BIG, 0.0) + np.where(hd[i] & (i > 0), BIG, 0.0)
+        tot = best[i] + cost + beta - bonus * ps[i] * (i > 0) + pen
+        k = int(np.argmin(tot))
+        best[j], frm[j] = tot[k], i[k]
+    out, j = [], n
+    while j > 0:
+        out.append((int(frm[j]), j))
+        j = int(frm[j])
+    return out[::-1]
 
 
-class MaxMin:
-    """Max–Min 넣기 조건. 청크가 바뀔 때 reset, 단위를 넣을 때 add."""
-
-    def __init__(self, emb, c=MAXMIN_DEFAULTS["c"], init_const=MAXMIN_DEFAULTS["init_const"], hard_thr=MAXMIN_DEFAULTS["hard_thr"]):
-        self.emb, self.c, self.init_const, self.hard_thr = emb, c, init_const, hard_thr
-
-    def reset(self, s):
-        self.members, self.min_sim = [s], None
-
-    def fits(self, j):
-        sims = self.emb[self.members] @ self.emb[j]
-        if len(self.members) == 1:
-            return self.init_const * float(sims[0]) > self.hard_thr
-        thr = max(self.c * self.min_sim * (1 / (1 + math.exp(-len(self.members)))), self.hard_thr)
-        return float(sims.max()) > thr
-
-    def add(self, j):
-        sims = self.emb[self.members] @ self.emb[j]
-        m = float(sims.min())
-        self.min_sim = m if self.min_sim is None else min(self.min_sim, m)
-        self.members.append(j)
+def segment_target(tokens, emb, theta, target, min_tokens=0, para_start=None, bonus_frac=0.0, heading=None, iters=18):
+    """평균 청크 토큰이 target에 가장 가까운 β를 이분 탐색(β가 크면 청크가 커진다). → (범위, 평균 토큰, β)."""
+    lo, hi, best = 1e-4, 50.0, None
+    for _ in range(iters):
+        beta = (lo * hi) ** 0.5
+        r = segment(tokens, emb, beta, theta, min_tokens, para_start, bonus_frac * beta, heading)
+        avg = sum(tokens) / len(r)
+        if best is None or abs(avg - target) < abs(best[1] - target):
+            best = (r, avg, beta)
+        if avg < target:
+            lo = beta
+        else:
+            hi = beta
+    return best
 
 
-class Centroid:
-    """중심 벡터 판단(centroid_mean: k=0, centroid_std: k>0). 기존 단위는 자기를 뺀 중심과 비교해 응집도를 잰다."""
-
-    def __init__(self, emb, tokens, k=0.0):
-        self.emb, self.w, self.k = emb, np.asarray(tokens, dtype=np.float64), k
-        adj = np.sum(emb[:-1] * emb[1:], axis=1).astype(np.float64) if len(emb) > 1 else np.ones(1)
-        self.first_ref = float(adj.mean() - k * adj.std())     # |C| = 1일 때 기준: 문서 안 이웃 단위 코사인 분포에 같은 식
-
-    def reset(self, s):
-        self.members = [s]
-        self.m = self.w[s] * self.emb[s].astype(np.float64)
-
-    @staticmethod
-    def _cos(v, e):
-        n = np.linalg.norm(v)
-        return float(v @ e / n) if n > 0 else 0.0
-
-    def fits(self, j):
-        e = self.emb[j].astype(np.float64)
-        if len(self.members) == 1:
-            return float(self.emb[self.members[0]] @ self.emb[j]) >= self.first_ref - EPS
-        sim = self._cos(self.m, e)
-        loo = np.array([self._cos(self.m - self.w[i] * self.emb[i], self.emb[i].astype(np.float64)) for i in self.members])
-        w = self.w[self.members]
-        mu = float(np.average(loo, weights=w))
-        sd = float(np.sqrt(np.average((loo - mu) ** 2, weights=w)))
-        return sim >= mu - self.k * sd - EPS
-
-    def add(self, j):
-        self.members.append(j)
-        self.m = self.m + self.w[j] * self.emb[j].astype(np.float64)
-
-
-def make_judge(criterion, tokens, emb, params):
-    if criterion == "maxmin":
-        return MaxMin(emb, **params)
-    if criterion == "centroid_mean":
-        return Centroid(emb, tokens, k=0.0)
-    if criterion == "centroid_std":
-        return Centroid(emb, tokens, k=params.get("k", CENTROID_STD_K))
-    raise ValueError(f"criterion은 maxmin / centroid_mean / centroid_std: {criterion!r}")
-
-
-def chunk_ranges(tokens, emb, theta, criterion="maxmin", **params):
-    """단위별 토큰 수·임베딩 → 청크 단위 범위 [(i, j)] (j 미포함)."""
-    criterion = VARIANTS.get(criterion, criterion)
-    judge = make_judge(criterion, tokens, emb, params)
-    n, s, out = len(tokens), 0, []
-    while s < n:
-        e, tot = s, 0
-        while e < n and tot <= theta:              # G = [s, e): θ를 넘게 만든 단위 e-1까지
-            tot += tokens[e]
-            e += 1
-        over = tot > theta
-        judge.reset(s)
-        cut = None
-        for j in range(s + 1, e - 1 if over else e):   # θ를 넘게 만든 단위는 '변화 없음'일 때 어차피 다음 청크 시작
-            if not judge.fits(j):
-                cut = j
-                break
-            judge.add(j)
-        if cut is None:
-            cut = (e - 1 if e - 1 > s else e) if over else e
-        out.append((s, cut))
-        s = cut
-    return out
-
-
-def chunk(text, encode, count_tokens, theta, lang="en", unit="sentence", criterion="maxmin", return_ranges=False, **params):
+def chunk(text, encode, count_tokens, theta, target=None, beta=None, lang="en", min_tokens=0, bonus_frac=0.5,
+          heading_rule=True, return_ranges=False):
     """텍스트 → 청크 문자열 목록(return_ranges면 (청크 목록, 단위 목록, 범위 목록)).
-    encode: 글 목록 → 길이 1 벡터, count_tokens: 글 목록 → 토큰 수 목록, theta: 그룹 토큰 상한."""
-    units = make_units(text, lang, unit, count_tokens, theta)
-    if not units:
+    encode: 글 목록 → 길이 1 벡터, count_tokens: 글 목록 → 토큰 수 목록, theta: 청크 토큰 상한, target 또는 beta 중 하나."""
+    if (target is None) == (beta is None):
+        raise ValueError("target(평균 청크 토큰)과 beta 중 하나만 준다")
+    items = split_structured(text, lang)
+    if not items:
         return ([], [], []) if return_ranges else []
+    units = [u for u, _, _ in items]
+    seps = [s for _, s, _ in items]
+    para_start = [s == "\n\n" for s in seps]
+    heading = [h for _, _, h in items] if heading_rule else None
     tokens = count_tokens(units)
     emb = np.asarray(encode(units), dtype=np.float32)
-    ranges = chunk_ranges(tokens, emb, theta, criterion, **params)
-    sep = " " if unit == "sentence" else "\n\n"
-    chunks = [sep.join(units[i:j]) for i, j in ranges]
+    if beta is None:
+        ranges = segment_target(tokens, emb, theta, target, min_tokens, para_start, bonus_frac, heading)[0]
+    else:
+        ranges = segment(tokens, emb, beta, theta, min_tokens, para_start, bonus_frac * beta, heading)
+    chunks = [units[i] + "".join(seps[k] + units[k] for k in range(i + 1, j)) for i, j in ranges]
     return (chunks, units, ranges) if return_ranges else chunks

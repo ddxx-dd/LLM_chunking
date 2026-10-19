@@ -5,11 +5,11 @@
 ## 1. 목표
 
 긴 문서·자막을 어떻게 청킹하느냐가 **검색·생성(요약) 품질**과 **번역 품질**에 어떤 영향을 주는지 같은 조건에서 비교한다.
-비교 방식은 LumberChunker(Duarte et al., 2024, `papers/` 참고)를 따른다.
+비교 방식(검색 지표·문서 안 검색 과제)은 LumberChunker(Duarte et al., 2024, `papers/` 참고)를 참고한다.
 
 - 비교 대상: LangChain 기준 청커 3종(fixed, recursive, semantic) + 우리가 만드는 `advanced_semantic_chunker`
-- **모든 청커는 같은 깨끗한 텍스트를 입력으로 받는다**(3절 입력 규칙). 청커별 구조 규칙은 쓰지 않고 순수 분할 알고리즘만 비교한다.
-- `advanced_semantic_chunker`: LumberChunker의 틀을 그대로 쓰되, **"어디서 내용이 바뀌는가"를 LLM이 판단하던 부분을 코사인 유사도 기반 알고리즘으로 대체**한다.
+- **모든 청커는 같은 깨끗한 텍스트를 입력으로 받는다**(3절 입력 규칙). 청커 밖에서 만든 구조 정보(제목 계층·메타데이터)는 쓰지 않는다. advanced_semantic_chunker는 텍스트 안의 빈 줄·줄바꿈만 쓴다(recursive가 쓰는 것과 같은 정보). 이 효과는 b = 0 절제 실험으로 따로 보고한다.
+- `advanced_semantic_chunker`: 문장 임베딩의 코사인 유사도로 **문서 전체에서 청크 안 흩어짐이 가장 작은 자르기를 동적 계획법으로 찾는다**(Embed-KCPD 비용 + 문단 경계 보너스 + 크기 제약). 2026-10-17 LumberChunker 틀(앞에서부터 처음 변화에서 자름)에서 바꿨다.
 
 ## 2. 반드시 지킬 것
 
@@ -29,7 +29,7 @@
 | `fixed` | LangChain `CharacterTextSplitter` | chunk size |
 | `recursive` | LangChain `RecursiveCharacterTextSplitter` | chunk size |
 | `semantic` | LangChain `SemanticChunker`(`langchain_experimental`) | 경계 백분위 |
-| `advanced_semantic_chunker` | 우리 구현 | **θ**(그룹 토큰 상한, LumberChunker의 θ) |
+| `advanced_semantic_chunker` | 우리 구현 | **target**(평균 청크 토큰, β 이분 탐색) 또는 β, θ(상한), min_tokens(하한) |
 
 - `header`(MarkdownHeaderTextSplitter)는 **제외**한다(2026-10-12): 제목 인식 품질이 고르지 않고(vectara 계층 오류, allganize는 모든 제목이 같은 수준, docx 소제목이 문단으로 들어감) LongBench에는 제목이 없다. 구조 기반 청킹과의 비교가 빠진다는 점은 한계로 적는다.
 - LumberChunker처럼 문단 단위 기준선(문단 하나 = 청크 하나)을 추가할지는 A3에서 정한다.
@@ -38,56 +38,46 @@
 
 전처리는 `src/preprocess/`: 1차 `stage1`이 원본 → Docling 변환(`data/docling_json`) → 블록 + 위치·줄 정보(`data/meta_text_v2`), 2차 `stage2`가 정리 규칙으로 단위를 만든 뒤 `clean_text.build`로 **문서 하나 = 긴 텍스트 하나**인 `data/clean_text/<데이터셋>/<doc_id>.json`을 만든다(2026-10-17 합침; 옛 `processed_para`·`processed_sen`은 지움). 규칙을 바꾸면 Docling은 다시 돌리지 않고 `stage1 --build-only`와 `stage2`만 다시 돌린다.
 
-형식(v4, Vectara 공식 코퍼스 = Open RAG Benchmark의 Mistral OCR 텍스트와 비교해 정함; 비교 도구 `tests/clean_text/ref_compare.py`: 본문 재현 98.4%, 잡음 2.0%, 순서 98.2%):
+형식(v5, 2026-10-19): v4(Vectara 공식 코퍼스 = Open RAG Benchmark의 Mistral OCR 텍스트와 비교해 정함, 비교 도구 `tests/clean_text/ref_compare.py`)를 만든 뒤
+`src/preprocess/paragraphs.py`가 문단을 의미상 다시 묶는다(사용자 결정: 공식 형식보다 문단을 깔끔하게 나누는 것을 우선). 공식 코퍼스 대비 본문 재현 98.4%, 잡음 2.1%,
+순서 98.2%, 문단 시작 재현·정밀 64.3%·79.4%(v4 74.0%·78.9%, 수식·목록을 합쳐서 예상된 하락). 시험 구현·규칙별 검사는 `tests/clean_text/v5.py`, `tests/clean_text/out/v5/`.
 
 | 항목 | 형식 |
 |---|---|
-| 문단(블록) 사이 | 빈 줄 `\n\n` |
-| 제목과 본문 사이 | `\n`(마크다운 표시 없음, 제목은 다음 블록 앞에 붙임) |
-| 짧은 조각을 붙인 자리 | 공백 |
+| 문단 사이 | 빈 줄 `\n\n` |
+| 제목과 본문 사이 | `\n`(마크다운 표시 없음). 단독 제목·장 번호 문단도 다음 본문 앞에 `\n`으로 붙임 |
+| 짧은 조각을 붙인 자리, 끊긴 문단을 이은 자리 | 공백(앞 본문이 문장 끝 없이 끝나고 다음 본문이 소문자·`(`로 시작하면 이음, 사이 캡션·각주·표는 이은 문단 뒤로) |
 | 원문 줄바꿈(표 행, Docling 블록 안) | 유지 |
 | 논문 제목·저자 | 본문 앞 |
-| 참고문헌 | 남김. 연속된 항목을 `\n`으로 이은 한 문단 + Docling 목록 표지(`[12]`) |
-| 디스플레이 수식 | `$$ LaTeX $$`, 자기 문단(Q3 고장 난 수식은 원본 글자 층) |
+| 디스플레이 수식·코드 | `$$ LaTeX $$`를 앞 문장 뒤에 **공백으로** 붙임(문장 안에 들어간 것). 뒤가 이어지는 모양(소문자, where …)이면 뒤 문장도 공백으로 |
+| 목록 | 도입 문장(`:` `—` …) + 연속 항목(글자로 쓴 조항 번호 `(a)` `(i)` `(2)` 포함)을 `\n`으로 이은 한 문단. 윗단계 글머리(□ Ⅰ. 1. Part …)에서 새 묶음, 200낱말 상한 |
+| 목차 | 쪽 번호로 끝나는 연속 줄을 `\n`으로 이은 한 문단(kind toc) |
+| 참고문헌 | 남김. 연속된 항목을 `\n`으로 이은 한 문단 + Docling 목록 표지(`[12]`). 제목 없는 참고문헌도 묶고, pdf 2단 배치로 본문 사이에 끼어든 묶음은 문서 끝으로 |
 | 표 | 본문 안 마크다운, 캡션과 한 블록. 참고문헌 영역의 참고문헌 모양 표는 항목 줄로 폄 |
 | 그림 캡션 | 남김(원래 위치). 그림 안 글자는 지움 |
 | 각주 | 문서 끝 |
 
-파일: `{doc_id, dataset, lang, title, fmt, source, n_pages, n_paras, n_tokens, text, paras[{kind, pages, block_ids}], log}`, 지운 블록은 `<doc_id>.dropped.json`. `paras`는 `text`를 빈 줄로 나눈 문단과 순서대로 대응하고 평가·추적용이다. **청커는 `text`만 쓴다.** 문장이 필요한 청커(semantic, advanced_semantic_chunker)는 같은 공용 문장 함수로 `text`를 나눈다(`src/preprocess/sentences.py`의 함수: 영어 nltk + 학술 약어 + 보정, 한국어 Kiwi + 구조 표시; 청커 쪽 공용 함수는 A3에서 만든다). LongBench(HotpotQA·NarrativeQA 책 14편)는 clean_text를 만들지 않고 `src/preprocess/longbench.py`가 원본 jsonl의 context를 그대로 청커 입력으로, input·answers를 질문·정답으로 읽는다(GovReport는 2026-10-17 삭제).
+파일: `{doc_id, dataset, lang, title, fmt, source, n_pages, n_paras, n_tokens, text, paras[{kind, pages, block_ids}], log}`, 지운 블록은 `<doc_id>.dropped.json`. `paras`는 `text`를 빈 줄로 나눈 문단과 순서대로 대응하고 평가·추적용이다(kind: para/list/toc/caption/footnote/table/heading/references, 수식·코드는 v5에서 문단 안으로 들어감). **청커는 `text`만 쓴다.** 문장이 필요한 청커(semantic, advanced_semantic_chunker)는 같은 공용 문장 함수로 `text`를 나눈다(`src/preprocess/sentences.py`의 함수: 영어 nltk + 학술 약어 + 보정, 한국어 Kiwi + 구조 표시; 청커 쪽 공용 함수는 A3에서 만든다). LongBench(HotpotQA·NarrativeQA 책 14편)는 clean_text를 만들지 않고 `src/preprocess/longbench.py`가 원본 jsonl의 context를 그대로 청커 입력으로, input·answers를 질문·정답으로 읽는다(GovReport는 2026-10-17 삭제).
 
-### LumberChunker 원본 동작 (논문 3.1절, 그림 1, 부록 B 프롬프트)
-
-1. 문서를 문단 단위로 나누고 번호(ID)를 붙인다.
-2. 시작 문단부터 이어 붙여 토큰 수가 θ를 넘는 순간까지 그룹 Gᵢ를 만든다(θ를 넘게 만든 문단 포함).
-3. LLM에게 묻는다: "**첫 문단을 제외하고**, 내용이 **앞 문단들과 비교해** 분명히 바뀌는 **첫 번째** 문단의 ID". 프롬프트는 그룹을 너무 길게 만들지 말라고도 지시한다.
-4. 그 ID 앞까지가 청크, 그 ID가 다음 그룹의 시작. 문서 끝까지 반복한다.
-- θ ∈ [450, 1000] 중 550이 가장 좋았고, 이때 평균 청크는 334토큰(θ보다 약 40% 작음, 표 9)이었다.
-
-### `advanced_semantic_chunker`: LLM 판단만 코사인 유사도 알고리즘으로 대체
+### `advanced_semantic_chunker` (`src/chunking/advanced_semantic.py`, 2026-10-17)
 
 ```
-s = 문서 시작 단위
-반복:
-  G = s부터 단위를 더해 토큰 합이 θ를 넘을 때까지                     ← 그룹 길이는 θ로 통제
-  for j = s+1 … G의 끝:                                              ← 첫 단위는 후보에서 제외
-      sim_j = cos( 현재 청크 [s, j)의 중심 벡터 , 단위 j )             ← 바로 앞 하나가 아니라 앞 단위 전체와 비교
-      if '분명한 변화' 기준을 만족: c = j; break                       ← 처음 변화가 나타나는 곳에서 자름
-  변화가 없으면: c = θ를 넘게 만든 단위 (그 앞까지가 청크, 그 단위부터 재시작)
-  청크 = [s, c),  s = c                                              ← 자른 곳에서 다시 시작
+단위      chunking.sentences.split_structured: 문장(표·수식은 한 단위) + 앞 구분(\n\n / \n / 공백) + 제목 여부
+점수      Σ_청크 흩어짐 + β·(청크 수) − b·(빈 줄 문단 시작에서 자른 수)          ← 작을수록 좋음
+          흩어짐([i, j)) = n·(1 − ‖평균 벡터‖²) = n − ‖Σe‖²/n                  ← Embed-KCPD(arXiv 2601.18788) 코사인 커널 비용
+제약      min_tokens ≤ 청크 토큰 ≤ θ (θ보다 큰 단위 하나는 혼자 허용), 제목 줄 바로 뒤에서 자르지 않음
+탐색      동적 계획법 best[j] = min_i best[i] + 흩어짐([i, j)) + β − b·[i가 문단 시작]   (i는 θ 안에 드는 범위만)
+β         target(평균 청크 토큰)에 맞도록 문서마다 이분 탐색(라벨 없음) 또는 고정값, b = bonus_frac·β (기본 0.5)
+청크 글   단위를 원래 앞 구분으로 다시 이음(문단·제목 줄 형식 유지)
 ```
 
 | 요소 | 결정 |
 |---|---|
-| 단위 | **문단 또는 문장(옵션 `unit`)**. 어느 쪽이 나은지는 파일럿에서 비교해 정한다 |
-| 비교 대상 | 현재 청크 전체의 중심 벡터(토큰 가중 평균) |
-| 자르는 곳 | 기준을 처음 만족하는 단위 |
-| 그룹 길이 | θ로 통제. 변화가 없으면 그룹 끝(θ를 넘게 만든 단위 앞)에서 절단 → 청크는 θ를 넘지 않는다(θ보다 큰 단일 문단은 문장으로 나눈다) |
-| '분명한 변화' 기준 | 세 가지를 구현해 파일럿에서 고른다(2026-10-17): `advanced_semantic` = Max–Min(Kiss et al. 2025, 새 단위의 청크 내 최대 유사도 > max(c·청크 내 최소 쌍 유사도·sigmoid(크기), hard_thr)), `advanced_semantic1` = 중심 벡터 유사도 < 청크 응집도 평균 μ_C(자기를 뺀 중심과의 유사도), `advanced_semantic2` = 중심 벡터 유사도 < μ_C − k·σ_C(k=0.5, TextTiling). 단위 하나일 때는 문서 이웃 유사도 분포에 같은 식. 값은 정답 경계(HotpotQA 패시지, vectara 절)로 고른다 |
-| 청크 초반 오판으로 생기는 아주 작은 청크 | 나중에 다룬다(파일럿에서 실제로 문제인지 먼저 확인) |
-
-- θ는 개발용 문서에서 격자로 찾는다. 처음 변화에서 자르므로 청크 크기는 θ보다 '분명한 변화' 기준이 더 크게 좌우하고, θ는 사실상 상한이다.
-- 단위(`unit`): 위 '깨끗한 텍스트'의 문단 또는 문장. θ보다 큰 문단은 문단 단위에서도 문장으로 나눈다(표는 예외로 그대로 한 단위). 구조 규칙(제목 가산점 등)은 쓰지 않는다.
-- 검증 후보: 같은 θ로 원본 LumberChunker(Gemma, 논문 프롬프트)를 몇 편 돌려 절단 위치 일치도를 재는 방법이 있다(선택).
+| 판단 방식 | 문서 전체 최적화. 앞에서부터 처음 변화에서 자르던 옛 판(LumberChunker 틀 + Max–Min / 중심 벡터 μ−0.5σ)은 2026-10-17 파일럿에서 HotpotQA 패시지 경계 재현율 0.27~0.31(새 판 b=0은 0.75), 문서 안 검색도 새 판 이하라서 지웠다(`tests/chunking/out/compare_v2_first_run.md`, 코드는 git 기록) |
+| 구조 사용 | 빈 줄 문단 경계 보너스 b와 제목 뒤 절단 금지. **b = 0·제목 규칙 없음 판을 절제 실험으로 함께 보고**한다. HotpotQA는 패시지 사이에 빈 줄이 없어(패시지 안 절 사이에만 있음) 보너스가 패시지 경계 재현율을 0.75 → 0.29로 낮췄다(한계로 적음) |
+| 크기 | 같은 조건 비교를 위해 target으로 평균 크기를 기준 청커와 맞춘다. 값(target, θ, min_tokens, bonus_frac)은 개발 문서에서 정하고 실제 실행 전 사용자 확인 |
+| 파일럿 임시 값 | θ 550, min_tokens 100, target 200, bonus_frac 0.5 |
+| 계산량 | 150편(vectara 50·docx 40·HotpotQA 60)에 약 130초(β 이분 탐색 18회 포함, 단위 임베딩 제외) |
 
 ## 4. 파이프라인
 
@@ -95,7 +85,7 @@ s = 문서 시작 단위
 
 ```
 원본 → 전처리(Docling → data/meta_text_v2 → data/clean_text: 문서 하나 = 긴 텍스트 하나)
-     → advanced_semantic_chunker의 최적 θ 찾기(개발 문서) + 청커별 청킹
+     → advanced_semantic_chunker의 크기·보너스 값 찾기(개발 문서) + 청커별 청킹
      → 임베딩(bge-m3 fp16) → FAISS 정확 검색 → top-k
      → 검색 품질 측정 + top-k를 넣은 생성(질의응답·요약) 품질 측정 → 지표화
 ```
@@ -137,7 +127,7 @@ srt → 전처리(큐 + 타임스탬프) → 청커별 청킹 → 청크 단위 
 | A3 | 청킹: fixed → recursive → semantic → advanced_semantic_chunker(파일럿) |
 | A4 | 인덱싱: 청크 → 임베딩 → FAISS, 캐시 |
 | A5 | QA 세트(docx는 Claude 생성 + Gemma 검증) → 지표를 하나씩 추가 |
-| A6 | θ 튜닝 → 평가 실행 → 분석 |
+| A6 | 크기·파라미터 튜닝(개발 문서) → 평가 실행 → 분석 |
 | B1–B6 | srt: 점검 → 청킹 → 번역 → 재병합·정렬 → 평가 → 실험 (A4 이후 시작) |
 | Z | README(설치·실행·재현), 지표 정의서, 트러블슈팅, 한계 |
 
@@ -154,7 +144,7 @@ src/
     fixed.py                      LangChain CharacterTextSplitter, 글자 수(기본 separator='' = 순수 고정 길이)
     recursive.py                  LangChain RecursiveCharacterTextSplitter 기본 그대로(글자 수)
     semantic.py                   LangChain SemanticChunker 기본 그대로, 문장 분리만 sentences.split_text
-    advanced_semantic.py          LumberChunker 틀 + 판단식 3종(advanced_semantic = Max–Min, advanced_semantic1·2 = 중심 벡터 후보 1·2) → 단위 범위 [(i, j)], θ는 bge-m3 토큰
+    advanced_semantic.py          문서 전체 동적 계획법(KCPD 코사인 비용 + 문단 보너스 + θ·min 제약 + 제목 규칙), β는 target 크기로 이분 탐색, 크기는 bge-m3 토큰
     embeddings.py                 bge-m3 encode, LangChain Embeddings 감싸기
     sizectl/                      srt 원본 min/max 엔진 → 단위 번호 범위 (옛 코드 이식, 수정 없이)
 
@@ -220,8 +210,7 @@ source env.sh                                   # HF 캐시·PYTHONPATH 고정, 
 
 ## 11. 미결정 사항
 
-- advanced_semantic_chunker의 '분명한 변화' 기준(논문 조사와 함께 개발)과 θ 격자
-- advanced_semantic_chunker의 단위: 문단 vs 문장(파일럿 비교)
+- advanced_semantic_chunker의 target·θ·min_tokens·bonus_frac(개발 문서), 문단 보너스 자리(빈 줄 vs 제목 줄 앞)
 - 청크 초반 오판으로 생기는 작은 청크 대책(필요할 때)
 - 기준 청커의 크기 값(공통 기본값으로 둘지, 같은 튜닝 예산을 줄지), 문단 단위 기준선 추가 여부(A3)
 - 제목처럼 보이는 짧은 줄까지 붙일지(2안, A2-2 통계 후), 문장 나누기 도구(A2-3 검증 후)

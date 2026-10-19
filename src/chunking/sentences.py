@@ -1,4 +1,5 @@
 """청커 공용 문장 분리: 문서 텍스트 하나 → 단위 목록. semantic과 advanced_semantic만 쓴다(fixed·recursive는 텍스트를 그대로 받는다).
+advanced_semantic은 split_structured로 문단 시작·제목 정보도 함께 받는다.
 
 입력은 데이터셋마다 원래 텍스트 그대로다: pdf·docx는 data/clean_text의 text, LongBench는 원본 context.
   1 문단: 빈 줄('\\n\\n')은 항상 문단 경계(라이브러리는 빈 줄을 공백으로 보고 문단을 넘어 문장을 잇는다)
@@ -55,6 +56,25 @@ def split_units(text, lang="en"):
         else:
             for g in lines(p):
                 out.extend(("sentence", s) for s in split(g, lang))
+    return out
+
+
+def split_structured(text, lang="en"):
+    """텍스트 → [(글, 앞 구분, 제목)] (단위는 split_text와 같다). advanced_semantic이 쓴다.
+    앞 구분: 원문에서 이 단위 앞에 있던 구분('\n\n' = 문단 시작, '\n' = 문단 안 새 줄, ' ' = 같은 줄, 첫 단위는 '').
+    제목: 문단의 첫 줄이고 뒤에 줄이 더 있으며, 12낱말 이하이고 . ! ? 로 끝나지 않는 줄의 첫 단위(절 제목, 'Passage 1:' 등)."""
+    out = []
+    for p in paragraphs(text):
+        if is_table(p) or is_formula(p):
+            out.append((p, "\n\n", False))
+            continue
+        gs = lines(p)
+        for gi, g in enumerate(gs):
+            head = gi < len(gs) - 1 and len(g.split()) <= 12 and not re.search(r"[.!?]\s*$", g)
+            for k, s in enumerate(split(g, lang)):
+                out.append((s, ("\n\n" if gi == 0 else "\n") if k == 0 else " ", head and k == 0))
+    if out:
+        out[0] = (out[0][0], "", out[0][2])
     return out
 
 

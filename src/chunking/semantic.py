@@ -8,8 +8,10 @@ from chunking.embeddings import as_langchain
 from chunking.sentences import split_text
 
 
-def chunk(text, encode, lang="en", breakpoint_threshold_type="percentile", breakpoint_threshold_amount=None, buffer_size=1):
-    """텍스트 → 청크 문자열 목록. encode: 글 목록 → 길이 1 벡터(chunking.embeddings)."""
+def chunk(text, encode, lang="en", breakpoint_threshold_type="percentile", breakpoint_threshold_amount=None, buffer_size=1,
+          number_of_chunks=None):
+    """텍스트 → 청크 문자열 목록. encode: 글 목록 → 길이 1 벡터(chunking.embeddings).
+    number_of_chunks: LangChain 기본 옵션. 주면 청크 수가 대략 이 값이 되도록 백분위를 정한다(크기 맞춘 비교용)."""
     from langchain_experimental.text_splitter import SemanticChunker
 
     class _Chunker(SemanticChunker):
@@ -17,5 +19,5 @@ def chunk(text, encode, lang="en", breakpoint_threshold_type="percentile", break
             return split_text(t, lang) or [t]
 
     sp = _Chunker(as_langchain(encode), buffer_size=buffer_size, breakpoint_threshold_type=breakpoint_threshold_type,
-                  breakpoint_threshold_amount=breakpoint_threshold_amount)
+                  breakpoint_threshold_amount=breakpoint_threshold_amount, number_of_chunks=number_of_chunks)
     return sp.split_text(text)
