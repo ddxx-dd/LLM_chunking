@@ -16,15 +16,17 @@
            이하 한 줄(문장 끝 기호 없음, 날짜·쪽 번호 끝·이메일·URL·=·Figure/Table·소속 기관·글자 60% 미만 제외)을 뒤 본문·목록 앞에 '\\n'으로(연달아 있으면 모두)
   broken   끊긴 문단: 앞 본문(3낱말 이상)이 문장 끝 없이 끝나고 다음 본문(사이 캡션·각주·표는 건너뜀)이 소문자나 '('로 시작하면 공백으로 잇고,
            건너뛴 것은 이은 문단 뒤에 둔다('(a)' 조항 번호, '(단위' '(Table' '(Fig' '(그림' '(표' 등은 제외)
+  ref_items (v6, 2026-10-26) 참고문헌 문단을 항목마다 문단으로(연도 있는 줄이 50% 미만인 문단은 보호해 나누지 않음, 쪼개진 조각은 앞 항목에
+           공백으로, 참고문헌 제목은 첫 항목 앞에 '\n'). 전수 검사 결과 tests/clean_text/out/refs_split.md
 글자는 지우지 않는다: 공백을 뺀 글자 구성이 그대로이고, 순서는 refs 이동만 바뀐다(stage2가 검사).
 문단 = {"text", "kind", 그 밖의 목록 값(pages, block_ids …)}: 합칠 때 목록 값은 이어 붙인다(pages는 겹치지 않게).
 """
 import re
 from collections import Counter
 
-from preprocess.stage2 import REF_START, REF_STRICT, YEAR     # stage2는 이 모듈을 process 안에서 불러 순환 import가 없다
+from preprocess.stage2 import REF_START, REF_STRICT, REFS, YEAR     # stage2는 이 모듈을 process 안에서 불러 순환 import가 없다
 
-RULES = ("toc", "refs", "lists", "formula", "heading", "broken")
+RULES = ("toc", "refs", "lists", "formula", "heading", "broken", "ref_items")
 SKIP = ("caption", "footnote", "table")
 SENT_END = re.compile(r"[.!?:;)\]\"'”’…。]\s*$")
 
@@ -294,10 +296,57 @@ def rule_broken(paras, fmt):
     return out
 
 
-FUNCS = {"toc": rule_toc, "refs": rule_refs, "lists": rule_lists, "formula": rule_formula, "heading": rule_heading, "broken": rule_broken}
+# ---------- ref_items (v6, 2026-10-26 확정; 전수 검사 결과 tests/clean_text/out/refs_split.md) ----------
+REF_PROTECT, REF_FRAG_WORDS, REF_TINY = 0.5, 12, 4
+REF_MARK = re.compile(r"^\s*(\[\d+[a-z]?\]|\d{1,3}[a-z]?\.\s|\d{1,3}\s+[A-Z*]|(19|20)\d\d[a-z]?\s+[A-Z*]|\*\s*[A-Z])")
+REF_FRAG_HEAD = re.compile(r"^\s*([a-z(\d]|doi|DOI|https?:|www\.)")
+REF_HEAD = re.compile(r"^\s*(\d+\.?\s*)?(references?|bibliography|reference list|daftar pustaka)\s*:?\s*$", re.I)
 
 
-def tidy(paras, fmt, upto="broken"):
+def _ref_fragment(line):
+    """참고문헌 항목의 쪼개진 조각(앞 항목에 붙일 줄): 항목 시작 모양(REF_START, '[12]' '12.' '12 Name' '2024 *Name' '*Name')이 아니면서
+    연도가 없거나, 4낱말 이하이거나, 12낱말 이하이고 소문자·숫자·'('·doi·http로 시작('61(2):126-32. doi: …', 'York: Plenum Press, 1991.')."""
+    if REF_START.match(line) or REF_MARK.match(line):
+        return False
+    n = len(line.split())
+    return not YEAR.search(line) or n <= REF_TINY or (n <= REF_FRAG_WORDS and bool(REF_FRAG_HEAD.match(line)))
+
+
+def rule_ref_items(paras, fmt):
+    """참고문헌 문단(항목을 '\\n'으로 이은 한 문단)을 항목마다 문단으로. 거대 문단의 주원인(vectara 700토큰 초과 문단의 43%)을 없앤다.
+    보호: 30글자 넘는 줄 중 연도가 있는 줄이 50% 미만이면 나누지 않음(참고문헌 영역에 끌려 들어온 본문 - docx 실험 절차·용어 정의,
+    vectara 부록·그림 설명·저자 주소). 첫 줄이 참고문헌 제목이면 첫 항목 앞에 '\\n'(제목 규칙과 같은 모양). 쪼개진 조각은 앞 항목에 공백
+    (조각이 따로 문단이 되면 bge-m3 코사인이 낮아 lumber에 가짜 경계가 생긴다: 문장 두 조각 0.50~0.53 < 이웃 문단 0.63)."""
+    out = []
+    for p in paras:
+        if p["kind"] != "references" or "\n" not in p["text"]:
+            out.append(p)
+            continue
+        L = [l for l in p["text"].split("\n") if len(l.strip()) > 30]
+        if not L or sum(bool(YEAR.search(l)) for l in L) < REF_PROTECT * len(L):
+            out.append(p)
+            continue
+        lines = [l for l in p["text"].split("\n") if l.strip()]
+        head = [lines.pop(0)] if (REFS.match(lines[0].strip()) or REF_HEAD.match(lines[0])) else []
+        items = []
+        for l in lines:
+            if items and _ref_fragment(l):
+                items[-1] += " " + l.strip()
+            else:
+                items.append(l)
+        if head and items:
+            items[0] = head[0] + "\n" + items[0]
+        elif head:
+            items = head
+        out += [{**p, "text": t} for t in items]
+    return out
+
+
+FUNCS = {"toc": rule_toc, "refs": rule_refs, "lists": rule_lists, "formula": rule_formula, "heading": rule_heading, "broken": rule_broken,
+         "ref_items": rule_ref_items}
+
+
+def tidy(paras, fmt, upto="ref_items"):
     """문단 목록 → (정리된 문단 목록, 규칙별 문단 수 변화 기록)."""
     log = Counter()
     for name in RULES[:RULES.index(upto) + 1]:

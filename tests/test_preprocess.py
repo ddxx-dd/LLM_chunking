@@ -201,9 +201,9 @@ class TestParagraphsV5(unittest.TestCase):
     """preprocess.paragraphs(v5 문단 정리): 규칙마다 작은 예."""
 
     @staticmethod
-    def run_(items, fmt="pdf"):
+    def run_(items, fmt="pdf", upto="ref_items"):
         from preprocess import paragraphs as P
-        out, _ = P.tidy([{"text": t, "kind": k, "pages": [1], "block_ids": [f"b{i}"]} for i, (t, k) in enumerate(items)], fmt)
+        out, _ = P.tidy([{"text": t, "kind": k, "pages": [1], "block_ids": [f"b{i}"]} for i, (t, k) in enumerate(items)], fmt, upto)
         return [(p["text"], p["kind"]) for p in out], out
 
     def test_formula_joins_sentence(self):
@@ -233,11 +233,64 @@ class TestParagraphsV5(unittest.TestCase):
         refs = [("T. D. Lee and C.-N. Yang, Parity, Phys. Rev. 104, 254 (1956).", "list"), ("C. S. Wu, E. Ambler, Test, Phys. Rev. 105, 1413 (1957).", "list"),
                 ("M. Kobayashi and T. Maskawa, CP violation, Phys. Rev. D 49, 652 (1973).", "list")]
         items = body + [("The estimator is limited because the noise in each", "para")] + refs + [("redshift bin could be subtracted.", "para"), ("Conclusion - We built it.", "para")]
-        got, _ = self.run_(items, "pdf")
+        got, _ = self.run_(items, "pdf", upto="broken")             # v5 단계까지(v6 ref_items는 끝의 참고문헌을 항목마다 나눔)
         self.assertEqual(got[-1][1], "references")
         self.assertIn("each redshift bin could be subtracted.", got[-3][0])
-        got_docx, _ = self.run_(items, "docx")
+        got_docx, _ = self.run_(items, "docx", upto="broken")
         self.assertNotEqual(got_docx[-1][1], "references")
+
+
+
+class TestV6(unittest.TestCase):
+    """clean_text v6(2026-10-26): 참고문헌 항목별 문단, 목차 보호 조건, 오류 수식 정리."""
+
+    def test_ref_items_split_and_fragment(self):
+        from preprocess import paragraphs as P
+        t = ("References\nAcemoglu, D., Ozdaglar, A., and ParandehGheibi, A. (2010). Spread of information in social networks. "
+             "Games and Economic Behavior ,\n70(2):194-227.\nAmico, M. and Keilegom, I. V. (2018). Cure models in survival analysis. Annual Review.")
+        out = P.rule_ref_items([{"text": t, "kind": "references", "pages": [9], "block_ids": ["b1"]}], "pdf")
+        self.assertEqual([p["text"] for p in out], [
+            "References\nAcemoglu, D., Ozdaglar, A., and ParandehGheibi, A. (2010). Spread of information in social networks. Games and Economic Behavior , 70(2):194-227.",
+            "Amico, M. and Keilegom, I. V. (2018). Cure models in survival analysis. Annual Review."])
+        self.assertTrue(all(p["kind"] == "references" for p in out))
+
+    def test_ref_items_protects_body(self):
+        from preprocess import paragraphs as P
+        t = "Preparation of alkaline extractant for the samples\nDissolve the following in 1L distilled water please:\n12 g sodium hydroxide"
+        out = P.rule_ref_items([{"text": t, "kind": "references", "pages": [1], "block_ids": ["b1"]}], "docx")
+        self.assertEqual([p["text"] for p in out], [t])                # 연도 있는 줄이 50% 미만 → 나누지 않음
+
+    def test_toc_lines_protection(self):
+        ok = stage2.toc_lines_are_toc
+        self.assertTrue(ok(["1. Short title 2", "2. Commencement 2", "3. Terms used 3"], "1. Short title ... 2. Commencement ... 3. Terms used ...", False))
+        self.assertFalse(ok(["Equality Act 2010", "Children Act 2014", "Data Protection Act 2018"], "", True))     # 연도로 끝남
+        self.assertFalse(ok(["PMCY 6430E Biopharmaceutics 2", "PHAR 6200E Clinical Trials 4", "PHAR 7100E Biostatistics 3"],
+                            "PMCY 6430E Biopharmaceutics PHAR 6200E Clinical Trials PHAR 7100E Biostatistics", True))   # 번호 감소(학점)
+        self.assertFalse(ok(["‘male’ = 41", "‘female’ = 11", "Back to - Activity 2"], "", True))                  # '='
+        self.assertFalse(ok(["Alpha section title 3", "Beta section title 4", "Gamma section title 5"], "unrelated body", False))  # 증거 없음
+
+    def test_t2_only_docx(self):
+        blocks = [{"type": "paragraph", "text": t} for t in ("Contents", "Intro part 1", "Methods part 2", "Results part 3")]
+        self.assertEqual(stage2.toc_delete_ids(blocks, "pdf"), set())
+        self.assertEqual(stage2.toc_delete_ids(blocks, "docx"), {1, 2, 3})
+
+    def test_drop_toc_paras_keeps_body(self):
+        text = "Body.\n\n가. 재직기간이 5년 미만인 사람의 퇴직급여: 4분의 1\n나. 재직기간이 5년 이상인 사람의 퇴직급여: 2분의 1\n다. 퇴직수당: 2분의 1\n\nMore body."
+        paras = [{"kind": "para"}, {"kind": "toc"}, {"kind": "para"}]
+        c, dropped = Counter(), []
+        t2, p2 = stage2.drop_toc_paras(text, paras, c, dropped)
+        self.assertEqual(t2, text)                                     # 증거 없는 목차 모양 본문(판결문)은 남김
+        self.assertEqual(c["TC 목차 문단 보호(남김)"], 1)
+
+    def test_formula_cut_to_layer_and_intertext(self):
+        count = lambda ts: [len(t.split()) for t in ts]              # 낱말 수로 토큰을 대신(테스트용)
+        cut = "$$ " + " + ".join(f"x _ {{ {i} }}" for i in range(80)) + " + \\sqrt { $$"     # 반복 없는 긴 수식이 '\\sqrt {'에서 끊김
+        f, why = stage2.fix_formula(cut, {"text_layer": "x1 + x2 + ... + sqrt(y)"}, count, Counter())
+        self.assertEqual((f, why), ("x1 + x2 + ... + sqrt(y)", "T"))
+        ok = "$$ x = \\frac { a } { b } $$"
+        self.assertEqual(stage2.fix_formula(ok, {"text_layer": "x = a/b"}, count, Counter()), (ok, None))
+        s = stage2.strip_spaced_intertext("$$ x = 1 . \\\\ \\intertext { s u m a l f o r t h e a g e n t w i t h } $$")
+        self.assertEqual(s, "$$ x = 1 . \\\\ $$")
 
 
 if __name__ == "__main__":

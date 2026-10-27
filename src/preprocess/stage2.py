@@ -9,6 +9,8 @@
       <out>/clean_text/<데이터셋>/<doc_id>.dropped.json  지운 블록과 규칙 이름(확인용)
       단위 만들기 = 아래 규칙(build_units), 마지막 정리 = clean_text.build(참고문헌 한 문단·번호, 수식 자기 문단, 참고문헌 모양 표 펴기 등)
       → 문단 정리 v5 = paragraphs.tidy(수식·코드를 문장 안으로, 목록·목차·참고문헌 묶기, 단독 제목·끊긴 문단 잇기; 2026-10-19)
+        + v6(2026-10-26, 결정 기록 tests/clean_text/out/v6_decisions.md): 참고문헌 항목마다 문단(tidy의 ref_items) / 목차 문단 지우기(TC, 보호 조건,
+          글자 구성 검사 뒤) / 오류 수식 정리(Q7 고리·잘림 → 글자 층, Q8 되돌림, Q9 띄어 쓴 \\intertext) / T2는 docx에만 + 보호 조건
 
 적용 순서
   K1 한국어 가짜 띄어쓰기 지움(1차 fake_spaces) / C3 글꼴 글리프 이름 쓰레기 / 1 문자 정리(제어·PUA·대체 문자, NBSP, 폭 없는 문자,
@@ -16,13 +18,15 @@
   B1 1차가 찾은 숨은 문단 경계(para_breaks)에서 블록 나눔 / G3 블록 앞 그림 낱글자 떼기
   2026-10-17 v4 형식(Vectara 공식 코퍼스와 맞춤): 참고문헌(R1·R2)과 그림 캡션(F1)은 지우지 않고 남기며, 수식은 LaTeX('$$ … $$').
   블록 제거  R1 참고문헌 영역 표시(제목 또는 'References' 한 줄부터, 본문 단락 2개 연속·수식·다른 제목에서 끝; 지우지 않고 ref 표시) / N1 줄 번호 사슬 /
-             D3 여러 쪽 반복 짧은 블록 / H2 반복 머리말·바닥글(Marker 기본값 + 2쪽 간격) / T1·T2 목차 /
+             D3 여러 쪽 반복 짧은 블록 / H2 반복 머리말·바닥글(Marker 기본값 + 2쪽 간격) / T1 점선 목차 / T2 번호로 끝나는 목차 줄(docx만,
+             연도 끝·번호 감소·'=' 묶음은 안 지우고, 제목이 뒤에 다시 나오거나 목차 제목이 있을 때만 - 원칙: 목차가 덜 지워져도 본문은 지우지 않음) /
              F1 그림 캡션(캡션 모양, 축 숫자 떼고 판정; 지우지 않고 남김) / G4 그림 영역 안 글(그림 안에서 살린 글은 본문보다 작은 글자일 때만) /
              G2 그림 속 글자 조각 / G5 글자가 흩어진 그림 글 / N2 본문 사이 쪽 번호 / N3 arXiv 세로 도장·저작권·라이선스·
              첫 쪽 접수·교신·소속·연구비 문구·이메일/URL 줄 / R2 제목 없는 끝 참고문헌(표시)
   D1 단어가 두 번씩 반복된 블록 반으로 / F2 본문으로 분류된 각주를 문서 끝으로
   표         T6 표 캡션을 표 앞에 / T8 표 바로 뒤 주석('Note:', '*** p <')을 표 뒤에 / T9 짝 없는 표 캡션·번호 줄은 뒤쪽 표에, 없으면 제거
-  문단 잇기  Q1 수식을 앞 문단 안으로('$$ LaTeX $$', Q3 고장 난 수식은 원본 글자 층, Q6 수식 안에 반복된 이웃 문장 자르기와 남은 괄호 조각 정리)
+  문단 잇기  Q1 수식을 앞 문단 안으로('$$ LaTeX $$', Q3 고장 난 수식은 원본 글자 층, Q7 고리 반복·잘린 수식(괄호 짝 & 300토큰 초과)도 글자 층,
+             Q6 수식 안에 반복된 이웃 문장 자르기와 남은 괄호 조각 정리, Q8 Q6 뒤 너무 짧아진 글자 층은 LaTeX로, Q9 띄어 쓴 \\intertext 지움)
              / Q2 수식 뒤 소문자 문장 이어 붙임 /
              P1·P2 영어 소문자 이어짐 / P5 하이픈 / P3 한국어 쪽 바뀜 / L1 줄 위치
   제목 붙이기(제목을 바로 아래 단위 앞에) / S 글자 없거나 2토큰 이하 조각을 다음 단위 앞에 / S2 양식 항목('…:')을 다음 단위 앞에
@@ -247,11 +251,70 @@ def toc_run_ids(blocks):
     return out
 
 
+# T2 v6(2026-10-26 확정, 전수 점검 tests/clean_text/toc_t2_audit.py, 회귀 검사 결과 tests/clean_text/out/toc_rules.md). 원칙: 목차가 덜 지워져도 본문은 절대 지우지 않는다.
+TOC_NUM_END = re.compile(r"\s*\.{0,}\s*(\d{1,4})\s*$")
+TOC_YEAR_END = re.compile(r"(19|20)\d\d\s*$")
+TOC_HEAD_V6 = re.compile(r"^\s*((table of )?contents|목\s*차|차\s*례|index)\s*:?\s*$", re.I)
+
+
+def _toc_norm(t):
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9가-힣 ]+", " ", t.lower())).strip()
+
+
+def toc_lines_are_toc(lines, after_text, head_before):
+    """번호로 끝나는 줄 묶음이 목차인지. 지우지 않음: 끝 번호가 연도인 줄이 절반 이상(이력서 경력·법령 이름·날짜), '='가 있음(자료값),
+    끝 번호가 한 번이라도 줄어듦(수업 목록 학점·인원). 지움: 번호를 뗀 제목의 50% 이상이 뒤에 다시 나옴, 또는 바로 앞에 목차 제목."""
+    if sum(bool(TOC_YEAR_END.search(l)) for l in lines) >= 0.5 * len(lines) or any("=" in l for l in lines):
+        return False
+    nums = [int(m.group(1)) for l in lines if (m := TOC_NUM_END.search(l))]
+    if any(b < a for a, b in zip(nums, nums[1:])):
+        return False
+    titles = [t for t in (_toc_norm(TOC_NUM_END.sub("", l)) for l in lines) if len(t.split()) >= 3 or len(t) >= 4]
+    after = _toc_norm(after_text)
+    return sum(t in after for t in titles) / max(1, len(titles)) >= 0.5 or head_before
+
+
+def toc_delete_ids(blocks, fmt):
+    """T2로 지울 블록: docx에서만(pdf에서 T2가 지운 것은 전부 본문이었다 - vectara 174줄·allganize 판결문 3줄), 목차 증거가 있는 묶음만."""
+    if fmt != "docx":
+        return set()
+    out, run = set(), []
+    for i in sorted(toc_run_ids(blocks)) + [None]:
+        if run and (i is None or i != run[-1] + 1):
+            lines = [blocks[k]["text"].strip() for k in run]
+            after = " ".join(b.get("text", "") for b in blocks[run[-1] + 1:])
+            head = any(TOC_HEAD_V6.match(blocks[j].get("text", "").strip()) for j in range(max(0, run[0] - 5), run[0]))
+            if toc_lines_are_toc(lines, after, head):
+                out.update(run)
+            run = []
+        if i is not None:
+            run.append(i)
+    return out
+
+
+def drop_toc_paras(text, paras, c, dropped):
+    """v5 문단 정리가 묶은 목차 문단(kind toc)을 같은 보호 조건으로 지운다. 반드시 '문단 정리 뒤 글자 구성' 검사 뒤에 부른다.
+    (pdf T2를 끄며 되살린 allganize 판결문 본문 '가. 재직기간이 5년 미만인 사람의 퇴직급여: 4분의 1'을 v5 toc 규칙이 목차로 묶어, 보호 없이는 다시 지워졌다)"""
+    items = text.split("\n\n")
+    keep = []
+    for k, (t, m) in enumerate(zip(items, paras)):
+        if m["kind"] == "toc":
+            lines = [l.strip() for l in t.split("\n") if l.strip()]
+            head = any(TOC_HEAD_V6.match(l) for j in range(max(0, k - 5), k + 1) for l in items[j].split("\n")[:1])
+            if toc_lines_are_toc(lines, " ".join(items[k + 1:]), head):
+                c["TC 목차 문단 제거"] += 1
+                dropped.append({"rule": "TC 목차 문단 제거", "page": (m.get("pages") or [None])[0], "type": "toc", "text": t})
+                continue
+            c["TC 목차 문단 보호(남김)"] += 1
+        keep.append(k)
+    return "\n\n".join(items[k] for k in keep), [paras[k] for k in keep]
+
+
 def remove_blocks(blocks, c, doc, dropped=None):
     """3 블록 제거(잡음 지우기). doc은 그림 영역(pictures)과 쪽 수를 준다. dropped(목록)를 주면 지운 블록을 기록한다."""
     dropped = dropped if dropped is not None else []
     lines, repeated = line_number_ids(blocks), repeated_short_ids(blocks)
-    running, tocs = running_ids(blocks, doc.get("n_pages") or 0), toc_run_ids(blocks)
+    running, tocs = running_ids(blocks, doc.get("n_pages") or 0), toc_delete_ids(blocks, doc.get("fmt"))
     pics = defaultdict(list)
     for pg, *box in doc.get("pictures") or []:
         pics[pg].append(box)
@@ -314,7 +377,7 @@ def remove_blocks(blocks, c, doc, dropped=None):
             drop("T1 목차 제거", b)
             continue
         if i in tocs:
-            drop("T2 번호로 끝나는 목차 줄 제거", b)
+            drop("T2 번호로 끝나는 목차 줄 제거(docx, 목차 증거가 있는 묶음)", b)
             continue
         s_cap = AXIS_LEAD.sub("", s)
         if ((b.get("role") == "caption" and not b.get("for") and FIG_CAP.match(s_cap))
@@ -580,6 +643,84 @@ def trim_neighbor_dup(f, prev_text, next_text, c):
     return f
 
 
+# ---------------------------------------------------------------- 수식 v6 (2026-10-26 확정, 시험 tests/clean_text/formula_fix.py·formula_audit.py, 결과 tests/clean_text/out/formula_*.md)
+# '$$ … $$'로 남은 수식 안쪽만 본다. 처리 순서: Q3(formula_text) → R·T(fix_formula) → Q6(trim_formula) → Q8 T 되돌림 → S(strip_spaced_intertext).
+# 정상 수식은 LaTeX 그대로(Vectara 공식 코퍼스·QA 근거도 LaTeX). vectara 수식 블록 55,568개 중 2,255개가 바뀌고 700토큰 넘는 수식 880 → 370.
+CUT_TOK, LOOP_MIN, LOOP_SHARE, SPACED, BADCH, T_KEEP = 300, 40, 0.4, 12, 0.03, 0.25
+BAD_LAYER = set("¨´ăÿˆ˘˙‰“`˝ˇ")                          # 글꼴 인코딩이 깨진 글자 층('0 “ 1tΛi¨pt´qă8u')
+SPACED_RUN = re.compile(r"(?:(?<=\s)|^)(?:[A-Za-z]\s+){%d,}" % SPACED)
+LOOP = re.compile(r"((?:\S+\s+){1,40}?)\1{3,}")
+INTERTEXT = re.compile(r"\\intertext\s*\{((?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*)\}")
+
+
+def _unbalanced(t):
+    o = len(re.findall(r"(?<!\\)\{", t)); cl = len(re.findall(r"(?<!\\)\}", t))
+    return o != cl or t.count("\\left") != t.count("\\right")
+
+
+def _spaced_box(t):
+    """\\intertext{…} 내용 낱말('\\,' '\\ ' '$'도 구분자)의 절반 이상이 한 글자 영문 = 본문을 수식으로 잘못 읽은 띄어 쓴 글."""
+    w = [x for x in re.split(r"\s+|\\[,;: ]|\$", t) if x]
+    return len(w) >= 6 and sum(len(x) == 1 and x.isalpha() for x in w) >= 0.5 * len(w)
+
+
+def _latex_visible(latex):
+    return re.sub(r"[\s{}_^&\\$]", "", re.sub(r"\\[a-zA-Z]+", "", latex))
+
+
+def fix_formula(f, b, count_many, c):
+    """R·T: Q3 뒤에도 LaTeX로 남은 수식의 인식 오류. 반환 (글, 'R'|'T'|None).
+    R 고리 = 1~40낱말 조각이 4번 이상 연달아 반복되는 구간이 40낱말 이상이고 수식의 40% 이상(띄어 쓴 LaTeX의 정상 반복 구조와 구분)
+    T 잘림 = 이스케이프 안 된 괄호 짝 또는 \\left·\\right 짝이 안 맞고 300토큰 초과(수식 모델 출력 길이 한계)
+    → 글자 층이 있고 깨진 글자가 3% 미만이면 글자 층, 아니면 R은 반복을 한 번만 남기고 T는 그대로."""
+    if not (f.startswith("$$ ") and f.endswith(" $$")):
+        return f, None
+    inner = f[3:-3]
+    loop = max((len(m.group(0).split()) for m in LOOP.finditer(inner + " ")), default=0)
+    if loop >= LOOP_MIN and loop >= LOOP_SHARE * len(inner.split()):
+        why = "R"
+    elif _unbalanced(inner) and count_many([f])[0] > CUT_TOK:
+        why = "T"
+    else:
+        return f, None
+    layer = b.get("text_layer") or ""
+    if layer and sum(ch in BAD_LAYER for ch in layer) < BADCH * len(layer):
+        c[f"Q7 수식 {'고리' if why == 'R' else '잘림'} → 원본 글자 층"] += 1
+        return layer, why
+    if why == "R":
+        c["Q7 수식 고리 → 반복 줄임"] += 1
+        return "$$ " + LOOP.sub(r"\1", inner + " ").strip() + " $$", why
+    return f, None
+
+
+def strip_spaced_intertext(f):
+    """S(Q6 뒤): '$$ … $$' 안의 띄어 쓴 \\intertext{…}만 통째로 지운 글, 바뀐 것이 없으면 None.
+    (Q6 앞에 지우면 Q6 판단이 바뀌어 정상 수식 끝을 잘라 먹은 4건이 있었다. \\intertext 밖의 띄어 쓴 글자는 진짜 낱말·변수 이름일 수 있어 그대로)"""
+    if not (f.startswith("$$ ") and f.endswith(" $$")):
+        return None
+    inner = f[3:-3]
+    if not SPACED_RUN.search(inner + " "):
+        return None
+    t = INTERTEXT.sub(lambda m: " " if _spaced_box(m.group(1)) or SPACED_RUN.search(m.group(1) + " ") else m.group(0), inner + " ")
+    t = " ".join(t.split())
+    return "$$ " + t + " $$" if t != " ".join(inner.split()) else None
+
+
+def formula_unit_text(b, prev_text, next_text, count_many, c):
+    """수식 블록 하나의 최종 글: Q3 → R·T → Q6 → Q8 T 되돌림(글자 층이 Q6 뒤 LaTeX 보이는 글자의 25%보다 짧아지면 LaTeX) → S."""
+    old = formula_text(b, c)
+    new, why = fix_formula(old, b, count_many, c)
+    f = trim_formula(new, prev_text, next_text, c)
+    if why == "T" and len(re.sub(r"\s", "", f)) < T_KEEP * len(_latex_visible(old[3:-3])):
+        c["Q8 잘린 수식 글자 층이 Q6 뒤 너무 짧아 LaTeX 유지"] += 1
+        f = trim_formula(old, prev_text, next_text, c)
+    s = strip_spaced_intertext(f)
+    if s:
+        c["Q9 수식 안 띄어 쓴 \\intertext 지움"] += 1
+        f = s
+    return f
+
+
 # ---------------------------------------------------------------- 5 문단 잇기
 def _kind(b):
     if b.get("role") == "caption":
@@ -754,9 +895,8 @@ def build_units(doc, count_many, dropped=None):
             units.append(_unit(b))
             continue
         if k == "formula":
-            f = formula_text(b, c)
             nb = next((x for x in blocks[bi + 1:] if x["type"] != "formula"), None)
-            f = trim_formula(f, last["text"] if last is not None else "", nb["text"] if nb else "", c)
+            f = formula_unit_text(b, last["text"] if last is not None else "", nb["text"] if nb else "", count_many, c)
             c["Q1 수식을 문장 안으로"] += 1
             if last is not None:
                 last["text"] = last["text"].rstrip() + " " + f
@@ -858,6 +998,7 @@ def process(doc_id, ds, out, count_many):
     if Counter("".join(new_text.split())) != Counter("".join(text.split())):
         raise AssertionError(f"{ds}:{doc_id} 문단 정리 뒤 글자 구성이 바뀜")
     text, paras = new_text, [{k: v for k, v in p.items() if k != "text"} for p in tidy]
+    text, paras = drop_toc_paras(text, paras, c, dropped)        # v6 목차 문단 지우기: 글자 구성 검사 뒤, 저장 전(2026-10-26)
     rec = {"doc_id": doc["doc_id"], "dataset": ds, "lang": doc.get("lang"), "title": doc.get("title"), "fmt": doc.get("fmt"),
            "source": f"meta_text_v2/{ds}", "n_pages": doc.get("n_pages"), "n_paras": len(paras),
            "n_tokens": count_many([text])[0], "text": text, "paras": paras,
